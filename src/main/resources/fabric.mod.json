@@ -2,9 +2,10 @@
   "schemaVersion": 1,
   "id": "tiered",
   "version": "${version}",
-  "name": "Tiered",
-  "description": "Adds tiers to tools.",
+  "name": "Tiered but More!",
+  "description": "Adds tiers to tools & accessories.",
   "authors": [
+    "KevzCz",
     "Draylar",
     "Globox_Z"
   ],

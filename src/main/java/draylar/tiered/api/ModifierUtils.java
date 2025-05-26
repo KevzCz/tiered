@@ -6,11 +6,15 @@ import net.levelz.access.LevelManagerAccess;
 import net.levelz.level.LevelManager;
 import net.levelz.level.Skill;
 import net.libz.util.SortList;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
@@ -101,7 +105,6 @@ public class ModifierUtils {
         } else
             return null;
     }
-
     public static void setItemStackAttribute(@Nullable PlayerEntity playerEntity, ItemStack stack, boolean reforge) {
         if (stack.get(Tiered.TIER) == null && !stack.isIn(TieredItemTags.MODIFIER_RESTRICTED)) {
             // attempt to get a random tier
@@ -124,6 +127,25 @@ public class ModifierUtils {
             }
         }
     }
+    public static void setItemStackAttributeWithId(ItemStack stack, Identifier id) {
+        // Don't check for existing TIER; this is a preview
+        PotentialAttribute attribute = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(id);
+        if (attribute == null) return;
+
+        float durableFactor = -1f;
+        int operation = 0;
+
+        for (AttributeTemplate template : attribute.getAttributes()) {
+            if (template.getAttributeTypeID().equals("tiered:generic.durable")) {
+                durableFactor = (float) Math.round(template.getEntityAttributeModifier().value() * 100.0f) / 100.0f;
+                operation = template.getEntityAttributeModifier().operation().getId();
+                break;
+            }
+        }
+
+        stack.set(Tiered.TIER, new TierComponent(id.toString(), durableFactor, operation));
+    }
+
 
     public static void removeItemStackAttribute(ItemStack itemStack) {
         if (itemStack.get(Tiered.TIER) != null) {
@@ -181,6 +203,7 @@ public class ModifierUtils {
                 }
             }
         }
+
     }
 
 }

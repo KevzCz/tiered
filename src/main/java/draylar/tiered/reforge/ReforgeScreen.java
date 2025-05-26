@@ -1,41 +1,122 @@
 package draylar.tiered.reforge;
 
-import java.util.*;
-
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import draylar.tiered.Tiered;
 import draylar.tiered.api.ModifierUtils;
 import draylar.tiered.api.TieredItemTags;
 import draylar.tiered.config.ConfigInit;
 import draylar.tiered.network.TieredClientPacket;
+import draylar.tiered.util.ReforgeUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.libz.api.Tab;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.AnvilScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.util.InputUtil;
+import net.minecraft.component.type.MapIdComponent;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolItem;
+import net.minecraft.item.map.MapState;
+import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerListener;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import draylar.tiered.util.ReforgeUtil;
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
+
+import java.util.*;
+
+import static draylar.tiered.util.ReforgeUtil.formatModifierName;
 
 @Environment(EnvType.CLIENT)
 public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implements ScreenHandlerListener, Tab {
+    @Nullable
+    private Identifier targetModifier = null;
+    private boolean modifierAchieved = false;
 
     public static final Identifier TEXTURE = Identifier.of("tiered", "textures/gui/reforging_screen.png");
-    public ReforgeScreen.ReforgeButton reforgeButton;
+    private final List<FloatingText> floatingTexts = new ArrayList<>();
+    private class FloatingText {
+        final Text text;
+        final int baseColor;
+        int age = 0;
+        final int maxAge = 50; // total lifespan
+        final int x, y;
+
+        FloatingText(Text text, int color, int x, int y) {
+            this.text = text;
+            this.baseColor = color;
+            this.x = x;
+            this.y = y;
+        }
+
+        void tick() {
+            age++;
+        }
+
+        boolean isExpired() {
+            return age >= maxAge;
+        }
+
+        float getAlpha() {
+            if (age < 10) {
+                // Fade in (ease out)
+                float t = age / 10f;
+                return t * t;
+            } else if (age < 30) {
+                // Fully visible
+                return 1f;
+            } else if (age < maxAge) {
+                // Fade out (ease in)
+                float t = (maxAge - age) / 20f;
+                return t * t;
+            } else {
+                return 0f;
+            }
+        }
+
+        float getYOffset() {
+            // ease-out upward drift
+            float t = age / (float) maxAge;
+            return (float) (-Math.pow(t, 0.6) * 20.0); // max rise of ~20 px
+        }
+
+        int getRenderColor() {
+            int alpha = (int) (getAlpha() * 255);
+            return (alpha << 24) | baseColor;
+        }
+    }
+
+
+    private Identifier lastSeenModifier = null;
+    private ItemStack lastSeenStack = ItemStack.EMPTY;
+
+    public ReforgeButton reforgeButton;
+    private ClickableWidget showModifiersButton;
+
     private ItemStack last;
     private List<Item> baseItems;
+
+    // Modifier UI state
+    private boolean modifiersVisible = false;
+    private final Map<String, List<Identifier>> groupedModifiers = new LinkedHashMap<>();
+    private final Set<String> expandedGroups = new HashSet<>();
+    private int scrollOffset = 0;
+    private final int entryHeight = 12;
+    private final int maxVisibleEntries = 12;
 
     public ReforgeScreen(ReforgeScreenHandler handler, PlayerInventory playerInventory, Text title) {
         super(handler, playerInventory, title);
@@ -45,47 +126,163 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
     @Override
     protected void init() {
         super.init();
-        ((ReforgeScreenHandler) this.handler).addListener(this);
+        handler.addListener(this);
 
-        int i = (this.width - this.backgroundWidth) / 2;
-        int j = (this.height - this.backgroundHeight) / 2;
-        this.reforgeButton = (ReforgeScreen.ReforgeButton) this.addDrawableChild(new ReforgeScreen.ReforgeButton(i + 79, j + 56, (button) -> {
-            if (button instanceof ReforgeScreen.ReforgeButton && !((ReforgeScreen.ReforgeButton) button).disabled)
+        int x = (this.width - this.backgroundWidth) / 2;
+        int y = (this.height - this.backgroundHeight) / 2;
+
+        this.reforgeButton = this.addDrawableChild(new ReforgeButton(x + 79, y + 56, (button) -> {
+            if (!reforgeButton.disabled && !modifierAchieved) {
                 TieredClientPacket.writeC2SReforgePacket();
+            }
         }));
+
+
+
+        this.showModifiersButton = new ClickableWidget(x + 155, y + 5, 16, 16, Text.empty()) {
+            @Override
+            public void onClick(double mouseX, double mouseY) {
+                modifiersVisible = !modifiersVisible;
+                groupedModifiers.clear();
+                expandedGroups.clear();
+
+                if (modifiersVisible) {
+                    ItemStack stack = handler.getSlot(1).getStack();
+                    if (!stack.isEmpty()) {
+                        List<Identifier> modifiers = ReforgeUtil.getAvailableModifiers(stack);
+                        modifiers.sort(Comparator
+                                .comparing(ReforgeUtil::getRarityOrder) // First sort by rarity
+                                .thenComparing(ReforgeUtil::getNumericSuffixOrZero) // Then by numeric suffix
+                        );
+
+                        for (Identifier id : modifiers) {
+                            String rarity = ReforgeUtil.getRarity(id);
+                            groupedModifiers.computeIfAbsent(rarity, k -> new ArrayList<>()).add(id);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            protected void appendClickableNarrations(NarrationMessageBuilder builder) {
+
+            }
+
+            @Override
+            protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+                ItemStack stack = handler.getSlot(1).getStack();
+                if (stack.isEmpty()) return;
+
+                Identifier icon = Identifier.of("kevs", "textures/gui/anvil_sword.png");
+
+                context.getMatrices().push();
+                RenderSystem.setShaderColor(isHovered() ? 1f : 0.5f, isHovered() ? 1f : 0.5f, isHovered() ? 1f : 0.5f, 1f);
+                context.drawTexture(icon, getX(), getY(), 0, 0, this.width, this.height, 16, 16);
+                RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+                context.getMatrices().pop();
+            }
+        };
+
+        this.addDrawableChild(showModifiersButton);
     }
 
     @Override
-    public void removed() {
-        super.removed();
-        ((ReforgeScreenHandler) this.handler).removeListener(this);
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+
+
+        int x = this.x + this.backgroundWidth + 10;
+        int baseY = this.y + 10;
+        int rendered = 0;
+        if (!modifiersVisible || groupedModifiers.isEmpty()) {
+            return super.mouseClicked(mouseX, mouseY, button);
+        }
+        for (Map.Entry<String, List<Identifier>> entry : groupedModifiers.entrySet()) {
+            String group = entry.getKey();
+            List<Identifier> modifiers = entry.getValue();
+            int groupY = baseY - scrollOffset + rendered * entryHeight;
+
+            if (mouseX >= x && mouseX <= x + 120 && mouseY >= groupY && mouseY <= groupY + entryHeight) {
+                if (expandedGroups.contains(group)) {
+                    expandedGroups.remove(group);
+                } else {
+                    expandedGroups.add(group);
+                }
+                return true;
+            }
+
+            rendered++;
+
+            if (expandedGroups.contains(group)) {
+                for (Identifier id : modifiers) {
+                    int modY = baseY - scrollOffset + rendered * entryHeight;
+                    if (mouseX >= x && mouseX <= x + 140 && mouseY >= modY && mouseY <= modY + entryHeight) {
+                        // SHIFT + click to clear
+                        if (targetModifier != null && targetModifier.equals(id) &&
+                                InputUtil.isKeyPressed(client.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT_SHIFT)) {
+                            targetModifier = null;
+                            modifierAchieved = false;
+                        }
+                        // Regular click to set
+                        else if (!modifierAchieved || !id.equals(targetModifier)) {
+                            targetModifier = id;
+                            modifierAchieved = false;
+                        }
+                        return true;
+                    }
+                    rendered++;
+                }
+            }
+        }
+
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+
+
+
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        int totalEntries = groupedModifiers.entrySet().stream()
+                .mapToInt(entry -> 1 + (expandedGroups.contains(entry.getKey()) ? entry.getValue().size() : 0))
+                .sum();
+
+        int maxOffset = Math.max(0, (totalEntries - maxVisibleEntries) * entryHeight);
+        scrollOffset = Math.min(Math.max(scrollOffset - (int) (verticalAmount * entryHeight), 0), maxOffset);
+        return true;
+    }
+    private static String capitalize(String input) {
+        if (input == null || input.isEmpty()) return input;
+        return input.substring(0, 1).toUpperCase() + input.substring(1);
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
         RenderSystem.disableBlend();
+        drawMouseoverTooltip(context, mouseX, mouseY);
 
-        this.drawMouseoverTooltip(context, mouseX, mouseY);
+        int i = (this.width - this.backgroundWidth) / 2;
+        int j = (this.height - this.backgroundHeight) / 2;
 
-        if (this.isPointWithinBounds(79, 56, 18, 18, (double) mouseX, (double) mouseY)) {
+        if (this.isPointWithinBounds(79, 56, 18, 18, mouseX, mouseY)) {
             ItemStack itemStack = this.getScreenHandler().getSlot(1).getStack();
             if (itemStack == null || itemStack.isEmpty() || itemStack.isIn(TieredItemTags.MODIFIER_RESTRICTED)) {
                 baseItems = Collections.emptyList();
             } else {
                 if (itemStack != last) {
                     last = itemStack;
-                    baseItems = new ArrayList<Item>();
+                    baseItems = new ArrayList<>();
                     List<Item> items = Tiered.REFORGE_DATA_LOADER.getReforgeBaseItems(itemStack.getItem());
                     if (!items.isEmpty()) {
                         baseItems.addAll(items);
                     } else if (itemStack.getItem() instanceof ToolItem toolItem) {
-                        for (int i = 0; i < toolItem.getMaterial().getRepairIngredient().getMatchingStacks().length; i++) {
-                            baseItems.add(toolItem.getMaterial().getRepairIngredient().getMatchingStacks()[i].getItem());
+                        for (ItemStack s : toolItem.getMaterial().getRepairIngredient().getMatchingStacks()) {
+                            baseItems.add(s.getItem());
                         }
                     } else if (itemStack.getItem() instanceof ArmorItem armorItem && armorItem.getMaterial().value().repairIngredient() != null) {
-                        for (int i = 0; i < armorItem.getMaterial().value().repairIngredient().get().getMatchingStacks().length; i++) {
-                            baseItems.add(armorItem.getMaterial().value().repairIngredient().get().getMatchingStacks()[i].getItem());
+                        for (ItemStack s : armorItem.getMaterial().value().repairIngredient().get().getMatchingStacks()) {
+                            baseItems.add(s.getItem());
                         }
                     } else {
                         for (RegistryEntry<Item> itemRegistryEntry : Registries.ITEM.getOrCreateEntryList(TieredItemTags.REFORGE_BASE_ITEM)) {
@@ -94,29 +291,194 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                     }
                 }
             }
-            List<Text> tooltip = new ArrayList<Text>();
+
+            List<Text> tooltip = new ArrayList<>();
             if (!baseItems.isEmpty()) {
                 ItemStack ingredient = this.getScreenHandler().getSlot(0).getStack();
-                if (ingredient != null && !ingredient.isEmpty() && baseItems.contains(ingredient.getItem())) {
-                } else {
+                if (ingredient == null || ingredient.isEmpty() || !baseItems.contains(ingredient.getItem())) {
                     tooltip.add(Text.translatable("screen.tiered.reforge_ingredient"));
                     for (Item item : baseItems) {
                         tooltip.add(item.getName());
                     }
                 }
             }
+
             if (itemStack.isDamageable() && itemStack.isDamaged()) {
                 tooltip.add(Text.translatable("screen.tiered.reforge_damaged"));
             }
+
             if (!tooltip.isEmpty()) {
                 context.drawTooltip(this.textRenderer, tooltip, mouseX, mouseY);
             }
         }
-        if (!ConfigInit.CONFIG.uniqueReforge && !this.getScreenHandler().getSlot(1).getStack().isEmpty() && ModifierUtils.getAttributeId(this.getScreenHandler().getSlot(1).getStack()) != null
+
+        if (!ConfigInit.CONFIG.uniqueReforge
+                && !this.getScreenHandler().getSlot(1).getStack().isEmpty()
+                && ModifierUtils.getAttributeId(this.getScreenHandler().getSlot(1).getStack()) != null
                 && ModifierUtils.getAttributeId(this.getScreenHandler().getSlot(1).getStack()).getPath().contains("unique")) {
             context.drawTexture(TEXTURE, this.x + 74, this.y + 29, 0, 166, 28, 26);
         }
+
+        // --- MODIFIER LIST START ---
+        if (modifiersVisible && !groupedModifiers.isEmpty()) {
+            boolean hoveredTooltipDrawn = false;
+
+            int listX = this.x + this.backgroundWidth + 5;
+            int listY = this.y + 10;
+            int maxWidth = 130;
+
+            // Background panel
+            int totalHeight = maxVisibleEntries * entryHeight;
+            int top = listY - 4;
+            int bottom = top + totalHeight + 8;
+            context.fill(listX - 4, top, listX + maxWidth + 4, bottom, 0xBB111111);
+            context.drawBorder(listX - 4, top, maxWidth + 8, bottom - top, 0xFF666666);
+
+            // ✅ Prepare tooltip storage
+            List<Text> tooltipToDraw = null;
+            int tooltipX = 0, tooltipY = 0;
+
+            // ✅ SCISSOR START
+            int scaleFactor = (int) this.client.getWindow().getScaleFactor();
+            RenderSystem.enableScissor(
+                    (listX - 4) * scaleFactor,
+                    (this.height - (listY + maxVisibleEntries * entryHeight + 4)) * scaleFactor,
+                    (maxWidth + 8) * scaleFactor,
+                    (maxVisibleEntries * entryHeight + 8) * scaleFactor
+            );
+
+            int rendered = 0;
+            for (Map.Entry<String, List<Identifier>> entry : groupedModifiers.entrySet()) {
+                String rarity = entry.getKey();
+                List<Identifier> modifiers = entry.getValue();
+                int groupY = listY - scrollOffset + rendered * entryHeight;
+
+                boolean groupHeaderVisible = !(groupY + entryHeight < listY || groupY > listY + (maxVisibleEntries * entryHeight));
+
+
+                String displayName = capitalize(rarity);
+                String prefix = expandedGroups.contains(rarity) ? "▼ " : "▶ ";
+
+                context.fill(listX - 2, groupY - 1, listX + maxWidth - 2, groupY + entryHeight, 0x55222222);
+                context.drawText(this.textRenderer, Text.literal(prefix + displayName).styled(s -> s.withBold(true)), listX, groupY, 0xFFFFFF, false);
+
+                if (!hoveredTooltipDrawn && mouseX >= listX && mouseX <= listX + 120 && mouseY >= groupY && mouseY <= groupY + entryHeight) {
+                    tooltipToDraw = List.of(Text.literal("Click to expand/collapse"));
+                    tooltipX = mouseX;
+                    tooltipY = mouseY;
+                    hoveredTooltipDrawn = true;
+                }
+
+                rendered++;
+
+                if (expandedGroups.contains(rarity)) {
+                    for (Identifier id : modifiers) {
+                        int modY = listY - scrollOffset + rendered * entryHeight;
+
+                        if (modY + entryHeight < listY || modY > listY + (maxVisibleEntries * entryHeight)) {
+                            rendered++;
+                            continue;
+                        }
+
+                        String niceName = formatModifierName(id);
+                        boolean isHovered = mouseX >= listX && mouseX <= listX + 140 && mouseY >= modY && mouseY <= modY + entryHeight;
+
+                        if (isHovered && !hoveredTooltipDrawn) {
+                            context.fill(listX - 2, modY - 1, listX + maxWidth - 2, modY + entryHeight, 0x44FFFFFF);
+                        } else if (id.equals(targetModifier)) {
+                            context.fill(listX - 2, modY - 1, listX + maxWidth - 2, modY + entryHeight, 0x331EFFA1);
+                        }
+
+                        String label = "• " + niceName;
+                        int modColor = ReforgeUtil.getColorForModifier(id);
+                        context.drawText(this.textRenderer, Text.literal(label), listX + 5, modY, modColor, false);
+                        if (groupHeaderVisible) {
+                            context.fill(listX - 2, groupY - 1, listX + maxWidth - 2, groupY + entryHeight, 0x55222222);
+                            context.drawText(this.textRenderer, Text.literal(prefix + displayName).styled(s -> s.withBold(true)), listX, groupY, 0xFFFFFF, false);
+
+                            if (!hoveredTooltipDrawn && mouseX >= listX && mouseX <= listX + 120 && mouseY >= groupY && mouseY <= groupY + entryHeight) {
+                                tooltipToDraw = List.of(Text.literal("Click to expand/collapse"));
+                                tooltipX = mouseX;
+                                tooltipY = mouseY;
+                                hoveredTooltipDrawn = true;
+                            }
+                        }
+
+                        if (isHovered && !hoveredTooltipDrawn) {
+                            ItemStack base = handler.getSlot(1).getStack();
+                            if (!base.isEmpty()) {
+                                ItemStack preview = base.copy();
+                                ModifierUtils.setItemStackAttributeWithId(preview, id);
+
+                                Item.TooltipContext tooltipContext = new Item.TooltipContext() {
+                                    @Nullable public RegistryWrapper.WrapperLookup getRegistryLookup() { return null; }
+                                    public float getUpdateTickRate() { return 0; }
+                                    @Nullable public MapState getMapState(MapIdComponent id) { return null; }
+                                };
+
+                                tooltipToDraw = preview.getTooltip(tooltipContext, client.player, TooltipType.ADVANCED);
+                            } else {
+                                tooltipToDraw = List.of(Text.literal("Modifier: " + id.getPath()));
+                            }
+
+                            tooltipX = mouseX;
+                            tooltipY = mouseY;
+                            hoveredTooltipDrawn = true;
+                        }
+
+                        rendered++;
+                    }
+                }
+            }
+
+            RenderSystem.disableScissor(); // ✅ SCISSOR END
+
+            // ✅ Draw tooltip AFTER scissor is disabled
+            if (tooltipToDraw != null) {
+                context.drawTooltip(this.textRenderer, tooltipToDraw, tooltipX, tooltipY);
+            }
+
+            // Scrollbar (unchanged)
+            int totalEntries = groupedModifiers.entrySet().stream()
+                    .mapToInt(entry -> 1 + (expandedGroups.contains(entry.getKey()) ? entry.getValue().size() : 0))
+                    .sum();
+            int contentHeight = totalEntries * entryHeight;
+            int viewHeight = maxVisibleEntries * entryHeight;
+
+            if (contentHeight > viewHeight) {
+                int scrollbarHeight = Math.max((int) ((float) viewHeight / contentHeight * viewHeight), 10);
+                int scrollPosition = (int) ((float) scrollOffset / (contentHeight - viewHeight) * (viewHeight - scrollbarHeight));
+                int scrollbarX = listX + maxWidth - 5;
+                int scrollbarY = listY + scrollPosition;
+
+                context.fill(scrollbarX, scrollbarY, scrollbarX + 4, scrollbarY + scrollbarHeight, 0xFF888888);
+            }
+        }
+// --- MODIFIER LIST END ---
+
+
+        // Floating Texts
+        Iterator<FloatingText> iterator = floatingTexts.iterator();
+        while (iterator.hasNext()) {
+            FloatingText ft = iterator.next();
+            ft.tick();
+
+            if (ft.isExpired()) {
+                iterator.remove();
+                continue;
+            }
+
+            int color = ft.getRenderColor();
+            float yOffset = ft.getYOffset();
+
+            int textWidth = this.textRenderer.getWidth(ft.text);
+            int drawX = ft.x - textWidth / 2;
+            int drawY = (int)(ft.y + yOffset);
+
+            context.drawText(this.textRenderer, ft.text, drawX, drawY, color, true);
+        }
     }
+
 
     @Override
     protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
@@ -126,24 +488,65 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
     }
 
     @Override
-    public void onPropertyUpdate(ScreenHandler handler, int property, int value) {
+    public void removed() {
+        super.removed();
+        handler.removeListener(this);
     }
 
+    @Override public void onPropertyUpdate(ScreenHandler handler, int property, int value) {}
     @Override
     public void onSlotUpdate(ScreenHandler handler, int slotId, ItemStack stack) {
+        if (slotId == 1 && !stack.isEmpty()) {
+            Identifier newId = ModifierUtils.getAttributeId(stack);
+
+            if (newId != null && (!newId.equals(lastSeenModifier) || !ItemStack.areItemsEqual(stack, lastSeenStack))) {
+                lastSeenModifier = newId;
+                lastSeenStack = stack.copy();
+
+                int slotX = this.getScreenHandler().getSlot(1).x;
+                int slotY = this.getScreenHandler().getSlot(1).y;
+                int x = this.x + slotX + 8;
+                int y = this.y + slotY - 6;
+
+                if (targetModifier != null && newId.equals(targetModifier)) {
+                    modifierAchieved = true;
+                    floatingTexts.add(new FloatingText(Text.literal("✔ Modifier Achieved"), 0x55FF55, x, y));
+                    if (reforgeButton != null) {
+                        reforgeButton.setDisabled(true);
+                    }
+                    return;
+                }
+
+                String rarity = ReforgeUtil.getRarity(newId);
+                Text displayText = Text.literal("✦ " + capitalize(rarity) + " ✦");
+                int color = ReforgeUtil.getColorForModifier(newId);
+                floatingTexts.add(new FloatingText(displayText, color, x, y));
+
+                // Re-enable button if not yet achieved
+                if (reforgeButton != null && reforgeButton.disabled && !modifierAchieved) {
+                    reforgeButton.setDisabled(false);
+                }
+            }
+        }
     }
 
-    @Override
-    public Class<?> getParentScreenClass() {
-        return AnvilScreen.class;
-    }
+
+
+
+
+
+    @Override public Class<?> getParentScreenClass() { return AnvilScreen.class; }
 
     public class ReforgeButton extends ButtonWidget {
         private boolean disabled;
 
-        public ReforgeButton(int x, int y, ButtonWidget.PressAction onPress) {
+        public ReforgeButton(int x, int y, PressAction onPress) {
             super(x, y, 18, 18, ScreenTexts.EMPTY, onPress, DEFAULT_NARRATION_SUPPLIER);
             this.disabled = true;
+            this.active = true;
+        }
+        public void press() {
+            this.onPress.onPress(this);
         }
 
         @Override
@@ -160,11 +563,13 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
             }
             context.drawTexture(TEXTURE, this.getX(), this.getY(), j, 0, this.width, this.height);
         }
-
         public void setDisabled(boolean disable) {
             this.disabled = disable;
+            // Keep button active so it can still be clicked
+            this.active = true;
         }
-
     }
+
+
 
 }
