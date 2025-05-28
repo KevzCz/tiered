@@ -197,7 +197,8 @@
             "index": 7,
             "startColor": "#1C265E",
             "endColor": "#1C265E",
-            "selectors": []
+            "selectors": [
+            ]
         },
         {
             "image": "legendarytooltips:textures/gui/tiered_borders.png",

@@ -23,7 +23,7 @@ public class TieredConfig implements ConfigData {
     public float levelzReforgeModifier = 0.01F;
     @Comment("Modify the biggest weights by this modifier per luck")
     public float luckReforgeModifier = 0.02F;
-    public boolean uniqueReforge = false;
+    public boolean uniqueReforge = true;
 
     @ConfigEntry.Category("client_settings")
     public boolean showReforgingTab = true;

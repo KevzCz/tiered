@@ -214,6 +214,14 @@
   "tiered:unique_elytra_3.label": "Unique",
   "tiered:unique_elytra_4.label": "Unique",
 
+  "tiered:warding.label": "Warding",
+  "tiered:hasty.label": "Hasty",
+  "tiered:quick.label": "Quick",
+  "tiered:wild.label": "Wild",
+  "tiered:lucky.label": "Lucky",
+  "tiered:healthy.label": "Healthy",
+  "tiered:strong.label": "Strong",
+
   "tiered:common.label": "Common",
   "tiered:uncommon.label": "Uncommon",
   "tiered:rare.label": "Rare",

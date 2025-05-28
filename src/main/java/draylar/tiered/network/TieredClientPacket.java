@@ -1,7 +1,9 @@
 package draylar.tiered.network;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 import draylar.tiered.Tiered;
 import draylar.tiered.TieredClient;
@@ -16,6 +18,7 @@ import draylar.tiered.network.packet.ReforgeScreenPacket;
 import draylar.tiered.reforge.ReforgeScreen;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
@@ -26,6 +29,7 @@ public class TieredClientPacket {
 
     @SuppressWarnings("resource")
     public static void init() {
+
         ClientPlayNetworking.registerGlobalReceiver(ReforgeReadyPacket.PACKET_ID, (payload, context) -> {
             boolean disableButton = payload.disableButton();
             context.client().execute(() -> {

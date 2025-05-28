@@ -13,15 +13,17 @@ import java.util.Map;
 public class ReforgeUtil {
 
     private static final List<String> ORDER = List.of("common", "uncommon", "rare", "epic", "legendary", "unique");
-    public static String getRarity(Identifier id) {
+    public static String getDynamicGroupName(Identifier id, Map<String, Integer> frequencyMap) {
         String path = id.getPath().toLowerCase();
-        for (String rarity : ORDER) {
-            if (path.startsWith(rarity + "_")) {
-                return rarity;
-            }
-        }
-        return "unknown";
+        String[] parts = path.split("_");
+
+        if (parts.length == 0) return "unknown";
+        String prefix = parts[0];
+
+        // Group if more than 1 of this prefix exist
+        return frequencyMap.getOrDefault(prefix, 0) > 1 ? prefix : path;
     }
+
 
     public static String formatModifierName(Identifier id) {
         String path = id.getPath();

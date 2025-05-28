@@ -1,0 +1,8 @@
+{
+  "items": [
+    "#tclayer:all_trinket_items"
+  ],
+  "base": [
+    "minecraft:lapis_lazuli"
+  ]
+}

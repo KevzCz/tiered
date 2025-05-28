@@ -117,6 +117,7 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
     private int scrollOffset = 0;
     private final int entryHeight = 12;
     private final int maxVisibleEntries = 12;
+    private final List<Identifier> ungroupedModifiers = new ArrayList<>();
 
     public ReforgeScreen(ReforgeScreenHandler handler, PlayerInventory playerInventory, Text title) {
         super(handler, playerInventory, title);
@@ -143,24 +144,40 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
             @Override
             public void onClick(double mouseX, double mouseY) {
                 modifiersVisible = !modifiersVisible;
+                scrollOffset = 0;
                 groupedModifiers.clear();
                 expandedGroups.clear();
+                ungroupedModifiers.clear(); // ← you'll define this as a new field below
 
                 if (modifiersVisible) {
                     ItemStack stack = handler.getSlot(1).getStack();
                     if (!stack.isEmpty()) {
                         List<Identifier> modifiers = ReforgeUtil.getAvailableModifiers(stack);
                         modifiers.sort(Comparator
-                                .comparing(ReforgeUtil::getRarityOrder) // First sort by rarity
-                                .thenComparing(ReforgeUtil::getNumericSuffixOrZero) // Then by numeric suffix
+                                .comparing(ReforgeUtil::getRarityOrder)
+                                .thenComparing(ReforgeUtil::getNumericSuffixOrZero)
                         );
 
+                        // Count group prefixes
+                        Map<String, Integer> prefixCount = new HashMap<>();
                         for (Identifier id : modifiers) {
-                            String rarity = ReforgeUtil.getRarity(id);
-                            groupedModifiers.computeIfAbsent(rarity, k -> new ArrayList<>()).add(id);
+                            String[] parts = id.getPath().split("_");
+                            if (parts.length > 0) {
+                                prefixCount.merge(parts[0], 1, Integer::sum);
+                            }
+                        }
+
+                        for (Identifier id : modifiers) {
+                            String group = ReforgeUtil.getDynamicGroupName(id, prefixCount);
+                            if (prefixCount.getOrDefault(group, 0) > 1) {
+                                groupedModifiers.computeIfAbsent(group, k -> new ArrayList<>()).add(id);
+                            } else {
+                                ungroupedModifiers.add(id); // single-entry → ungrouped
+                            }
                         }
                     }
                 }
+
             }
 
             @Override
@@ -193,45 +210,76 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
         int x = this.x + this.backgroundWidth + 10;
         int baseY = this.y + 10;
         int rendered = 0;
-        if (!modifiersVisible || groupedModifiers.isEmpty()) {
+        if (!modifiersVisible || (groupedModifiers.isEmpty() && ungroupedModifiers.isEmpty())) {
             return super.mouseClicked(mouseX, mouseY, button);
         }
+
         for (Map.Entry<String, List<Identifier>> entry : groupedModifiers.entrySet()) {
-            String group = entry.getKey();
-            List<Identifier> modifiers = entry.getValue();
-            int groupY = baseY - scrollOffset + rendered * entryHeight;
+                String group = entry.getKey();
+                List<Identifier> modifiers = entry.getValue();
+                int groupY = baseY - scrollOffset + rendered * entryHeight;
 
-            if (mouseX >= x && mouseX <= x + 120 && mouseY >= groupY && mouseY <= groupY + entryHeight) {
-                if (expandedGroups.contains(group)) {
-                    expandedGroups.remove(group);
-                } else {
-                    expandedGroups.add(group);
-                }
-                return true;
-            }
-
-            rendered++;
-
-            if (expandedGroups.contains(group)) {
-                for (Identifier id : modifiers) {
-                    int modY = baseY - scrollOffset + rendered * entryHeight;
-                    if (mouseX >= x && mouseX <= x + 140 && mouseY >= modY && mouseY <= modY + entryHeight) {
-                        // SHIFT + click to clear
+                if (mouseX >= x && mouseX <= x + 120 && mouseY >= groupY && mouseY <= groupY + entryHeight) {
+                    if (modifiers.size() == 1) {
+                        Identifier id = modifiers.get(0);
                         if (targetModifier != null && targetModifier.equals(id) &&
                                 InputUtil.isKeyPressed(client.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT_SHIFT)) {
                             targetModifier = null;
                             modifierAchieved = false;
-                        }
-                        // Regular click to set
-                        else if (!modifierAchieved || !id.equals(targetModifier)) {
+                        } else if (!modifierAchieved || !id.equals(targetModifier)) {
                             targetModifier = id;
                             modifierAchieved = false;
                         }
-                        return true;
+                    } else {
+                        if (expandedGroups.contains(group)) {
+                            expandedGroups.remove(group);
+                        } else {
+                            expandedGroups.add(group);
+                        }
                     }
-                    rendered++;
+                    return true;
                 }
+
+
+
+                rendered++;
+
+                if (expandedGroups.contains(group)) {
+                    for (Identifier id : modifiers) {
+                        int modY = baseY - scrollOffset + rendered * entryHeight;
+                        if (mouseX >= x && mouseX <= x + 140 && mouseY >= modY && mouseY <= modY + entryHeight) {
+                            // SHIFT + click to clear
+                            if (targetModifier != null && targetModifier.equals(id) &&
+                                    InputUtil.isKeyPressed(client.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT_SHIFT)) {
+                                targetModifier = null;
+                                modifierAchieved = false;
+                            }
+                            // Regular click to set
+                            else if (!modifierAchieved || !id.equals(targetModifier)) {
+                                targetModifier = id;
+                                modifierAchieved = false;
+                            }
+                            return true;
+                        }
+                        rendered++;
+                    }
+                }
+        }
+        int ungroupedY = this.y + 10 + rendered * entryHeight;
+        for (Identifier id : ungroupedModifiers) {
+            int modY = ungroupedY - scrollOffset;
+            if (mouseX >= x && mouseX <= x + 140 && mouseY >= modY && mouseY <= modY + entryHeight) {
+                if (targetModifier != null && targetModifier.equals(id) &&
+                        InputUtil.isKeyPressed(client.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT_SHIFT)) {
+                    targetModifier = null;
+                    modifierAchieved = false;
+                } else {
+                    targetModifier = id;
+                    modifierAchieved = false;
+                }
+                return true;
             }
+            ungroupedY += entryHeight;
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
@@ -320,7 +368,7 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
         }
 
         // --- MODIFIER LIST START ---
-        if (modifiersVisible && !groupedModifiers.isEmpty()) {
+        if (modifiersVisible && (!groupedModifiers.isEmpty() || !ungroupedModifiers.isEmpty())) {
             boolean hoveredTooltipDrawn = false;
 
             int listX = this.x + this.backgroundWidth + 5;
@@ -357,7 +405,9 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
 
 
                 String displayName = capitalize(rarity);
-                String prefix = expandedGroups.contains(rarity) ? "▼ " : "▶ ";
+                boolean isSingleEntry = modifiers.size() == 1 && groupedModifiers.get(rarity).size() == 1;
+                String prefix = isSingleEntry ? "• " : (expandedGroups.contains(rarity) ? "▼ " : "▶ ");
+
 
                 context.fill(listX - 2, groupY - 1, listX + maxWidth - 2, groupY + entryHeight, 0x55222222);
                 context.drawText(this.textRenderer, Text.literal(prefix + displayName).styled(s -> s.withBold(true)), listX, groupY, 0xFFFFFF, false);
@@ -371,7 +421,7 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
 
                 rendered++;
 
-                if (expandedGroups.contains(rarity)) {
+                if (modifiers.size() == 1 || expandedGroups.contains(rarity)) {
                     for (Identifier id : modifiers) {
                         int modY = listY - scrollOffset + rendered * entryHeight;
 
@@ -383,27 +433,19 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                         String niceName = formatModifierName(id);
                         boolean isHovered = mouseX >= listX && mouseX <= listX + 140 && mouseY >= modY && mouseY <= modY + entryHeight;
 
+                        // Hover/selected background
                         if (isHovered && !hoveredTooltipDrawn) {
                             context.fill(listX - 2, modY - 1, listX + maxWidth - 2, modY + entryHeight, 0x44FFFFFF);
                         } else if (id.equals(targetModifier)) {
                             context.fill(listX - 2, modY - 1, listX + maxWidth - 2, modY + entryHeight, 0x331EFFA1);
                         }
 
+                        // Draw modifier label
                         String label = "• " + niceName;
                         int modColor = ReforgeUtil.getColorForModifier(id);
                         context.drawText(this.textRenderer, Text.literal(label), listX + 5, modY, modColor, false);
-                        if (groupHeaderVisible) {
-                            context.fill(listX - 2, groupY - 1, listX + maxWidth - 2, groupY + entryHeight, 0x55222222);
-                            context.drawText(this.textRenderer, Text.literal(prefix + displayName).styled(s -> s.withBold(true)), listX, groupY, 0xFFFFFF, false);
 
-                            if (!hoveredTooltipDrawn && mouseX >= listX && mouseX <= listX + 120 && mouseY >= groupY && mouseY <= groupY + entryHeight) {
-                                tooltipToDraw = List.of(Text.literal("Click to expand/collapse"));
-                                tooltipX = mouseX;
-                                tooltipY = mouseY;
-                                hoveredTooltipDrawn = true;
-                            }
-                        }
-
+                        // Tooltip preview
                         if (isHovered && !hoveredTooltipDrawn) {
                             ItemStack base = handler.getSlot(1).getStack();
                             if (!base.isEmpty()) {
@@ -429,6 +471,55 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                         rendered++;
                     }
                 }
+
+            }
+// --- RENDER UNGROUPED MODIFIERS ---
+            for (Identifier id : ungroupedModifiers) {
+                int modY = listY - scrollOffset + rendered * entryHeight;
+
+                if (modY + entryHeight < listY || modY > listY + (maxVisibleEntries * entryHeight)) {
+                    rendered++;
+                    continue;
+                }
+
+                String niceName = formatModifierName(id);
+                boolean isHovered = mouseX >= listX && mouseX <= listX + 140 && mouseY >= modY && mouseY <= modY + entryHeight;
+
+                // Hover/selected background
+                if (isHovered && !hoveredTooltipDrawn) {
+                    context.fill(listX - 2, modY - 1, listX + maxWidth - 2, modY + entryHeight, 0x44FFFFFF);
+                } else if (id.equals(targetModifier)) {
+                    context.fill(listX - 2, modY - 1, listX + maxWidth - 2, modY + entryHeight, 0x331EFFA1);
+                }
+
+                String label = "• " + niceName;
+                int modColor = ReforgeUtil.getColorForModifier(id);
+                context.drawText(this.textRenderer, Text.literal(label), listX + 5, modY, modColor, false);
+
+                // Tooltip
+                if (isHovered && !hoveredTooltipDrawn) {
+                    ItemStack base = handler.getSlot(1).getStack();
+                    if (!base.isEmpty()) {
+                        ItemStack preview = base.copy();
+                        ModifierUtils.setItemStackAttributeWithId(preview, id);
+
+                        Item.TooltipContext tooltipContext = new Item.TooltipContext() {
+                            @Nullable public RegistryWrapper.WrapperLookup getRegistryLookup() { return null; }
+                            public float getUpdateTickRate() { return 0; }
+                            @Nullable public MapState getMapState(MapIdComponent id) { return null; }
+                        };
+
+                        tooltipToDraw = preview.getTooltip(tooltipContext, client.player, TooltipType.ADVANCED);
+                    } else {
+                        tooltipToDraw = List.of(Text.literal("Modifier: " + id.getPath()));
+                    }
+
+                    tooltipX = mouseX;
+                    tooltipY = mouseY;
+                    hoveredTooltipDrawn = true;
+                }
+
+                rendered++;
             }
 
             RenderSystem.disableScissor(); // ✅ SCISSOR END
@@ -496,39 +587,82 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
     @Override public void onPropertyUpdate(ScreenHandler handler, int property, int value) {}
     @Override
     public void onSlotUpdate(ScreenHandler handler, int slotId, ItemStack stack) {
-        if (slotId == 1 && !stack.isEmpty()) {
-            Identifier newId = ModifierUtils.getAttributeId(stack);
-
-            if (newId != null && (!newId.equals(lastSeenModifier) || !ItemStack.areItemsEqual(stack, lastSeenStack))) {
-                lastSeenModifier = newId;
+        if (slotId == 1) {
+            // Check if item actually changed
+            if (!ItemStack.areItemsEqual(stack, lastSeenStack)) {
                 lastSeenStack = stack.copy();
 
-                int slotX = this.getScreenHandler().getSlot(1).x;
-                int slotY = this.getScreenHandler().getSlot(1).y;
-                int x = this.x + slotX + 8;
-                int y = this.y + slotY - 6;
+                if (modifiersVisible) {
+                    groupedModifiers.clear();
+                    expandedGroups.clear();
+                    ungroupedModifiers.clear();
 
-                if (targetModifier != null && newId.equals(targetModifier)) {
-                    modifierAchieved = true;
-                    floatingTexts.add(new FloatingText(Text.literal("✔ Modifier Achieved"), 0x55FF55, x, y));
-                    if (reforgeButton != null) {
-                        reforgeButton.setDisabled(true);
+                    if (!stack.isEmpty()) {
+                        List<Identifier> modifiers = ReforgeUtil.getAvailableModifiers(stack);
+                        modifiers.sort(Comparator
+                                .comparing(ReforgeUtil::getRarityOrder)
+                                .thenComparing(ReforgeUtil::getNumericSuffixOrZero)
+                        );
+
+                        Map<String, Integer> prefixCount = new HashMap<>();
+                        for (Identifier id : modifiers) {
+                            String[] parts = id.getPath().split("_");
+                            if (parts.length > 0) {
+                                prefixCount.merge(parts[0], 1, Integer::sum);
+                            }
+                        }
+
+                        for (Identifier id : modifiers) {
+                            String group = ReforgeUtil.getDynamicGroupName(id, prefixCount);
+                            if (prefixCount.getOrDefault(group, 0) > 1) {
+                                groupedModifiers.computeIfAbsent(group, k -> new ArrayList<>()).add(id);
+                            } else {
+                                ungroupedModifiers.add(id);
+                            }
+                        }
                     }
-                    return;
                 }
+            }
 
-                String rarity = ReforgeUtil.getRarity(newId);
-                Text displayText = Text.literal("✦ " + capitalize(rarity) + " ✦");
-                int color = ReforgeUtil.getColorForModifier(newId);
-                floatingTexts.add(new FloatingText(displayText, color, x, y));
+            // Handle modifier animation and state
+            if (!stack.isEmpty()) {
+                Identifier newId = ModifierUtils.getAttributeId(stack);
+                if (newId != null && (!newId.equals(lastSeenModifier) || !ItemStack.areItemsEqual(stack, lastSeenStack))) {
+                    lastSeenModifier = newId;
 
-                // Re-enable button if not yet achieved
-                if (reforgeButton != null && reforgeButton.disabled && !modifierAchieved) {
-                    reforgeButton.setDisabled(false);
+                    int slotX = this.getScreenHandler().getSlot(1).x;
+                    int slotY = this.getScreenHandler().getSlot(1).y;
+                    int x = this.x + slotX + 8;
+                    int y = this.y + slotY - 6;
+
+                    if (targetModifier != null && newId.equals(targetModifier)) {
+                        modifierAchieved = true;
+                        floatingTexts.add(new FloatingText(Text.literal("✔ Modifier Achieved"), 0x55FF55, x, y));
+                        if (reforgeButton != null) {
+                            reforgeButton.setDisabled(true);
+                        }
+                        return;
+                    }
+
+                    Map<String, Integer> prefixFrequency = new HashMap<>();
+                    String[] parts = newId.getPath().toLowerCase().split("_");
+                    if (parts.length > 0) {
+                        prefixFrequency.put(parts[0], 2);
+                    }
+
+                    String group = ReforgeUtil.getDynamicGroupName(newId, prefixFrequency);
+                    Text displayText = Text.literal("✦ " + capitalize(group) + " ✦");
+                    int color = ReforgeUtil.getColorForModifier(newId);
+                    floatingTexts.add(new FloatingText(displayText, color, x, y));
+
+                    if (reforgeButton != null && reforgeButton.disabled && !modifierAchieved) {
+                        reforgeButton.setDisabled(false);
+                    }
                 }
             }
         }
     }
+
 
 
 

@@ -18,7 +18,8 @@
     "ArmorStandEntityMixin",
     "CraftingScreenHandlerMixin",
     "access.StyleAccessor",
-    "access.ServerPlayerEntityAccessor"
+    "access.ServerPlayerEntityAccessor",
+    "compat.AccessoriesAPIMixin"
   ],
   "client": [
     "client.ItemStackClientMixin",

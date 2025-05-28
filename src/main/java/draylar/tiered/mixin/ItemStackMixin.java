@@ -4,6 +4,8 @@ import draylar.tiered.Tiered;
 import draylar.tiered.api.AttributeTemplate;
 import draylar.tiered.api.ModifierUtils;
 import draylar.tiered.api.PotentialAttribute;
+import io.wispforest.accessories.api.AccessoriesAPI;
+import io.wispforest.accessories.api.slot.SlotReference;
 import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.EntityAttribute;
@@ -70,6 +72,15 @@ public abstract class ItemStackMixin {
                             }
                         }
                     }
+                    if (template.isOnlyForAccessories()) continue;
+
+                    if (template.getOptionalAccessoriesSlots() != null) {
+                        for (String slotName : template.getOptionalAccessoriesSlots()) {
+                            SlotReference ref = SlotReference.of(null, slotName, 0);
+                            template.applyAccessoryModifiers(itemStack, ref, attributeModifierConsumer);
+                        }
+                    }
+
                     // get optional equipment slots
                     if (template.getOptionalEquipmentSlots() != null) {
                         List<EquipmentSlot> optionalEquipmentSlots = new ArrayList<>(Arrays.asList(template.getOptionalEquipmentSlots()));
