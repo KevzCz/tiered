@@ -222,11 +222,10 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                 if (mouseX >= x && mouseX <= x + 120 && mouseY >= groupY && mouseY <= groupY + entryHeight) {
                     if (modifiers.size() == 1) {
                         Identifier id = modifiers.get(0);
-                        if (targetModifier != null && targetModifier.equals(id) &&
-                                InputUtil.isKeyPressed(client.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT_SHIFT)) {
+                        if (targetModifier != null && targetModifier.equals(id)) {
                             targetModifier = null;
                             modifierAchieved = false;
-                        } else if (!modifierAchieved || !id.equals(targetModifier)) {
+                        } else {
                             targetModifier = id;
                             modifierAchieved = false;
                         }
@@ -249,8 +248,7 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                         int modY = baseY - scrollOffset + rendered * entryHeight;
                         if (mouseX >= x && mouseX <= x + 140 && mouseY >= modY && mouseY <= modY + entryHeight) {
                             // SHIFT + click to clear
-                            if (targetModifier != null && targetModifier.equals(id) &&
-                                    InputUtil.isKeyPressed(client.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT_SHIFT)) {
+                            if (targetModifier != null && targetModifier.equals(id)) {
                                 targetModifier = null;
                                 modifierAchieved = false;
                             }
@@ -269,8 +267,7 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
         for (Identifier id : ungroupedModifiers) {
             int modY = ungroupedY - scrollOffset;
             if (mouseX >= x && mouseX <= x + 140 && mouseY >= modY && mouseY <= modY + entryHeight) {
-                if (targetModifier != null && targetModifier.equals(id) &&
-                        InputUtil.isKeyPressed(client.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT_SHIFT)) {
+                if (targetModifier != null && targetModifier.equals(id) ) {
                     targetModifier = null;
                     modifierAchieved = false;
                 } else {
@@ -596,6 +593,7 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                     groupedModifiers.clear();
                     expandedGroups.clear();
                     ungroupedModifiers.clear();
+                    scrollOffset = 0;
 
                     if (!stack.isEmpty()) {
                         List<Identifier> modifiers = ReforgeUtil.getAvailableModifiers(stack);
