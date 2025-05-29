@@ -36,4 +36,7 @@ public class TieredConfig implements ConfigData {
     @ConfigEntry.Category("client_settings")
     public boolean centerName = true;
 
+    @ConfigEntry.Category("client_settings")
+    @Comment("Move modifier list and icon to the left side of the screen")
+    public boolean leftSideModifierList = true;
 }

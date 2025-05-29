@@ -20,29 +20,28 @@ public class ReforgeUtil {
         if (parts.length == 0) return "unknown";
         String prefix = parts[0];
 
-        // Group if more than 1 of this prefix exist
+
         return frequencyMap.getOrDefault(prefix, 0) > 1 ? prefix : path;
     }
 
 
     public static String formatModifierName(Identifier id) {
         String path = id.getPath();
-        // Split by underscores
         String[] parts = path.split("_");
         StringBuilder builder = new StringBuilder();
 
         for (int i = 0; i < parts.length; i++) {
             String part = parts[i];
-            // If it's the last part and numeric, make it a number
             if (i == parts.length - 1 && part.matches("\\d+")) {
                 builder.append(" ").append(part);
             } else {
-                builder.append(i == 0 ? capitalize(part) : " " + part);
+                builder.append(i == 0 ? capitalize(part) : " " + capitalize(part));
             }
         }
 
         return builder.toString();
     }
+
     public static int getColorForModifier(Identifier id) {
         PotentialAttribute attribute = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(id);
         if (attribute != null && attribute.getStyle() != null && attribute.getStyle().getColor() != null) {
@@ -56,11 +55,11 @@ public class ReforgeUtil {
                 case "gold" -> 0xFFAA00;
                 case "yellow" -> 0xFFFF55;
                 case "green" -> 0x55FF55;
-                case "dark_green" -> 0x005F00;      // 👈 add this
+                case "dark_green" -> 0x005F00;
                 case "aqua" -> 0x55FFFF;
                 case "blue" -> 0x5555FF;
                 case "purple", "light_purple" -> 0xFF55FF;
-                case "dark_purple" -> 0xAA00AA;     // 👈 add this
+                case "dark_purple" -> 0xAA00AA;
                 case "gray", "grey" -> 0xAAAAAA;
                 case "dark_gray", "dark_grey" -> 0x555555;
                 case "black" -> 0x000000;
@@ -69,7 +68,7 @@ public class ReforgeUtil {
             };
 
         }
-        return 0xCCCCCC; // default fallback
+        return 0xCCCCCC;
     }
 
     private static String capitalize(String input) {
@@ -110,6 +109,6 @@ public class ReforgeUtil {
                 return i;
             }
         }
-        return ORDER.size(); // unknown rarity
+        return ORDER.size();
     }
 }
