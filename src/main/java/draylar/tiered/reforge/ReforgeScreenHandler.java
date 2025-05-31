@@ -8,12 +8,15 @@ import net.minecraft.item.ArmorItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolItem;
+import net.minecraft.registry.Registries;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldEvents;
+import org.jetbrains.annotations.Nullable;
 
 import draylar.tiered.Tiered;
 import draylar.tiered.api.ModifierUtils;
@@ -79,7 +82,7 @@ public class ReforgeScreenHandler extends ScreenHandler {
         ItemStack stack = this.getSlot(1).getStack();
         if (this.getSlot(0).hasStack() && this.getSlot(1).hasStack() && this.getSlot(2).hasStack()) {
             Item item = stack.getItem();
-            if (!stack.isIn(TieredItemTags.MODIFIER_RESTRICTED) && ModifierUtils.getRandomAttributeIDFor(null, item, false) != null && !stack.isDamaged()) {
+            if (!stack.isIn(TieredItemTags.MODIFIER_RESTRICTED) && ModifierUtils.getRandomAttributeIDFor(null, item, false, null) != null && !stack.isDamaged()) {
                 List<Item> items = Tiered.REFORGE_DATA_LOADER.getReforgeBaseItems(item);
                 ItemStack baseItem = this.getSlot(0).getStack();
                 if (!items.isEmpty()) {
@@ -114,6 +117,20 @@ public class ReforgeScreenHandler extends ScreenHandler {
         return this.context.get((world, pos) -> {
             return player.squaredDistanceTo((double) pos.getX() + 0.5, (double) pos.getY() + 0.5, (double) pos.getZ() + 0.5) <= 64.0;
         }, true);
+    }
+    @Nullable
+    private String getGroupFromTuningIngot(ItemStack tuningIngot) {
+        if (tuningIngot.isEmpty()) return null;
+
+        // Check for tuning ingots by ID convention: "tuning_ingot_<group>"
+        Identifier id = Registries.ITEM.getId(tuningIngot.getItem());
+        String path = id.getPath();
+
+        if (path.startsWith("tuning_ingot_")) {
+            return path.substring("tuning_ingot_".length()).toLowerCase();
+        }
+
+        return null;
     }
 
     @Override
@@ -153,7 +170,7 @@ public class ReforgeScreenHandler extends ScreenHandler {
                         return ItemStack.EMPTY;
                     }
                 }
-                if (ModifierUtils.getRandomAttributeIDFor(null, itemStack.getItem(), false) != null && !this.insertItem(itemStack2, 1, 2, false)) {
+                if (ModifierUtils.getRandomAttributeIDFor(null, itemStack.getItem(), false, null) != null && !this.insertItem(itemStack2, 1, 2, false)) {
                     return ItemStack.EMPTY;
                 }
             }
@@ -172,8 +189,10 @@ public class ReforgeScreenHandler extends ScreenHandler {
 
     public void reforge() {
         ItemStack itemStack = this.getSlot(1).getStack();
+        ItemStack tuningIngot = this.getSlot(2).getStack();
+        String group = getGroupFromTuningIngot(tuningIngot);
         ModifierUtils.removeItemStackAttribute(itemStack);
-        ModifierUtils.setItemStackAttribute(player, itemStack, true);
+        ModifierUtils.setItemStackAttribute(player, itemStack, true,group);
 
         this.decrementStack(0);
         this.decrementStack(2);

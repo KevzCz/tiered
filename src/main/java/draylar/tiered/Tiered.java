@@ -3,10 +3,13 @@ package draylar.tiered;
 import draylar.tiered.api.*;
 import draylar.tiered.command.CommandInit;
 import draylar.tiered.config.ConfigInit;
+import draylar.tiered.config.TieredConfig;
 import draylar.tiered.data.AttributeDataLoader;
 import draylar.tiered.data.ReforgeDataLoader;
 import draylar.tiered.network.TieredServerPacket;
 import draylar.tiered.reforge.ReforgeScreenHandler;
+import draylar.tiered.registry.ModComponents;
+import draylar.tiered.registry.ModLoot;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -25,6 +28,7 @@ import net.minecraft.resource.featuretoggle.FeatureFlags;
 import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.util.Identifier;
+import draylar.tiered.registry.ModItems;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,13 +53,18 @@ public class Tiered implements ModInitializer {
     public static ScreenHandlerType<ReforgeScreenHandler> REFORGE_SCREEN_HANDLER_TYPE;
 
     public static final ComponentType<TierComponent> TIER = registerComponent("tiered:tier", builder -> builder.codec(TierComponent.CODEC).packetCodec(TierComponent.PACKET_CODEC));
-
+    public static TieredConfig CONFIG;
     public static final Logger LOGGER = LogManager.getLogger();
 
     @Override
     public void onInitialize() {
         ConfigInit.init();
+        CONFIG = ConfigInit.CONFIG;
+
+        ModComponents.init();
         TieredItemTags.init();
+        ModItems.init();
+        ModLoot.init();
         CustomEntityAttributes.init();
         CommandInit.init();
         ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(Tiered.ATTRIBUTE_DATA_LOADER);

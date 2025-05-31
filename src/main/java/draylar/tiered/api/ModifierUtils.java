@@ -35,16 +35,22 @@ public class ModifierUtils {
      * @return id of random attribute for item in {@link Identifier} form, or null if there are no valid options
      */
     @Nullable
-    public static Identifier getRandomAttributeIDFor(@Nullable PlayerEntity playerEntity, Item item, boolean reforge) {
-        List<Identifier> potentialAttributes = new ArrayList<>();
+    public static Identifier getRandomAttributeIDFor(@Nullable PlayerEntity playerEntity, Item item, boolean reforge, @Nullable String group)
+    {
+    List<Identifier> potentialAttributes = new ArrayList<>();
         List<Integer> attributeWeights = new ArrayList<>();
         // collect all valid attributes for the given item and their weights
 
         Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().forEach((id, attribute) -> {
+            Identifier attrId = Identifier.of(attribute.getID());
             if (attribute.isValid(Registries.ITEM.getId(item)) && (attribute.getWeight() > 0 || reforge)) {
-                potentialAttributes.add(Identifier.of(attribute.getID()));
-                attributeWeights.add(reforge ? attribute.getWeight() + 1 : attribute.getWeight());
+                // If no group specified, or the attribute ID starts with group_
+                if (group == null || attrId.getPath().startsWith(group.toLowerCase() + "_")) {
+                    potentialAttributes.add(attrId);
+                    attributeWeights.add(reforge ? attribute.getWeight() + 1 : attribute.getWeight());
+                }
             }
+
         });
         if (potentialAttributes.size() <= 0) {
             return null;
@@ -106,9 +112,13 @@ public class ModifierUtils {
             return null;
     }
     public static void setItemStackAttribute(@Nullable PlayerEntity playerEntity, ItemStack stack, boolean reforge) {
+        setItemStackAttribute(playerEntity, stack, reforge, null);
+    }
+
+    public static void setItemStackAttribute(@Nullable PlayerEntity playerEntity, ItemStack stack, boolean reforge, @Nullable String group) {
         if (stack.get(Tiered.TIER) == null && !stack.isIn(TieredItemTags.MODIFIER_RESTRICTED)) {
             // attempt to get a random tier
-            Identifier potentialAttributeID = ModifierUtils.getRandomAttributeIDFor(playerEntity, stack.getItem(), reforge);
+            Identifier potentialAttributeID = ModifierUtils.getRandomAttributeIDFor(playerEntity, stack.getItem(), reforge, group);
             // found an ID
             if (potentialAttributeID != null) {
 
@@ -180,7 +190,7 @@ public class ModifierUtils {
                         break;
                     } else if (i == attributeIds.size() - 1) {
                         ModifierUtils.removeItemStackAttribute(itemStack);
-                        attributeID = ModifierUtils.getRandomAttributeIDFor(null, itemStack.getItem(), false);
+                        attributeID = ModifierUtils.getRandomAttributeIDFor(null, itemStack.getItem(), false, null);
                     }
                 }
 

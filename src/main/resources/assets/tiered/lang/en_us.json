@@ -1,4 +1,8 @@
 {
+  "item.tiered.tuning_ingot": "Tuning Ingot",
+  "itemGroup.tiered.tab": "Tiered Items",
+  "text.autoconfig.tiered.option.tuningIngotLootTables": "Tuning Ingot Loot table",
+
   "attribute.name.generic.dig_speed": "Dig Speed",
   "attribute.name.generic.crit_chance": "Crit Chance",
   "attribute.name.generic.durable": "Durability",

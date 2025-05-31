@@ -5,7 +5,7 @@
             "tag": "c:tools/shields"
         }
     ],
-    "weight": 0,
+    "weight": 1,
     "style": {
         "color": "light_purple"
     },

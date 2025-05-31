@@ -1,6 +1,12 @@
 {
     "replace": false,
     "values": [
-        "minecraft:amethyst_shard"
+        "minecraft:amethyst_shard",
+        "tiered:tuning_ingot_common",
+        "tiered:tuning_ingot_uncommon",
+        "tiered:tuning_ingot_rare",
+        "tiered:tuning_ingot_epic",
+        "tiered:tuning_ingot_legendary",
+        "tiered:tuning_ingot_unique"
     ]
 }
