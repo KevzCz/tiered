@@ -79,32 +79,62 @@ public class ReforgeScreenHandler extends ScreenHandler {
     }
 
     private void updateResult() {
-        ItemStack stack = this.getSlot(1).getStack();
-        if (this.getSlot(0).hasStack() && this.getSlot(1).hasStack() && this.getSlot(2).hasStack()) {
-            Item item = stack.getItem();
-            if (!stack.isIn(TieredItemTags.MODIFIER_RESTRICTED) && ModifierUtils.getRandomAttributeIDFor(null, item, false, null) != null && !stack.isDamaged()) {
-                List<Item> items = Tiered.REFORGE_DATA_LOADER.getReforgeBaseItems(item);
-                ItemStack baseItem = this.getSlot(0).getStack();
-                if (!items.isEmpty()) {
-                    this.reforgeReady = items.stream().anyMatch(it -> it == baseItem.getItem());
-                } else if (item instanceof ToolItem toolItem) {
-                    this.reforgeReady = toolItem.getMaterial().getRepairIngredient().test(baseItem);
-                } else if (item instanceof ArmorItem armorItem && armorItem.getMaterial().value().repairIngredient() != null) {
-                    this.reforgeReady = armorItem.getMaterial().value().repairIngredient().get().test(baseItem);
-                } else {
-                    this.reforgeReady = baseItem.isIn(TieredItemTags.REFORGE_BASE_ITEM);
-                }
-            } else {
-                this.reforgeReady = false;
+        ItemStack stack = this.getSlot(1).getStack(); // Item to reforge
+        ItemStack baseItem = this.getSlot(0).getStack(); // Reforge base
+        ItemStack addition = this.getSlot(2).getStack(); // Tuning ingot
+
+        this.reforgeReady = false;
+
+        if (baseItem.isEmpty() || stack.isEmpty() || addition.isEmpty()) {
+            TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
+            return;
+        }
+
+        if (stack.isIn(TieredItemTags.MODIFIER_RESTRICTED) || stack.isDamaged()) {
+            TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
+            return;
+        }
+
+        Item item = stack.getItem();
+
+        // 🔎 Check that *some* modifiers exist in general
+        if (ModifierUtils.getRandomAttributeIDFor(null, item, false, null) == null) {
+            TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
+            return;
+        }
+
+        // 🔐 Block reforging if using tuning ingot but group is invalid
+        String group = getGroupFromTuningIngot(addition);
+        if (group != null) {
+            if (ModifierUtils.getRandomAttributeIDFor(null, item, false, group) == null) {
+                TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
+                return;
             }
+        }
+
+        // 🛠 Reforge base check
+        List<Item> validBaseItems = Tiered.REFORGE_DATA_LOADER.getReforgeBaseItems(item);
+        if (!validBaseItems.isEmpty()) {
+            this.reforgeReady = validBaseItems.contains(baseItem.getItem());
+        } else if (item instanceof ToolItem toolItem) {
+            this.reforgeReady = toolItem.getMaterial().getRepairIngredient().test(baseItem);
+        } else if (item instanceof ArmorItem armorItem && armorItem.getMaterial().value().repairIngredient() != null) {
+            this.reforgeReady = armorItem.getMaterial().value().repairIngredient().get().test(baseItem);
         } else {
+            this.reforgeReady = baseItem.isIn(TieredItemTags.REFORGE_BASE_ITEM);
+        }
+
+        // 🚫 Prevent reforging uniques if not allowed
+        if (this.reforgeReady
+                && !ConfigInit.CONFIG.uniqueReforge
+                && ModifierUtils.getAttributeId(stack) != null
+                && ModifierUtils.getAttributeId(stack).getPath().contains("unique")) {
             this.reforgeReady = false;
         }
-        if (this.reforgeReady && !ConfigInit.CONFIG.uniqueReforge && ModifierUtils.getAttributeId(stack) != null && ModifierUtils.getAttributeId(stack).getPath().contains("unique")) {
-            this.reforgeReady = false;
-        }
+
         TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, !this.reforgeReady);
     }
+
 
     @Override
     public void onClosed(PlayerEntity player) {
