@@ -94,9 +94,13 @@ public class ModifierUtils {
 
         if (potentialAttributes.size() > 0) {
             int totalWeight = 0;
-            for (Integer weight : attributeWeights) {
-                totalWeight += weight.intValue();
+            for (int i = 0; i < attributeWeights.size(); i++) {
+                int w = attributeWeights.get(i);
+                if (w <= 0) w = 1;
+                attributeWeights.set(i, w);
+                totalWeight += w;
             }
+
             int randomChoice = new Random().nextInt(totalWeight);
             SortList.concurrentSort(attributeWeights, attributeWeights, potentialAttributes);
 

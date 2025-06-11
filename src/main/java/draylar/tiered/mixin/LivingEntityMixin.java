@@ -17,6 +17,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Map;
@@ -36,10 +37,13 @@ public abstract class LivingEntityMixin extends Entity {
     /**
      * Item attributes aren't applied until the player first ticks, which means any attributes such as bonus health are reset. This is annoying with health boosting armor.
      */
-    @Redirect(method = "readCustomDataFromNbt", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;setHealth(F)V"))
-    private void readCustomDataFromNbtMixin(LivingEntity livingEntity, float health) {
-        this.dataTracker.set(HEALTH, health);
+    @Inject(method = "readCustomDataFromNbt", at = @At("RETURN"))
+    private void readCustomDataFromNbtMixin(CallbackInfo ci) {
+        float current = this.dataTracker.get(HEALTH);
+        this.setHealth(current);
     }
+
+
 
     @Inject(method = "getEquipmentChanges", at = @At(value = "TAIL"))
     private void getEquipmentChangesMixin(CallbackInfoReturnable<Map<EquipmentSlot, ItemStack>> cir) {
