@@ -1,6 +1,7 @@
 package draylar.tiered.registry;
 
 import draylar.tiered.Tiered;
+import draylar.tiered.config.ConfigInit;
 import draylar.tiered.config.TieredConfig;
 import draylar.tiered.config.TuningIngotConfig;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
@@ -27,7 +28,7 @@ public class ModItems {
     public static void init() {
         TieredConfig config = Tiered.CONFIG; // however you access your config
 
-        for (TuningIngotConfig entry : config.tuningIngotConfigs) {
+        for (TuningIngotConfig entry : ConfigInit.CUSTOM_TUNING_INGOTS) {
             String group = entry.group;
 
             Item item = Registry.register(
@@ -46,6 +47,7 @@ public class ModItems {
 
             TUNING_INGOTS.put(group, item);
         }
+
 
 
 

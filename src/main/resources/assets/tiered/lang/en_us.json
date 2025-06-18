@@ -2,6 +2,12 @@
   "item.tiered.tuning_ingot": "Tuning Ingot",
   "itemGroup.tiered.tab": "Tiered Items",
   "text.autoconfig.tiered.option.tuningIngotLootTables": "Tuning Ingot Loot table",
+  "text.autoconfig.tiered.option.tuningIngotConfigs": "Tuning Ingot Configs",
+
+  "text.autoconfig.tiered.option.TuningIngotConfig": "Tuning Ingot Config",
+  "text.autoconfig.tiered.option.TuningIngotConfig.group": "Ingot Group",
+  "text.autoconfig.tiered.option.TuningIngotConfig.color": "Tooltip Color",
+  "text.autoconfig.tiered.option.TuningIngotConfig.lootChance": "Loot Chance",
 
   "attribute.name.generic.dig_speed": "Dig Speed",
   "attribute.name.generic.crit_chance": "Crit Chance",

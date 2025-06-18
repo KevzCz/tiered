@@ -1,6 +1,7 @@
 package draylar.tiered.registry;
 
 import draylar.tiered.Tiered;
+import draylar.tiered.config.ConfigInit;
 import draylar.tiered.config.TieredConfig;
 import draylar.tiered.config.TuningIngotConfig;
 import net.minecraft.entity.Entity;
@@ -29,10 +30,11 @@ public class TuningIngotItem extends Item {
         tooltip.add(Text.literal(capitalized).formatted(Formatting.byName(color.toUpperCase())));
 
         TieredConfig config = Tiered.CONFIG;
-        TuningIngotConfig match = config.tuningIngotConfigs.stream()
+        TuningIngotConfig match = ConfigInit.CUSTOM_TUNING_INGOTS.stream()
                 .filter(c -> c.group.equalsIgnoreCase(group))
                 .findFirst()
                 .orElse(null);
+
 
         if (match != null) {
             tooltip.add(Text.literal("Loot Chance: " + (int)(match.lootChance * 100) + "%").formatted(Formatting.GRAY));
