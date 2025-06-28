@@ -293,14 +293,18 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        int totalEntries = groupedModifiers.entrySet().stream()
+        if (!modifiersVisible) return false;
+
+        int groupedCount = groupedModifiers.entrySet().stream()
                 .mapToInt(entry -> 1 + (expandedGroups.contains(entry.getKey()) ? entry.getValue().size() : 0))
                 .sum();
+        int totalEntries = groupedCount + ungroupedModifiers.size();
 
         int maxOffset = Math.max(0, (totalEntries - maxVisibleEntries) * entryHeight);
         scrollOffset = Math.min(Math.max(scrollOffset - (int) (verticalAmount * entryHeight), 0), maxOffset);
         return true;
     }
+
     private static String capitalize(String input) {
         if (input == null || input.isEmpty()) return input;
         return input.substring(0, 1).toUpperCase() + input.substring(1);
@@ -567,9 +571,10 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
             }
 
 
-            int totalEntries = groupedModifiers.entrySet().stream()
+            int groupedCount = groupedModifiers.entrySet().stream()
                     .mapToInt(entry -> 1 + (expandedGroups.contains(entry.getKey()) ? entry.getValue().size() : 0))
                     .sum();
+            int totalEntries = groupedCount + ungroupedModifiers.size();
             int contentHeight = totalEntries * entryHeight;
             int viewHeight = maxVisibleEntries * entryHeight;
 
@@ -581,6 +586,7 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
 
                 context.fill(scrollbarX, scrollbarY, scrollbarX + 4, scrollbarY + scrollbarHeight, 0xFF888888);
             }
+
         }
 
         Iterator<FloatingText> iterator = floatingTexts.iterator();
