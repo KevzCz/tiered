@@ -25,6 +25,9 @@
     ],
     "modmenu": [
       "draylar.tiered.config.ModMenuIntegration"
+    ],
+    "server": [
+      "draylar.tiered.TieredServer"
     ]
   },
   "mixins": [
