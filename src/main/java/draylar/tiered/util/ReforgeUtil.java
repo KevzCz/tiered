@@ -3,6 +3,7 @@ package draylar.tiered.util;
 import draylar.tiered.Tiered;
 import draylar.tiered.api.PotentialAttribute;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
@@ -92,7 +93,7 @@ public class ReforgeUtil {
         List<Identifier> modifiers = new ArrayList<>();
         Map<Identifier, PotentialAttribute> allAttributes = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes();
 
-        Identifier itemId = net.minecraft.registry.Registries.ITEM.getId(stack.getItem());
+        Identifier itemId = Registries.ITEM.getId(stack.getItem());
 
         for (Map.Entry<Identifier, PotentialAttribute> entry : allAttributes.entrySet()) {
             if (entry.getValue().isValid(itemId)) {
@@ -102,6 +103,7 @@ public class ReforgeUtil {
 
         return modifiers;
     }
+
 
     public static int getRarityOrder(Identifier id) {
         for (int i = 0; i < ORDER.size(); i++) {

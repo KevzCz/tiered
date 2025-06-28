@@ -12,15 +12,19 @@ public class PotentialAttribute {
     private final int weight;
     private final Style style;
     private final List<AttributeTemplate> attributes;
-
-    public PotentialAttribute(String id, List<ItemVerifier> verifiers, int weight, Style style, List<AttributeTemplate> attributes) {
+    private final List<ItemVerifier> excludes;
+    public PotentialAttribute(String id, List<ItemVerifier> verifiers, List<ItemVerifier> excludes, int weight, Style style, List<AttributeTemplate> attributes) {
         this.id = id;
         this.verifiers = verifiers;
+        this.excludes = excludes != null ? excludes : List.of();
+        this.weight = weight;
         this.style = style;
         this.attributes = attributes;
-        this.weight = weight;
     }
 
+    public List<ItemVerifier> getExcludes() {
+        return excludes;
+    }
     public String getID() {
         return id;
     }
@@ -34,13 +38,17 @@ public class PotentialAttribute {
     }
 
     public boolean isValid(Identifier id) {
-        for (ItemVerifier verifier : verifiers) {
-            if (verifier.isValid(id))
-                return true;
+        if (excludes != null) {
+            for (ItemVerifier exclude : excludes) {
+                if (exclude.isValid(id)) return false;
+            }
         }
-
+        for (ItemVerifier verifier : verifiers) {
+            if (verifier.isValid(id)) return true;
+        }
         return false;
     }
+
 
     public Style getStyle() {
         return style;
