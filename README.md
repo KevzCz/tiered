@@ -6,6 +6,84 @@
 - Head [here](https://github.com/Globox1997/tiered/blob/1.21/README.md) since most of everything is the same.
 
 ### New features
+
+- Optional field "cursed": "true" / "false"
+```
+{
+    "id": "tiered:sadistic",
+    "verifiers": [
+        {
+            "tag": "tclayer:all_trinket_items"
+        }
+    ],
+    "cursed": "true",
+    "weight": 25,
+    "style": {
+        "color": "red"
+    },
+    "attributes": [
+        {
+            "type": "minecraft:generic.attack_damage",
+            "modifier": {
+                "name": "tiered:sadistic",
+                "operation": "ADD_MULTIPLIED_TOTAL",
+                "amount": 0.025
+            },
+            "optional_accessories_slots": [
+                "anklet",
+                "any",
+                "back",
+                "belt",
+                "cape",
+                "charm",
+                "face",
+                "hand",
+                "hat",
+                "necklace",
+                "ring",
+                "shoes",
+                "trinket_group_misc-quiver",
+                "trinket_group_spell-book",
+                "trinket_group_spell-quiver",
+                "trinket_group_spell-scroll",
+                "trinket_group_spell-trinket",
+                "wrist"
+            ]
+
+        },
+        {
+            "type": "minecraft:generic.armor",
+            "modifier": {
+                "name": "tiered:sadistic",
+                "operation": "ADD_MULTIPLIED_TOTAL",
+                "amount": -0.035
+            },
+            "optional_accessories_slots": [
+                "anklet",
+                "any",
+                "back",
+                "belt",
+                "cape",
+                "charm",
+                "face",
+                "hand",
+                "hat",
+                "necklace",
+                "ring",
+                "shoes",
+                "trinket_group_misc-quiver",
+                "trinket_group_spell-book",
+                "trinket_group_spell-quiver",
+                "trinket_group_spell-scroll",
+                "trinket_group_spell-trinket",
+                "wrist"
+            ]
+
+        }
+    ]
+}
+```
+
 reforge_items/*.json are now able to use tags
 ```
 {
