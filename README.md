@@ -8,6 +8,7 @@
 ### New features
 
 - Optional field "cursed": "true" / "false"
+Cursed Modifiers can only be obtained through found loot. You are unable to reforge the Cursed Item unless you use the Blessed Scroll (v1.0.9)
 ```
 {
     "id": "tiered:sadistic",
