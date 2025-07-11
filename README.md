@@ -7,6 +7,53 @@
 
 ### New features
 
+- Modifiers now work on accessories
+```
+{
+    "id": "tiered:hasty",
+    "verifiers": [
+        {
+            "tag": "tclayer:all_trinket_items"
+        }
+    ],
+    "weight": 50,
+    "style": {
+        "color": "blue"
+    },
+    "attributes": [
+        {
+            "type": "minecraft:player.block_break_speed",
+            "modifier": {
+                "name": "tiered:hasty",
+                "operation": "ADD_MULTIPLIED_TOTAL",
+                "amount": 0.05
+            },
+            "optional_accessories_slots": [
+                "anklet",
+                "any",
+                "back",
+                "belt",
+                "cape",
+                "charm",
+                "face",
+                "hand",
+                "hat",
+                "necklace",
+                "ring",
+                "shoes",
+                "trinket_group_misc-quiver",
+                "trinket_group_spell-book",
+                "trinket_group_spell-quiver",
+                "trinket_group_spell-scroll",
+                "trinket_group_spell-trinket",
+                "wrist"
+            ]
+
+        }
+    ]
+}
+```
+
 - Optional field "cursed": "true" / "false"
 Cursed Modifiers can only be obtained through found loot. You are unable to reforge the Cursed Item unless you use the Blessed Scroll (v1.0.9)
 ```
