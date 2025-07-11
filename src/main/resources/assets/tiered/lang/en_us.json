@@ -3,7 +3,7 @@
   "itemGroup.tiered.tab": "Tiered Items",
   "text.autoconfig.tiered.option.tuningIngotLootTables": "Tuning Ingot Loot table",
   "text.autoconfig.tiered.option.tuningIngotConfigs": "Tuning Ingot Configs",
-
+  "text.autoconfig.tiered.option.allowedRerollGroups": "Blessed Scroll reroll groups",
   "text.autoconfig.tiered.option.TuningIngotConfig": "Tuning Ingot Config",
   "text.autoconfig.tiered.option.TuningIngotConfig.group": "Ingot Group",
   "text.autoconfig.tiered.option.TuningIngotConfig.color": "Tooltip Color",
@@ -231,6 +231,8 @@
   "tiered:lucky.label": "Lucky",
   "tiered:healthy.label": "Healthy",
   "tiered:strong.label": "Strong",
+  "tiered:sadistic.label": "Sadistic",
+  "tiered:tiny.label": "Miniaaaaaaaa",
 
   "tiered:common.label": "Common",
   "tiered:uncommon.label": "Uncommon",
@@ -281,6 +283,10 @@
   "commands.tiered.untier_failed": "Nothing changed. %s from %s has no tier",
   "commands.tiered.untier": "Untiered %s from %s",
   "commands.tiered.tiering_failed": "Nothing changed. %s from %s has no given tier",
-  "commands.tiered.tier": "Tiered %s from %s"
+  "commands.tiered.tier": "Tiered %s from %s",
+  "tooltip.tiered.cursed": "╚ \uD83D\uDC80 Cursed \uD83D\uDC80 ╝",
+  "tooltip.tiered.cannot_reforge": "Cannot be Reforged",
+  "item.tiered.blessed_scroll": "Blessed Scroll"
+
 
 }

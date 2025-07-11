@@ -1,0 +1,102 @@
+{
+    "id": "tiered:tiny",
+    "verifiers": [
+        {
+            "tag": "tclayer:all_trinket_items"
+        }
+    ],
+    "cursed": "true",
+    "weight": 25,
+    "style": {
+        "color": "red"
+    },
+    "attributes": [
+        {
+            "type": "minecraft:generic.scale",
+            "modifier": {
+                "name": "tiered:tiny",
+                "operation": "ADD_MULTIPLIED_TOTAL",
+                "amount": -0.05
+            },
+            "optional_accessories_slots": [
+                "anklet",
+                "any",
+                "back",
+                "belt",
+                "cape",
+                "charm",
+                "face",
+                "hand",
+                "hat",
+                "necklace",
+                "ring",
+                "shoes",
+                "trinket_group_misc-quiver",
+                "trinket_group_spell-book",
+                "trinket_group_spell-quiver",
+                "trinket_group_spell-scroll",
+                "trinket_group_spell-trinket",
+                "wrist"
+            ]
+
+        },
+        {
+            "type": "minecraft:generic.movement_speed",
+            "modifier": {
+                "name": "tiered:tiny",
+                "operation": "ADD_MULTIPLIED_TOTAL",
+                "amount": 0.04
+            },
+            "optional_accessories_slots": [
+                "anklet",
+                "any",
+                "back",
+                "belt",
+                "cape",
+                "charm",
+                "face",
+                "hand",
+                "hat",
+                "necklace",
+                "ring",
+                "shoes",
+                "trinket_group_misc-quiver",
+                "trinket_group_spell-book",
+                "trinket_group_spell-quiver",
+                "trinket_group_spell-scroll",
+                "trinket_group_spell-trinket",
+                "wrist"
+            ]
+
+        },
+        {
+            "type": "minecraft:generic.max_health",
+            "modifier": {
+                "name": "tiered:tiny",
+                "operation": "ADD_MULTIPLIED_TOTAL",
+                "amount": -0.05
+            },
+            "optional_accessories_slots": [
+                "anklet",
+                "any",
+                "back",
+                "belt",
+                "cape",
+                "charm",
+                "face",
+                "hand",
+                "hat",
+                "necklace",
+                "ring",
+                "shoes",
+                "trinket_group_misc-quiver",
+                "trinket_group_spell-book",
+                "trinket_group_spell-quiver",
+                "trinket_group_spell-scroll",
+                "trinket_group_spell-trinket",
+                "wrist"
+            ]
+
+        }
+    ]
+}

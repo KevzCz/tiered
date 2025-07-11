@@ -21,6 +21,7 @@ import java.util.Locale;
 import java.util.Map;
 
 public class ModItems {
+    public static Item BLESSED_SCROLL;
 
     public static final Map<String, Item> TUNING_INGOTS = new HashMap<>();
     public static ItemGroup TIERED_TAB;
@@ -47,6 +48,11 @@ public class ModItems {
 
             TUNING_INGOTS.put(group, item);
         }
+        BLESSED_SCROLL = Registry.register(
+                Registries.ITEM,
+                Tiered.id("blessed_scroll"),
+                new BlessedScrollItem(new Item.Settings().rarity(Rarity.EPIC))
+        );
 
 
 
@@ -54,12 +60,18 @@ public class ModItems {
         TIERED_TAB = FabricItemGroup.builder()
                 .icon(() -> new ItemStack(TUNING_INGOTS.values().iterator().next()))
                 .displayName(Text.translatable("itemGroup.tiered.tab"))
-                .entries((context, entries) -> TUNING_INGOTS.values().forEach(entries::add))
+                .entries((context, entries) -> {
+                    TUNING_INGOTS.values().forEach(entries::add);
+                    entries.add(BLESSED_SCROLL);
+                })
                 .build();
+
         Registry.register(Registries.ITEM_GROUP, Tiered.id("tab"), TIERED_TAB);
 
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.INGREDIENTS)
-                .register(entries -> TUNING_INGOTS.values().forEach(entries::add));
+                .register(entries -> {
+                    TUNING_INGOTS.values().forEach(entries::add);
+                });
     }
 }
 

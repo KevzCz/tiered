@@ -23,14 +23,14 @@ public class ItemMixin {
     @Inject(method = "onCraftByPlayer", at = @At("TAIL"))
     private void onCraftByPlayerMixin(ItemStack stack, World world, PlayerEntity player, CallbackInfo info) {
         if (!world.isClient() && !stack.isEmpty() && ConfigInit.CONFIG.craftingModifier) {
-            ModifierUtils.setItemStackAttribute(player, stack, false);
+            ModifierUtils.setItemStackAttribute(player, stack, false, null, true);
         }
     }
 
     @Inject(method = "onCraft", at = @At("TAIL"))
     private void onCraftMixin(ItemStack stack, World world, CallbackInfo info) {
         if (!world.isClient() && !stack.isEmpty() && ConfigInit.CONFIG.craftingModifier) {
-            ModifierUtils.setItemStackAttribute(null, stack, false);
+            ModifierUtils.setItemStackAttribute(null, stack, false, null, true);
         }
     }
 

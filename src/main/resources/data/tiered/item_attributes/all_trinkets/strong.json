@@ -15,7 +15,7 @@
             "modifier": {
                 "name": "tiered:strong",
                 "operation": "ADD_MULTIPLIED_TOTAL",
-                "amount": 0.02
+                "amount": 0.05
             },
             "optional_accessories_slots": [
                 "anklet",

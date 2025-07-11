@@ -15,6 +15,7 @@
     "RangedWeaponItemMixin",
     "ItemFrameEntityMixin",
     "MobEntityMixin",
+    "ScreenHandlerMixin",
     "ArmorStandEntityMixin",
     "CraftingScreenHandlerMixin",
     "access.StyleAccessor",

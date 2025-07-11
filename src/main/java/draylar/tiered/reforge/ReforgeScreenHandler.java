@@ -1,5 +1,6 @@
 package draylar.tiered.reforge;
 
+import draylar.tiered.api.PotentialAttribute;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
@@ -94,11 +95,20 @@ public class ReforgeScreenHandler extends ScreenHandler {
             TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
             return;
         }
+// 🚫 Prevent reforging if the item has a cursed modifier
+        Identifier currentAttributeId = ModifierUtils.getAttributeId(stack);
+        if (currentAttributeId != null) {
+            PotentialAttribute currentAttribute = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(currentAttributeId);
+            if (currentAttribute != null && currentAttribute.isCursed()) {
+                TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
+                return;
+            }
+        }
 
         Item item = stack.getItem();
 
         // 🔎 Check that *some* modifiers exist in general
-        if (ModifierUtils.getRandomAttributeIDFor(null, item, false, null) == null) {
+        if (ModifierUtils.getRandomAttributeIDFor(null, item, false, null, true) == null) {
             TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
             return;
         }
@@ -106,7 +116,7 @@ public class ReforgeScreenHandler extends ScreenHandler {
         // 🔐 Block reforging if using tuning ingot but group is invalid
         String group = getGroupFromTuningIngot(addition);
         if (group != null) {
-            if (ModifierUtils.getRandomAttributeIDFor(null, item, false, group) == null) {
+            if (ModifierUtils.getRandomAttributeIDFor(null, item, false, group, true) == null) {
                 TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
                 return;
             }
@@ -200,7 +210,7 @@ public class ReforgeScreenHandler extends ScreenHandler {
                         return ItemStack.EMPTY;
                     }
                 }
-                if (ModifierUtils.getRandomAttributeIDFor(null, itemStack.getItem(), false, null) != null && !this.insertItem(itemStack2, 1, 2, false)) {
+                if (ModifierUtils.getRandomAttributeIDFor(null, itemStack.getItem(), false, null, true) != null && !this.insertItem(itemStack2, 1, 2, false)) {
                     return ItemStack.EMPTY;
                 }
             }
@@ -222,7 +232,7 @@ public class ReforgeScreenHandler extends ScreenHandler {
         ItemStack tuningIngot = this.getSlot(2).getStack();
         String group = getGroupFromTuningIngot(tuningIngot);
         ModifierUtils.removeItemStackAttribute(itemStack);
-        ModifierUtils.setItemStackAttribute(player, itemStack, true,group);
+        ModifierUtils.setItemStackAttribute(player, itemStack, true, group, true);
 
         this.decrementStack(0);
         this.decrementStack(2);

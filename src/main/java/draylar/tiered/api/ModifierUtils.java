@@ -35,23 +35,27 @@ public class ModifierUtils {
      * @return id of random attribute for item in {@link Identifier} form, or null if there are no valid options
      */
     @Nullable
-    public static Identifier getRandomAttributeIDFor(@Nullable PlayerEntity playerEntity, Item item, boolean reforge, @Nullable String group)
+    public static Identifier getRandomAttributeIDFor(@Nullable PlayerEntity playerEntity, Item item, boolean reforge, @Nullable String group, boolean skipCursed)
     {
-    List<Identifier> potentialAttributes = new ArrayList<>();
+        List<Identifier> potentialAttributes = new ArrayList<>();
         List<Integer> attributeWeights = new ArrayList<>();
-        // collect all valid attributes for the given item and their weights
 
-        Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().forEach((id, attribute) -> {
-            Identifier attrId = Identifier.of(attribute.getID());
-            if (attribute.isValid(Registries.ITEM.getId(item)) && (attribute.getWeight() > 0 || reforge)) {
-                // If no group specified, or the attribute ID starts with group_
-                if (group == null || attrId.getPath().startsWith(group.toLowerCase() + "_")) {
-                    potentialAttributes.add(attrId);
-                    attributeWeights.add(reforge ? attribute.getWeight() + 1 : attribute.getWeight());
-                }
-            }
+// First try with allowedRerollGroups filter (if skipCursed is true)
+        List<String> allowedGroups = (skipCursed && ConfigInit.ALLOWED_REROLL_GROUPS != null && !ConfigInit.ALLOWED_REROLL_GROUPS.isEmpty())
+                ? ConfigInit.ALLOWED_REROLL_GROUPS
+                : null;
 
-        });
+
+        collectValidAttributes(playerEntity, item, reforge, group, skipCursed, allowedGroups, potentialAttributes, attributeWeights);
+
+// Fallback: If nothing found, try again with no allowedGroups filter
+        if (potentialAttributes.isEmpty()) {
+            attributeWeights.clear();
+            collectValidAttributes(playerEntity, item, reforge, group, skipCursed, null, potentialAttributes, attributeWeights);
+        }
+
+
+
         if (potentialAttributes.size() <= 0) {
             return null;
         }
@@ -115,15 +119,45 @@ public class ModifierUtils {
         } else
             return null;
     }
-    public static void setItemStackAttribute(@Nullable PlayerEntity playerEntity, ItemStack stack, boolean reforge) {
-        setItemStackAttribute(playerEntity, stack, reforge, null);
+    private static void collectValidAttributes(
+            PlayerEntity playerEntity,
+            Item item,
+            boolean reforge,
+            @Nullable String group,
+            boolean skipCursed,
+            @Nullable List<String> allowedGroups, // null = no filter
+            List<Identifier> outAttributes,
+            List<Integer> outWeights
+    ) {
+        Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().forEach((id, attribute) -> {
+            Identifier attrId = Identifier.of(attribute.getID());
+
+            if (!attribute.isValid(Registries.ITEM.getId(item))) return;
+            if (attribute.getWeight() <= 0 && !reforge) return;
+            if (skipCursed && attribute.isCursed()) return;
+
+            // Group check (custom groups or reroll-only filter)
+            if (allowedGroups != null && !allowedGroups.isEmpty()) {
+                String prefix = attrId.getPath().split("_")[0];
+                if (!allowedGroups.contains(prefix.toLowerCase())) return;
+            }
+
+            if (group == null || attrId.getPath().startsWith(group.toLowerCase() + "_")) {
+                outAttributes.add(attrId);
+                outWeights.add(reforge ? attribute.getWeight() + 1 : attribute.getWeight());
+            }
+        });
     }
 
+    public static void setItemStackAttribute(@Nullable PlayerEntity playerEntity, ItemStack stack, boolean reforge) {
+        setItemStackAttribute(playerEntity, stack, reforge, null, false);
+    }
     public static void setItemStackAttribute(@Nullable PlayerEntity playerEntity, ItemStack stack, boolean reforge, @Nullable String group) {
+        setItemStackAttribute(playerEntity, stack, reforge, group, false);
+    }
+    public static void setItemStackAttribute(@Nullable PlayerEntity playerEntity, ItemStack stack, boolean reforge, @Nullable String group, boolean skipCursed) {
         if (stack.get(Tiered.TIER) == null && !stack.isIn(TieredItemTags.MODIFIER_RESTRICTED)) {
-            // attempt to get a random tier
-            Identifier potentialAttributeID = ModifierUtils.getRandomAttributeIDFor(playerEntity, stack.getItem(), reforge, group);
-            // found an ID
+            Identifier potentialAttributeID = getRandomAttributeIDFor(playerEntity, stack.getItem(), reforge, group, skipCursed);
             if (potentialAttributeID != null) {
 
                 // add durability nbt
@@ -194,7 +228,7 @@ public class ModifierUtils {
                         break;
                     } else if (i == attributeIds.size() - 1) {
                         ModifierUtils.removeItemStackAttribute(itemStack);
-                        attributeID = ModifierUtils.getRandomAttributeIDFor(null, itemStack.getItem(), false, null);
+                        attributeID = ModifierUtils.getRandomAttributeIDFor(null, itemStack.getItem(), false, null, false);
                     }
                 }
 

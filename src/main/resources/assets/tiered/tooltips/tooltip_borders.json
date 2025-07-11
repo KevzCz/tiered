@@ -217,7 +217,7 @@
             "end_border_gradient": "FFB00000",
             "texture": "tiered_borders",
             "decider": [
-
+                "tiered:sadistic"
             ]
         }
     ]

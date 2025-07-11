@@ -313,6 +313,7 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
+
         RenderSystem.disableBlend();
         drawMouseoverTooltip(context, mouseX, mouseY);
 

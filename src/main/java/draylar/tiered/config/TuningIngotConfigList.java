@@ -5,5 +5,6 @@ import java.util.List;
 public class TuningIngotConfigList {
     public List<TuningIngotConfig> tuningIngotConfigs;
     public List<String> tuningIngotLootTables;
+    public List<String> allowedRerollGroupsScroll;
     public TuningIngotConfigList() {}
 }

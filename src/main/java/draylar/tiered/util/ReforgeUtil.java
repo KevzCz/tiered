@@ -96,13 +96,16 @@ public class ReforgeUtil {
         Identifier itemId = Registries.ITEM.getId(stack.getItem());
 
         for (Map.Entry<Identifier, PotentialAttribute> entry : allAttributes.entrySet()) {
-            if (entry.getValue().isValid(itemId)) {
+            PotentialAttribute attribute = entry.getValue();
+            if (attribute.isCursed()) continue; // ❌ Don't show cursed modifiers in reforge UI
+            if (attribute.isValid(itemId)) {
                 modifiers.add(entry.getKey());
             }
         }
 
         return modifiers;
     }
+
 
 
     public static int getRarityOrder(Identifier id) {
