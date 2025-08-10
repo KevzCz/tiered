@@ -193,3 +193,19 @@ item_attributes/*.json now has an optional exclude item
     ]
 }
 ```
+Exclude items or tags via:
+```
+"excludes": [
+    {
+        "tag": "c:elytra"
+    }
+]
+```
+or
+```
+"excludes": [
+    {
+        "id": "minecraft:elytra"
+    }
+]
+```
