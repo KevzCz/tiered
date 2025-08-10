@@ -8,6 +8,7 @@ import draylar.tiered.data.AttributeDataLoader;
 import draylar.tiered.data.ReforgeDataLoader;
 import draylar.tiered.network.TieredServerPacket;
 import draylar.tiered.reforge.ReforgeScreenHandler;
+import draylar.tiered.registry.GeometricExtraCountLootFunction;
 import draylar.tiered.registry.ModComponents;
 import draylar.tiered.registry.ModLoot;
 import net.fabricmc.api.ModInitializer;
@@ -69,7 +70,7 @@ public class Tiered implements ModInitializer {
         CommandInit.init();
         ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(Tiered.ATTRIBUTE_DATA_LOADER);
         ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(Tiered.REFORGE_DATA_LOADER);
-
+        Registry.register(Registries.LOOT_FUNCTION_TYPE, Identifier.of("tiered", "geometric_extra_count"), GeometricExtraCountLootFunction.TYPE);
         REFORGE_SCREEN_HANDLER_TYPE = Registry.register(Registries.SCREEN_HANDLER, "tiered:reforge",
                 new ScreenHandlerType<>((syncId, inventory) -> new ReforgeScreenHandler(syncId, inventory, ScreenHandlerContext.EMPTY), FeatureFlags.VANILLA_FEATURES));
 

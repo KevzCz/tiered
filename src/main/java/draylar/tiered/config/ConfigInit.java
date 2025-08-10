@@ -58,6 +58,31 @@ public class ConfigInit {
                     data.allowedRerollGroupsScroll = createDefaultAllowedRerollGroups();
                     needsRewrite = true;
                 }
+                if (data.tuningIngotConfigs != null) {
+                    List<TuningIngotConfig> defs = createDefaultTuningConfigs();
+                    java.util.Map<String, TuningIngotConfig> defByGroup = new java.util.HashMap<>();
+                    for (TuningIngotConfig d : defs) defByGroup.put(d.group, d);
+
+                    for (TuningIngotConfig t : data.tuningIngotConfigs) {
+                        TuningIngotConfig def = defByGroup.get(t.group);
+
+                        if (def != null) {
+                            if (t.minCount <= 0) { t.minCount = def.minCount; needsRewrite = true; }
+                            if (t.maxCount <= 0) { t.maxCount = def.maxCount; needsRewrite = true; }
+                            if (t.maxCount < t.minCount) {
+                                t.maxCount = Math.max(t.minCount, def.maxCount);
+                                needsRewrite = true;
+                            }
+                        } else {
+                            if (t.minCount <= 0) { t.minCount = 1; needsRewrite = true; }
+                            if (t.maxCount < t.minCount) { t.maxCount = t.minCount; needsRewrite = true; }
+                        }
+
+                        if (t.lootChance < 0f) { t.lootChance = 0f; needsRewrite = true; }
+                        if (t.lootChance > 1f) { t.lootChance = 1f; needsRewrite = true; }
+                    }
+                }
+
 
                 if (needsRewrite) {
                     writeTuningConfig(data);
@@ -86,14 +111,15 @@ public class ConfigInit {
 
     private static List<TuningIngotConfig> createDefaultTuningConfigs() {
         return List.of(
-                new TuningIngotConfig("common", "gray", 0.3f),
-                new TuningIngotConfig("uncommon", "dark_green", 0.2f),
-                new TuningIngotConfig("rare", "blue", 0.15f),
-                new TuningIngotConfig("epic", "dark_purple", 0.075f),
-                new TuningIngotConfig("legendary", "gold", 0.035f),
-                new TuningIngotConfig("unique", "light_purple", 0.01f)
+                new TuningIngotConfig("common",    "gray",         0.30f, 1, 5),
+                new TuningIngotConfig("uncommon",  "dark_green",   0.20f, 1, 4),
+                new TuningIngotConfig("rare",      "blue",         0.15f, 1, 3),
+                new TuningIngotConfig("epic",      "dark_purple",  0.075f, 1, 2),
+                new TuningIngotConfig("legendary", "gold",         0.035f, 1, 2),
+                new TuningIngotConfig("unique",    "light_purple", 0.01f, 1, 1)
         );
     }
+
 
     private static List<String> createDefaultLootTables() {
         return List.of(
