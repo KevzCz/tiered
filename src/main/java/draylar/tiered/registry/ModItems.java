@@ -2,7 +2,6 @@ package draylar.tiered.registry;
 
 import draylar.tiered.Tiered;
 import draylar.tiered.config.ConfigInit;
-import draylar.tiered.config.TieredConfig;
 import draylar.tiered.config.TuningIngotConfig;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
@@ -13,7 +12,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.Rarity;
 
 import java.util.HashMap;
@@ -28,14 +26,12 @@ public class ModItems {
     public static ItemGroup TIERED_TAB;
 
     public static void init() {
-        TieredConfig config = Tiered.CONFIG; // however you access your config
-
         for (TuningIngotConfig entry : ConfigInit.CUSTOM_TUNING_INGOTS) {
             String group = entry.group;
 
             Item item = Registry.register(
                     Registries.ITEM,
-                    Tiered.id("tuning_ingot_" + group.toLowerCase()),
+                    Tiered.id("tuning_ingot_" + group.toLowerCase(Locale.ROOT)),
                     new TuningIngotItem(
                             new Item.Settings().rarity(Rarity.EPIC),
                             group, entry.color
@@ -49,23 +45,20 @@ public class ModItems {
 
             TUNING_INGOTS.put(group, item);
         }
+
         BLESSED_SCROLL = Registry.register(
                 Registries.ITEM,
                 Tiered.id("blessed_scroll"),
                 new BlessedScrollItem(new Item.Settings().rarity(Rarity.EPIC))
         );
-        if (ConfigInit.SPECIAL_INGOT_ENABLED) {
-            SPECIAL_TUNING_INGOT = Registry.register(
-                    Registries.ITEM,
-                    Tiered.id("special_tuning_ingot"),
-                    new SpecialTuningIngotItem(new Item.Settings().rarity(Rarity.EPIC)) {
-                        @Override public String getTranslationKey() { return "item.tiered.special_tuning_ingot"; }
-                    }
-            );
-        }
 
-
-
+        SPECIAL_TUNING_INGOT = Registry.register(
+                Registries.ITEM,
+                Tiered.id("special_tuning_ingot"),
+                new SpecialTuningIngotItem(new Item.Settings().rarity(Rarity.EPIC)) {
+                    @Override public String getTranslationKey() { return "item.tiered.special_tuning_ingot"; }
+                }
+        );
 
         TIERED_TAB = FabricItemGroup.builder()
                 .icon(() -> new ItemStack(TUNING_INGOTS.values().iterator().next()))
@@ -74,7 +67,6 @@ public class ModItems {
                     TUNING_INGOTS.values().forEach(entries::add);
                     entries.add(BLESSED_SCROLL);
                     if (SPECIAL_TUNING_INGOT != null) entries.add(SPECIAL_TUNING_INGOT);
-
                 })
                 .build();
 
@@ -84,8 +76,6 @@ public class ModItems {
                 .register(entries -> {
                     TUNING_INGOTS.values().forEach(entries::add);
                     if (SPECIAL_TUNING_INGOT != null) entries.add(SPECIAL_TUNING_INGOT);
-
                 });
     }
 }
-
