@@ -6,15 +6,11 @@ import net.levelz.access.LevelManagerAccess;
 import net.levelz.level.LevelManager;
 import net.levelz.level.Skill;
 import net.libz.util.SortList;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
-import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
@@ -26,35 +22,23 @@ import org.jetbrains.annotations.Nullable;
 
 public class ModifierUtils {
 
-    /**
-     * Returns the ID of a random attribute that is valid for the given {@link Item} in {@link Identifier} form.
-     * <p>
-     * If there is no valid attribute for the given {@link Item}, null is returned.
-     *
-     * @param item {@link Item} to generate a random attribute for
-     * @return id of random attribute for item in {@link Identifier} form, or null if there are no valid options
-     */
+    private static final String SPECIAL_TIER = "tiered:special";
+
     @Nullable
-    public static Identifier getRandomAttributeIDFor(@Nullable PlayerEntity playerEntity, Item item, boolean reforge, @Nullable String group, boolean skipCursed)
-    {
+    public static Identifier getRandomAttributeIDFor(@Nullable PlayerEntity playerEntity, Item item, boolean reforge, @Nullable String group, boolean skipCursed) {
         List<Identifier> potentialAttributes = new ArrayList<>();
         List<Integer> attributeWeights = new ArrayList<>();
 
-// First try with allowedRerollGroups filter (if skipCursed is true)
         List<String> allowedGroups = (skipCursed && ConfigInit.ALLOWED_REROLL_GROUPS != null && !ConfigInit.ALLOWED_REROLL_GROUPS.isEmpty())
                 ? ConfigInit.ALLOWED_REROLL_GROUPS
                 : null;
 
-
         collectValidAttributes(playerEntity, item, reforge, group, skipCursed, allowedGroups, potentialAttributes, attributeWeights);
 
-// Fallback: If nothing found, try again with no allowedGroups filter
         if (potentialAttributes.isEmpty()) {
             attributeWeights.clear();
             collectValidAttributes(playerEntity, item, reforge, group, skipCursed, null, potentialAttributes, attributeWeights);
         }
-
-
 
         if (potentialAttributes.size() <= 0) {
             return null;
@@ -69,7 +53,7 @@ public class ModifierUtils {
                 }
             }
         }
-        // LevelZ
+
         if (Tiered.isLevelZLoaded && playerEntity != null) {
             LevelManager.SKILLS.values().stream().filter(skill -> skill.getKey().equals("smithing"));
             for (Skill skill : LevelManager.SKILLS.values()) {
@@ -84,9 +68,8 @@ public class ModifierUtils {
                     break;
                 }
             }
-
         }
-        // Luck
+
         if (playerEntity != null) {
             int luckMaxWeight = Collections.max(attributeWeights);
             for (int i = 0; i < attributeWeights.size(); i++) {
@@ -114,18 +97,19 @@ public class ModifierUtils {
                 }
                 randomChoice -= attributeWeights.get(i);
             }
-            // If random choice didn't work
             return potentialAttributes.get(new Random().nextInt(potentialAttributes.size()));
-        } else
+        } else {
             return null;
+        }
     }
+
     private static void collectValidAttributes(
             PlayerEntity playerEntity,
             Item item,
             boolean reforge,
             @Nullable String group,
             boolean skipCursed,
-            @Nullable List<String> allowedGroups, // null = no filter
+            @Nullable List<String> allowedGroups,
             List<Identifier> outAttributes,
             List<Integer> outWeights
     ) {
@@ -136,7 +120,6 @@ public class ModifierUtils {
             if (attribute.getWeight() <= 0 && !reforge) return;
             if (skipCursed && attribute.isCursed()) return;
 
-            // Group check (custom groups or reroll-only filter)
             if (allowedGroups != null && !allowedGroups.isEmpty()) {
                 String prefix = attrId.getPath().split("_")[0];
                 if (!allowedGroups.contains(prefix.toLowerCase())) return;
@@ -152,15 +135,15 @@ public class ModifierUtils {
     public static void setItemStackAttribute(@Nullable PlayerEntity playerEntity, ItemStack stack, boolean reforge) {
         setItemStackAttribute(playerEntity, stack, reforge, null, false);
     }
+
     public static void setItemStackAttribute(@Nullable PlayerEntity playerEntity, ItemStack stack, boolean reforge, @Nullable String group) {
         setItemStackAttribute(playerEntity, stack, reforge, group, false);
     }
+
     public static void setItemStackAttribute(@Nullable PlayerEntity playerEntity, ItemStack stack, boolean reforge, @Nullable String group, boolean skipCursed) {
-        if (stack.get(Tiered.TIER) == null && !stack.isIn(TieredItemTags.MODIFIER_RESTRICTED)) {
+        if (stack.get(Tiered.TIER) == null && !stack.isIn(draylar.tiered.api.TieredItemTags.MODIFIER_RESTRICTED)) {
             Identifier potentialAttributeID = getRandomAttributeIDFor(playerEntity, stack.getItem(), reforge, group, skipCursed);
             if (potentialAttributeID != null) {
-
-                // add durability nbt
                 float durableFactor = -1f;
                 int operation = 0;
                 List<AttributeTemplate> attributeList = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(Identifier.of(potentialAttributeID.toString())).getAttributes();
@@ -175,8 +158,8 @@ public class ModifierUtils {
             }
         }
     }
+
     public static void setItemStackAttributeWithId(ItemStack stack, Identifier id) {
-        // Don't check for existing TIER; this is a preview
         PotentialAttribute attribute = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(id);
         if (attribute == null) return;
 
@@ -193,7 +176,6 @@ public class ModifierUtils {
 
         stack.set(Tiered.TIER, new TierComponent(id.toString(), durableFactor, operation));
     }
-
 
     public static void removeItemStackAttribute(ItemStack itemStack) {
         if (itemStack.get(Tiered.TIER) != null) {
@@ -214,13 +196,19 @@ public class ModifierUtils {
             ItemStack itemStack = playerInventory.getStack(u);
             if (!itemStack.isEmpty() && itemStack.get(Tiered.TIER) != null) {
 
-                // Check if attribute exists
+                String currentTier = itemStack.get(Tiered.TIER).tier();
+                if (SPECIAL_TIER.equals(currentTier)) {
+                    playerInventory.setStack(u, itemStack);
+                    continue;
+                }
+
                 List<String> attributeIds = new ArrayList<>();
                 Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().forEach((id, attribute) -> {
                     if (attribute.isValid(Registries.ITEM.getId(itemStack.getItem()))) {
                         attributeIds.add(attribute.getID());
                     }
                 });
+
                 Identifier attributeID = null;
                 for (int i = 0; i < attributeIds.size(); i++) {
                     if (itemStack.get(Tiered.TIER).tier().contains(attributeIds.get(i))) {
@@ -232,9 +220,7 @@ public class ModifierUtils {
                     }
                 }
 
-                // found an ID
                 if (attributeID != null) {
-                    // update durability nbt
                     float durableFactor = -1f;
                     int operation = 0;
                     List<AttributeTemplate> attributeList = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(Identifier.of(attributeID.toString())).getAttributes();
@@ -251,7 +237,5 @@ public class ModifierUtils {
                 }
             }
         }
-
     }
-
 }

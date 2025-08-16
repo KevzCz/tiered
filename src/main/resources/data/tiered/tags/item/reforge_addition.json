@@ -7,6 +7,7 @@
         "tiered:tuning_ingot_rare",
         "tiered:tuning_ingot_epic",
         "tiered:tuning_ingot_legendary",
-        "tiered:tuning_ingot_unique"
+        "tiered:tuning_ingot_unique",
+        "tiered:special_tuning_ingot"
     ]
 }

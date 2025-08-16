@@ -286,7 +286,8 @@
   "commands.tiered.tier": "Tiered %s from %s",
   "tooltip.tiered.cursed": "╚ \uD83D\uDC80 Cursed \uD83D\uDC80 ╝",
   "tooltip.tiered.cannot_reforge": "Cannot be Reforged",
-  "item.tiered.blessed_scroll": "Blessed Scroll"
+  "item.tiered.blessed_scroll": "Blessed Scroll",
+  "item.tiered.special_tuning_ingot": "Special Tuning Ingot"
 
 
 }

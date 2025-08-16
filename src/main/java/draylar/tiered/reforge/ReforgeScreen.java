@@ -472,7 +472,7 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                             Identifier lockIcon = Identifier.of("kevs", "textures/gui/lock.png");
                             int iconSize = 8;
                             int textWidth = textRenderer.getWidth(trimmed);
-                            int iconX = textX + textWidth + 4; // 4px padding after text
+                            int iconX = textX + textWidth + 4;
                             int iconY = textY;
 
                             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
@@ -533,7 +533,7 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                     Identifier lockIcon = Identifier.of("kevs", "textures/gui/lock.png");
                     int iconSize = 8;
                     int textWidth = textRenderer.getWidth(trimmed);
-                    int iconX = textX + textWidth + 4; // 4px padding after text
+                    int iconX = textX + textWidth + 4;
                     int iconY = textY;
 
                     RenderSystem.setShaderColor(1f, 1f, 1f, 1f);

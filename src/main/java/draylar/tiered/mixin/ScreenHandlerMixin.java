@@ -45,25 +45,21 @@ public abstract class ScreenHandlerMixin {
             if (attributeId != null) {
                 PotentialAttribute attribute = draylar.tiered.Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(attributeId);
                 if (attribute != null && attribute.isCursed()) {
-                    // 🔥 Remove cursed modifier
+
                     ModifierUtils.removeItemStackAttribute(targetStack);
 
-                    // ✨ Apply new non-cursed modifier
                     ModifierUtils.setItemStackAttribute(player, targetStack, false, null, true); // skipCursed = true
 
-                    // 📉 Consume 1 scroll
                     cursorStack.decrement(1);
 
-                    // 🛠 Update slot contents
                     targetSlot.setStack(targetStack);
                     targetSlot.markDirty();
 
-                    // 🎵 Play sound or effect
                     player.getWorld().syncWorldEvent(WorldEvents.OMINOUS_ITEM_SPAWNER_SPAWNS_ITEM, player.getBlockPos(), 0);
-// 🌪️ Spawn swirl particles from feet to head
+
                     for (int i = 0; i < 20; i++) {
                         double height = player.getY() + (i / 20.0f) * player.getHeight();
-                        double angle = Math.toRadians(i * 36); // 10 turns = 360°
+                        double angle = Math.toRadians(i * 36);
                         double radius = 0.5;
                         double x = player.getX() + Math.cos(angle) * radius;
                         double z = player.getZ() + Math.sin(angle) * radius;
@@ -73,7 +69,7 @@ public abstract class ScreenHandlerMixin {
                                 serverWorld.spawnParticles(
                                         net.minecraft.particle.ParticleTypes.WITCH,
                                         x, height, z,
-                                        1, // count
+                                        1,
                                         0.0, 0.0, 0.0, 0.0
                                 );
                             }
@@ -81,7 +77,7 @@ public abstract class ScreenHandlerMixin {
 
                     }
 
-                    ci.cancel(); // Prevent default item swap
+                    ci.cancel();
                 }
             }
         }

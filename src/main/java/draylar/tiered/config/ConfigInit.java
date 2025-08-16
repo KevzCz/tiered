@@ -20,14 +20,17 @@ public class ConfigInit {
     public static List<TuningIngotConfig> CUSTOM_TUNING_INGOTS;
     public static List<String> CUSTOM_TUNING_INGOT_LOOT_TABLES;
 
+    public static SpecialIngotConfig SPECIAL_INGOT;
+    public static boolean SPECIAL_INGOT_ENABLED;
+
+    public static List<String> ALLOWED_REROLL_GROUPS;
+
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final File FILE = new File("config/tiered_more.json");
-    public static List<String> ALLOWED_REROLL_GROUPS;
 
     public static void init() {
         AutoConfig.register(TieredConfig.class, JanksonConfigSerializer::new);
         CONFIG = AutoConfig.getConfigHolder(TieredConfig.class).getConfig();
-
         loadExtraTuningIngotConfig();
     }
 
@@ -43,21 +46,20 @@ public class ConfigInit {
 
                 boolean needsRewrite = false;
 
-                // 🛠 Patch missing config fields
+
                 if (data.tuningIngotConfigs == null) {
                     data.tuningIngotConfigs = createDefaultTuningConfigs();
                     needsRewrite = true;
                 }
-
                 if (data.tuningIngotLootTables == null) {
                     data.tuningIngotLootTables = createDefaultLootTables();
                     needsRewrite = true;
                 }
-
                 if (data.allowedRerollGroupsScroll == null) {
                     data.allowedRerollGroupsScroll = createDefaultAllowedRerollGroups();
                     needsRewrite = true;
                 }
+
                 if (data.tuningIngotConfigs != null) {
                     List<TuningIngotConfig> defs = createDefaultTuningConfigs();
                     java.util.Map<String, TuningIngotConfig> defByGroup = new java.util.HashMap<>();
@@ -83,12 +85,40 @@ public class ConfigInit {
                     }
                 }
 
+                if (data.enableSpecialIngot == null) {
+                    data.enableSpecialIngot = false;
+                    needsRewrite = true;
+                }
+                if (data.specialIngot == null) {
+                    data.specialIngot = createDefaultSpecialIngot();
+                    needsRewrite = true;
+                }
+
+                if (data.specialIngot != null) {
+                    SpecialIngotConfig s = data.specialIngot;
+                    boolean patch = false;
+
+
+                    float clampedDrop = clamp01(s.dropChance);
+                    if (s.dropChance != clampedDrop) { s.dropChance = clampedDrop; patch = true; }
+
+                    float clampedTotal = clamp01(s.totalSpecialPercent);
+                    if (s.totalSpecialPercent != clampedTotal) { s.totalSpecialPercent = clampedTotal; patch = true; }
+
+
+                    if (s.lootTables == null) { s.lootTables = createDefaultSpecialLootTables(); patch = true; }
+                    if (s.specialStats == null) { s.specialStats = createDefaultSpecialIngot().specialStats; patch = true; }
+                    if (s.basicStats == null)   { s.basicStats   = createDefaultSpecialIngot().basicStats;   patch = true; }
+                    if (s.blockedItemIds == null)  { s.blockedItemIds  = List.of(); patch = true; }
+                    if (s.blockedItemTags == null) { s.blockedItemTags = List.of(); patch = true; }
+
+                    if (patch) needsRewrite = true;
+                }
 
                 if (needsRewrite) {
                     writeTuningConfig(data);
-                    Tiered.LOGGER.info("Patched missing fields in tiered_more.json.");
+                    Tiered.LOGGER.info("Patched missing/invalid fields in tiered_more.json.");
                 }
-
             } catch (IOException | JsonSyntaxException e) {
                 Tiered.LOGGER.error("Failed to load tiered_more.json", e);
                 data = createDefaultTuningConfig();
@@ -96,17 +126,74 @@ public class ConfigInit {
             }
         }
 
-        // ✅ Now that it's guaranteed to be loaded and valid:
         CUSTOM_TUNING_INGOTS = data.tuningIngotConfigs;
         CUSTOM_TUNING_INGOT_LOOT_TABLES = data.tuningIngotLootTables;
         ALLOWED_REROLL_GROUPS = data.allowedRerollGroupsScroll;
+
+        SPECIAL_INGOT = data.specialIngot;
+        SPECIAL_INGOT_ENABLED = Boolean.TRUE.equals(data.enableSpecialIngot);
     }
+
+    private static float clamp01(float v) {
+        return v < 0f ? 0f : (Math.min(v, 1f));
+    }
+
     private static TuningIngotConfigList createDefaultTuningConfig() {
         TuningIngotConfigList defaultData = new TuningIngotConfigList();
         defaultData.tuningIngotConfigs = createDefaultTuningConfigs();
         defaultData.tuningIngotLootTables = createDefaultLootTables();
         defaultData.allowedRerollGroupsScroll = createDefaultAllowedRerollGroups();
+        defaultData.enableSpecialIngot = false;
+        defaultData.specialIngot = createDefaultSpecialIngot();
         return defaultData;
+    }
+
+    private static SpecialIngotConfig createDefaultSpecialIngot() {
+        SpecialIngotConfig c = new SpecialIngotConfig();
+        c.totalSpecialPercent = 0.5f;
+        c.dropChance = 0.01f;
+        c.lootTables = createDefaultSpecialLootTables();
+        c.specialStats = List.of(
+                stat("minecraft:generic.attack_damage",   2, 1f, List.of("any")),
+                stat("minecraft:generic.attack_speed",    2, 1f, List.of("any")),
+                stat("minecraft:generic.movement_speed",  2, 1f, List.of("any")),
+                stat("minecraft:generic.armor",           2, 1f, List.of("any")),
+                stat("minecraft:generic.max_health",      2, 1f, List.of("any"))
+        );
+        c.basicStats = List.of(
+                basic("minecraft:generic.luck",            0, 1.0f, 1f, List.of("any")),
+                basic("minecraft:generic.armor_toughness", 0, 1.0f, 1f, List.of("any"))
+        );
+        c.blockedItemIds  = List.of();
+        c.blockedItemTags = List.of("#tclayer:all_trinket_items");
+        return c;
+    }
+
+    private static List<String> createDefaultSpecialLootTables() {
+        return List.of(
+                "minecraft:chests/end_city_treasure",
+                "minecraft:chests/ancient_city",
+                "minecraft:chests/bastion_treasure"
+        );
+    }
+
+    private static SpecialStatEntry stat(String id, int op, float weight, List<String> slots) {
+        SpecialStatEntry e = new SpecialStatEntry();
+        e.attributeId = id;
+        e.operation = op;
+        e.weight = weight;
+        e.slots = slots;
+        return e;
+    }
+
+    private static BasicStatEntry basic(String id, int op, float value, float weight, List<String> slots) {
+        BasicStatEntry e = new BasicStatEntry();
+        e.attributeId = id;
+        e.operation = op;
+        e.value = value;
+        e.weight = weight;
+        e.slots = slots;
+        return e;
     }
 
     private static List<TuningIngotConfig> createDefaultTuningConfigs() {
@@ -119,7 +206,6 @@ public class ConfigInit {
                 new TuningIngotConfig("unique",    "light_purple", 0.01f, 1, 1)
         );
     }
-
 
     private static List<String> createDefaultLootTables() {
         return List.of(
@@ -153,5 +239,4 @@ public class ConfigInit {
             Tiered.LOGGER.error("Failed to write tiered_more.json", e);
         }
     }
-
 }

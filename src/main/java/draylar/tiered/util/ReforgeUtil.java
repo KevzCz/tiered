@@ -44,6 +44,12 @@ public class ReforgeUtil {
     }
 
     public static int getColorForModifier(Identifier id) {
+        String path = id.getPath().toLowerCase(Locale.ROOT);
+
+        if (path.equals("special") || path.startsWith("special_")) {
+            return 0xFF55FF;
+        }
+
         PotentialAttribute attribute = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(id);
         if (attribute != null && attribute.getStyle() != null && attribute.getStyle().getColor() != null) {
             String color = attribute.getStyle().getColor().getName();

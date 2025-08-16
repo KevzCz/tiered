@@ -1,6 +1,11 @@
 package draylar.tiered.reforge;
 
 import draylar.tiered.api.PotentialAttribute;
+import draylar.tiered.api.TierComponent;
+import draylar.tiered.registry.ModComponents;
+import draylar.tiered.registry.ModItems;
+import draylar.tiered.registry.SpecialTuningIngotItem;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
@@ -14,6 +19,8 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldEvents;
@@ -78,13 +85,40 @@ public class ReforgeScreenHandler extends ScreenHandler {
         }
 
     }
+    private static boolean hasSpecialPrefixName(ItemStack stack) {
+        Text overridden = stack.get(DataComponentTypes.ITEM_NAME);
+        if (overridden == null) return false;
+        return overridden.getString().startsWith("Special ");
+    }
+
+
+    private static void applySpecialName(ItemStack stack) {
+        if (stack.contains(DataComponentTypes.CUSTOM_NAME)) return;
+        if (hasSpecialPrefixName(stack)) return;
+
+        Text base = Text.translatable(stack.getItem().getTranslationKey());
+        Text name = Text.literal("Special ")
+                .formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD)
+                .append(base.copy().styled(s -> s.withColor(Formatting.LIGHT_PURPLE).withItalic(false)));
+
+        stack.set(DataComponentTypes.ITEM_NAME, name);
+    }
+
 
     private void updateResult() {
-        ItemStack stack = this.getSlot(1).getStack(); // Item to reforge
-        ItemStack baseItem = this.getSlot(0).getStack(); // Reforge base
-        ItemStack addition = this.getSlot(2).getStack(); // Tuning ingot
+        ItemStack stack = this.getSlot(1).getStack();
+        ItemStack baseItem = this.getSlot(0).getStack();
+        ItemStack addition = this.getSlot(2).getStack();
 
         this.reforgeReady = false;
+        if (ConfigInit.SPECIAL_INGOT_ENABLED && !addition.isEmpty() && ModItems.SPECIAL_TUNING_INGOT != null
+                && addition.getItem() == ModItems.SPECIAL_TUNING_INGOT) {
+            if (isBlockedForSpecial(stack)) {
+                this.reforgeReady = false;
+                TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
+                return;
+            }
+        }
 
         if (baseItem.isEmpty() || stack.isEmpty() || addition.isEmpty()) {
             TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
@@ -95,7 +129,7 @@ public class ReforgeScreenHandler extends ScreenHandler {
             TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
             return;
         }
-// 🚫 Prevent reforging if the item has a cursed modifier
+
         Identifier currentAttributeId = ModifierUtils.getAttributeId(stack);
         if (currentAttributeId != null) {
             PotentialAttribute currentAttribute = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(currentAttributeId);
@@ -107,13 +141,12 @@ public class ReforgeScreenHandler extends ScreenHandler {
 
         Item item = stack.getItem();
 
-        // 🔎 Check that *some* modifiers exist in general
+
         if (ModifierUtils.getRandomAttributeIDFor(null, item, false, null, true) == null) {
             TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
             return;
         }
 
-        // 🔐 Block reforging if using tuning ingot but group is invalid
         String group = getGroupFromTuningIngot(addition);
         if (group != null) {
             if (ModifierUtils.getRandomAttributeIDFor(null, item, false, group, true) == null) {
@@ -122,7 +155,6 @@ public class ReforgeScreenHandler extends ScreenHandler {
             }
         }
 
-        // 🛠 Reforge base check
         List<Item> validBaseItems = Tiered.REFORGE_DATA_LOADER.getReforgeBaseItems(item);
         if (!validBaseItems.isEmpty()) {
             this.reforgeReady = validBaseItems.contains(baseItem.getItem());
@@ -134,7 +166,6 @@ public class ReforgeScreenHandler extends ScreenHandler {
             this.reforgeReady = baseItem.isIn(TieredItemTags.REFORGE_BASE_ITEM);
         }
 
-        // 🚫 Prevent reforging uniques if not allowed
         if (this.reforgeReady
                 && !ConfigInit.CONFIG.uniqueReforge
                 && ModifierUtils.getAttributeId(stack) != null
@@ -143,6 +174,29 @@ public class ReforgeScreenHandler extends ScreenHandler {
         }
 
         TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, !this.reforgeReady);
+    }
+
+    private boolean isBlockedForSpecial(ItemStack target) {
+        var cfg = ConfigInit.SPECIAL_INGOT;
+        if (cfg == null) return false;
+
+        if (cfg.blockedItemIds != null && !cfg.blockedItemIds.isEmpty()) {
+            String id = Registries.ITEM.getId(target.getItem()).toString();
+            for (String s : cfg.blockedItemIds) {
+                if (s.equalsIgnoreCase(id)) return true;
+            }
+        }
+
+        if (cfg.blockedItemTags != null && !cfg.blockedItemTags.isEmpty()) {
+            for (String t : cfg.blockedItemTags) {
+                String raw = t.startsWith("#") ? t.substring(1) : t;
+                var tagId = Identifier.of(raw);
+                var tag = net.minecraft.registry.tag.TagKey.of(Registries.ITEM.getKey(), tagId);
+                if (target.isIn(tag)) return true;
+            }
+        }
+
+        return false;
     }
 
 
@@ -162,7 +216,6 @@ public class ReforgeScreenHandler extends ScreenHandler {
     private String getGroupFromTuningIngot(ItemStack tuningIngot) {
         if (tuningIngot.isEmpty()) return null;
 
-        // Check for tuning ingots by ID convention: "tuning_ingot_<group>"
         Identifier id = Registries.ITEM.getId(tuningIngot.getItem());
         String path = id.getPath();
 
@@ -230,14 +283,41 @@ public class ReforgeScreenHandler extends ScreenHandler {
     public void reforge() {
         ItemStack itemStack = this.getSlot(1).getStack();
         ItemStack tuningIngot = this.getSlot(2).getStack();
+
+        if (tuningIngot.getItem() == ModItems.SPECIAL_TUNING_INGOT) {
+            SpecialTuningIngotItem.ensureRoll(tuningIngot);
+            var comp = tuningIngot.get(ModComponents.SPECIAL_STATS);
+            if (comp != null) {
+
+                ModifierUtils.removeItemStackAttribute(itemStack);
+                if (!hasSpecialPrefixName(itemStack)) applySpecialName(itemStack);
+
+                itemStack.set(Tiered.TIER, new TierComponent("tiered:special", -1f, 0));
+                itemStack.set(ModComponents.SPECIAL_STATS, comp);
+
+                this.decrementStack(0);
+                this.decrementStack(2);
+                this.context.run((world, pos) -> world.syncWorldEvent(net.minecraft.world.WorldEvents.ANVIL_USED, this.pos, 0));
+                return;
+            }
+        }
+
+
         String group = getGroupFromTuningIngot(tuningIngot);
         ModifierUtils.removeItemStackAttribute(itemStack);
-        ModifierUtils.setItemStackAttribute(player, itemStack, true, group, true);
 
+        itemStack.remove(ModComponents.SPECIAL_STATS);
+        if (hasSpecialPrefixName(itemStack)) {
+            itemStack.remove(DataComponentTypes.ITEM_NAME);
+        }
+
+
+        ModifierUtils.setItemStackAttribute(player, itemStack, true, group, true);
         this.decrementStack(0);
         this.decrementStack(2);
-        this.context.run((world, pos) -> world.syncWorldEvent(WorldEvents.ANVIL_USED, (BlockPos) pos, 0));
+        this.context.run((world, pos) -> world.syncWorldEvent(net.minecraft.world.WorldEvents.ANVIL_USED, this.pos, 0));
     }
+
 
     public void setPos(BlockPos pos) {
         this.pos = pos;

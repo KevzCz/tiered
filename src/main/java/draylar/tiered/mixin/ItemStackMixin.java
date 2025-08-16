@@ -48,9 +48,56 @@ public abstract class ItemStackMixin {
     private void applyAttributeModifiersMixin(EquipmentSlot slot, BiConsumer<RegistryEntry<EntityAttribute>, EntityAttributeModifier> attributeModifierConsumer, CallbackInfo info) {
         applyAttributeModifier(slot, null, attributeModifierConsumer);
     }
+    private static EntityAttributeModifier.Operation opFromId(int id) {
+        if (id < 0 || id > 2) id = 0;
+        return EntityAttributeModifier.Operation.ID_TO_VALUE.apply(id);
+    }
+
+    private void applyStatEntry(ItemStack stack, draylar.tiered.api.SpecialStatsComponent.Entry e, @Nullable EquipmentSlot equipmentSlot, @Nullable AttributeModifierSlot attributeModifierSlot, BiConsumer<RegistryEntry<EntityAttribute>, EntityAttributeModifier> out) {
+        var attrRef = net.minecraft.registry.Registries.ATTRIBUTE.getEntry(Identifier.of(e.attribute()));
+        if (attrRef.isEmpty()) return;
+
+        java.util.function.Predicate<EquipmentSlot> slotMatch = s -> {
+            if (e.slots().contains("any")) return true;
+            return e.slots().stream().anyMatch(n -> n.equalsIgnoreCase(s.getName()));
+        };
+
+        if (equipmentSlot != null && slotMatch.test(equipmentSlot) && Tiered.isPreferredEquipmentSlot(stack, equipmentSlot)) {
+            EntityAttributeModifier mod = new EntityAttributeModifier(
+                    Identifier.of(e.attribute() + "_" + equipmentSlot.getName() + "_special"),
+                    e.value(),
+                    opFromId(e.operation())
+            );
+
+            out.accept(attrRef.get(), mod);
+        } else if (attributeModifierSlot != null && attributeModifierSlot != AttributeModifierSlot.ANY && attributeModifierSlot != AttributeModifierSlot.HAND) {
+            for (EquipmentSlot s : EquipmentSlot.values()) {
+                if (attributeModifierSlot.matches(s) && slotMatch.test(s) && Tiered.isPreferredEquipmentSlot(stack, s)) {
+                    EntityAttributeModifier mod = new EntityAttributeModifier(
+                            Identifier.of(e.attribute() + "_" + s.getName() + "_special"),
+                            e.value(),
+                            opFromId(e.operation())
+                    );
+                    out.accept(attrRef.get(), mod);
+                    break;
+                }
+            }
+        }
+    }
 
     private void applyAttributeModifier(@Nullable EquipmentSlot equipmentSlot, @Nullable AttributeModifierSlot attributeModifierSlot, BiConsumer<RegistryEntry<EntityAttribute>, EntityAttributeModifier> attributeModifierConsumer) {
         ItemStack itemStack = (ItemStack) (Object) this;
+        if (itemStack.get(Tiered.TIER) != null && "tiered:special".equals(itemStack.get(Tiered.TIER).tier())) {
+            var comp = itemStack.get(draylar.tiered.registry.ModComponents.SPECIAL_STATS);
+            if (comp != null) {
+                for (var e : comp.specials()) {
+                    applyStatEntry(itemStack, e, equipmentSlot, attributeModifierSlot, attributeModifierConsumer);
+                }
+                applyStatEntry(itemStack, comp.basic(), equipmentSlot, attributeModifierSlot, attributeModifierConsumer);
+            }
+            return;
+        }
+
         if (itemStack.get(Tiered.TIER) != null) {
             Identifier tier = ModifierUtils.getAttributeId(itemStack);
             PotentialAttribute potentialAttribute = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier);
