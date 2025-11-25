@@ -31,19 +31,15 @@ public abstract class AccessoriesAPIMixin {
             PotentialAttribute potentialAttribute = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier);
             if (potentialAttribute != null) {
                 for (AttributeTemplate template : potentialAttribute.getAttributes()) {
-                    if (template.getOptionalAccessoriesSlots() != null) {
-                        for (String slotName : template.getOptionalAccessoriesSlots()) {
-                            if (slotName.equalsIgnoreCase(ref.slotName())) {
-                                Optional<RegistryEntry.Reference<EntityAttribute>> optional = Registries.ATTRIBUTE.getEntry(Identifier.of(template.getAttributeTypeID()));
-                                if (optional.isPresent()) {
-                                    EntityAttributeModifier modifier = new EntityAttributeModifier(
-                                            Identifier.of("tiered", template.getEntityAttributeModifier().id().getPath() + "_" + slotName.toLowerCase()),
-                                            template.getEntityAttributeModifier().value(),
-                                            template.getEntityAttributeModifier().operation()
-                                    );
-                                    cir.getReturnValue().addStackable(optional.get(), modifier);
-                                }
-                            }
+                    if (template.appliesToAccessorySlot(ref.slotName())) {
+                        Optional<RegistryEntry.Reference<EntityAttribute>> optional = Registries.ATTRIBUTE.getEntry(Identifier.of(template.getAttributeTypeID()));
+                        if (optional.isPresent()) {
+                            EntityAttributeModifier modifier = new EntityAttributeModifier(
+                                    Identifier.of("tiered", template.getEntityAttributeModifier().id().getPath() + "_" + ref.slotName().toLowerCase()),
+                                    template.getEntityAttributeModifier().value(),
+                                    template.getEntityAttributeModifier().operation()
+                            );
+                            cir.getReturnValue().addStackable(optional.get(), modifier);
                         }
                     }
                 }
@@ -51,4 +47,3 @@ public abstract class AccessoriesAPIMixin {
         }
     }
 }
-

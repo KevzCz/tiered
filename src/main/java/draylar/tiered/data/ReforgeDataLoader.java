@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import draylar.tiered.TieredClient;
 import draylar.tiered.TieredServer;
+import draylar.tiered.compat.AccessoryTagHandler;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.fabricmc.loader.api.FabricLoader;
@@ -54,6 +55,13 @@ public class ReforgeDataLoader implements SimpleSynchronousResourceReloadListene
                     for (String entry : baseRaw) {
                         if (entry.startsWith("#")) {
                             Identifier tagId = Identifier.of(entry.substring(1));
+
+                            if (tagId.toString().equals("tclayer:all_trinket_items")) {
+                                AccessoryTagHandler.getAllTrinketItems().forEach(baseItems::add);
+                                LOGGER.debug("[Tiered] Added {} accessory items as base items from virtual tag", AccessoryTagHandler.getAllTrinketItems().size());
+                                continue;
+                            }
+
                             TagKey<Item> tagKey = TagKey.of(RegistryKeys.ITEM, tagId);
                             Registries.ITEM.getEntryList(tagKey).ifPresentOrElse(
                                     list -> list.forEach(e -> baseItems.add(e.value())),
@@ -73,6 +81,17 @@ public class ReforgeDataLoader implements SimpleSynchronousResourceReloadListene
                     for (String itemEntry : itemRaw) {
                         if (itemEntry.startsWith("#")) {
                             Identifier tagId = Identifier.of(itemEntry.substring(1));
+
+                            if (tagId.toString().equals("tclayer:all_trinket_items")) {
+                                AccessoryTagHandler.getAllTrinketItems().forEach(item -> {
+                                    Identifier itemId = Registries.ITEM.getId(item);
+                                    reforgeIdentifiers.add(itemId);
+                                    reforgeBaseMap.put(itemId, new ArrayList<>(baseItems));
+                                });
+                                LOGGER.info("[Tiered] Added {} accessory items from virtual tag tclayer:all_trinket_items", AccessoryTagHandler.getAllTrinketItems().size());
+                                continue;
+                            }
+
                             TagKey<Item> tagKey = TagKey.of(RegistryKeys.ITEM, tagId);
                             Registries.ITEM.getEntryList(tagKey).ifPresentOrElse(
                                     list -> {
