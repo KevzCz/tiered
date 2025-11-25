@@ -1,7 +1,6 @@
 package draylar.tiered.api;
 
 import draylar.tiered.Tiered;
-import draylar.tiered.compat.AccessoryTagHandler;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKeys;
@@ -43,19 +42,14 @@ public class ItemVerifier {
         if (id != null) {
             return itemID.equals(id);
         } else if (tag != null) {
-            Item item = Registries.ITEM.get(Identifier.of(itemID));
-
-            if (tag.equals("tclayer:all_trinket_items")) {
-                if (AccessoryTagHandler.shouldBeInTag(item)) {
-                    return true;
-                }
-            }
-
             TagKey<Item> itemTag = TagKey.of(RegistryKeys.ITEM, Identifier.of(tag));
             if (itemTag != null) {
-                return item.getRegistryEntry().isIn(itemTag);
+                return Registries.ITEM.get(Identifier.of(itemID)).getRegistryEntry().isIn(itemTag);
+            } else {
+                Tiered.LOGGER.error(tag + " was specified as an item verifier tag, but it does not exist!");
             }
         }
+
         return false;
     }
 
