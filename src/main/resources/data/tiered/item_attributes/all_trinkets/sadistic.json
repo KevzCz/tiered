@@ -2,7 +2,7 @@
     "id": "tiered:sadistic",
     "verifiers": [
         {
-            "tag": "tclayer:all_trinket_items"
+            "tag": "accessories_compat_layer:all_trinkets_items"
         }
     ],
     "cursed": "true",
@@ -31,6 +31,7 @@
                 "necklace",
                 "ring",
                 "shoes",
+                "trinket_group_charm-trinket",
                 "trinket_group_misc-quiver",
                 "trinket_group_spell-book",
                 "trinket_group_spell-quiver",
@@ -60,6 +61,7 @@
                 "necklace",
                 "ring",
                 "shoes",
+                "trinket_group_charm-trinket",
                 "trinket_group_misc-quiver",
                 "trinket_group_spell-book",
                 "trinket_group_spell-quiver",

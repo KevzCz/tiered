@@ -1,6 +1,6 @@
 {
   "items": [
-    "#tclayer:all_trinket_items"
+    "#accessories_compat_layer:all_trinkets_items"
   ],
   "base": [
     "minecraft:lapis_lazuli"
