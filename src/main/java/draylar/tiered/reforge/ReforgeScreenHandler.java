@@ -140,14 +140,14 @@ public class ReforgeScreenHandler extends ScreenHandler {
 
         Item item = stack.getItem();
 
-        if (ModifierUtils.getRandomAttributeIDFor(null, item, false, null, true) == null) {
+        if (ModifierUtils.getRandomAttributeIDFor(null, item, true, null, true) == null) {
             TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
             return;
         }
 
         String group = getGroupFromTuningIngot(addition);
         if (group != null) {
-            if (ModifierUtils.getRandomAttributeIDFor(null, item, false, group, true) == null) {
+            if (ModifierUtils.getRandomAttributeIDFor(null, item, true, group, true) == null) {
                 TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
                 return;
             }
