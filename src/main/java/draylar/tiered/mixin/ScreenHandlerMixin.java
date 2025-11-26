@@ -48,7 +48,7 @@ public abstract class ScreenHandlerMixin {
 
                     ModifierUtils.removeItemStackAttribute(targetStack);
 
-                    ModifierUtils.setItemStackAttribute(player, targetStack, false, null, true); // skipCursed = true
+                    ModifierUtils.setItemStackAttribute(player, targetStack, false, null, true, true);
 
                     cursorStack.decrement(1);
 

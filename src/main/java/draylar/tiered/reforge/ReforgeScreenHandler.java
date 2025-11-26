@@ -283,17 +283,17 @@ public class ReforgeScreenHandler extends ScreenHandler {
         ItemStack tuningIngot = this.getSlot(2).getStack();
 
         if (tuningIngot.getItem() == ModItems.SPECIAL_TUNING_INGOT) {
-            if (!ConfigInit.SPECIAL_INGOT_ENABLED || ConfigInit.SPECIAL_INGOT == null) {
+            if (! ConfigInit.SPECIAL_INGOT_ENABLED || ConfigInit.SPECIAL_INGOT == null) {
                 return;
             }
-            SpecialTuningIngotItem.ensureRoll(tuningIngot);
+            SpecialTuningIngotItem. ensureRoll(tuningIngot);
             var comp = tuningIngot.get(ModComponents.SPECIAL_STATS);
             if (comp != null) {
                 ModifierUtils.removeItemStackAttribute(itemStack);
-                if (!hasSpecialPrefixName(itemStack)) applySpecialName(itemStack);
+                if (! hasSpecialPrefixName(itemStack)) applySpecialName(itemStack);
 
                 itemStack.set(Tiered.TIER, new TierComponent("tiered:special", -1f, 0));
-                itemStack.set(ModComponents.SPECIAL_STATS, comp);
+                itemStack.set(ModComponents. SPECIAL_STATS, comp);
 
                 this.decrementStack(0);
                 this.decrementStack(2);
@@ -310,10 +310,11 @@ public class ReforgeScreenHandler extends ScreenHandler {
             itemStack.remove(DataComponentTypes.ITEM_NAME);
         }
 
-        ModifierUtils.setItemStackAttribute(player, itemStack, true, group, true);
+        ModifierUtils. setItemStackAttribute(player, itemStack, true, group, true, false);
+
         this.decrementStack(0);
         this.decrementStack(2);
-        this.context.run((world, pos) -> world.syncWorldEvent(net.minecraft.world.WorldEvents.ANVIL_USED, this.pos, 0));
+        this.context.run((world, pos) -> world.syncWorldEvent(net. minecraft.world.WorldEvents. ANVIL_USED, this. pos, 0));
     }
 
     public void setPos(BlockPos pos) {
