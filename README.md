@@ -131,7 +131,42 @@ Cursed Modifiers can only be obtained through found loot. You are unable to refo
     ]
 }
 ```
-
+Add spells to modifiers 
+```
+{
+  "id": "tiered:spell_armor",
+  "verifiers": [
+    {
+      "tag": "minecraft:chest_armor"
+    }
+  ],
+  "weight": 100,
+  "style": {
+    "color": "aqua"
+  },
+  "attributes": [
+    {
+      "type": "generic.armor",
+      "modifier": {
+        "name": "tiered:spell_armor",
+        "operation": "ADD_VALUE",
+        "amount": 2
+      },
+      "optional_equipment_slots": [
+        "CHEST"
+      ]
+    }
+  ],
+  "spells": [
+    {
+      "spell_id": "wizards:fireball",
+      "optional_equipment_slots": [
+        "CHEST"
+      ]
+    }
+  ]
+}
+```
 reforge_items/*.json are now able to use tags
 ```
 {
@@ -209,3 +244,5 @@ or
     }
 ]
 ```
+
+

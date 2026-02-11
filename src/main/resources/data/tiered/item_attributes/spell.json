@@ -1,0 +1,57 @@
+{
+  "id": "tiered:spell_magic_weapon",
+  "verifiers": [
+    {
+      "tag": "minecraft:swords"
+    },
+    {
+      "tag": "minecraft:enchantable/sword"
+    },
+    {
+      "tag": "rpg_series:weapon_type/damage_staff"
+    },
+    {
+      "tag": "rpg_series:weapon_type/damage_wand"
+    },
+    {
+      "tag": "rpg_series:weapon_type/healing_staff"
+    },
+    {
+      "tag": "rpg_series:weapon_type/healing_wand"
+    }
+  ],
+  "weight": 100,
+  "style": {
+    "color": "light_purple"
+  },
+  "attributes": [
+    {
+      "type": "generic.attack_damage",
+      "modifier": {
+        "name": "tiered:spell_magic_weapon",
+        "operation": "ADD_VALUE",
+        "amount": 2
+      },
+      "optional_equipment_slots": [
+        "MAINHAND",
+        "OFFHAND"
+      ]
+    }
+  ],
+  "spells": [
+    {
+      "spell_id": "wizards:fireball",
+      "optional_equipment_slots": [
+        "MAINHAND",
+        "OFFHAND"
+      ]
+    },
+    {
+      "spell_id": "wizards:fire_wall",
+      "optional_equipment_slots": [
+        "MAINHAND",
+        "OFFHAND"
+      ]
+    }
+  ]
+}

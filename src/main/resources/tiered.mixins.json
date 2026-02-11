@@ -18,6 +18,7 @@
     "ScreenHandlerMixin",
     "ArmorStandEntityMixin",
     "CraftingScreenHandlerMixin",
+    "ItemStackSpellMixin",
     "access.StyleAccessor",
     "access.ServerPlayerEntityAccessor",
     "compat.AccessoriesAPIMixin"

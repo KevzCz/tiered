@@ -1,0 +1,69 @@
+{
+  "id": "tiered:spell_accessory",
+  "verifiers": [
+    {
+      "tag": "accessories_compat_layer:all_trinkets_items"
+    }
+  ],
+  "weight": 50,
+  "style": {
+    "color": "blue"
+  },
+  "attributes": [
+    {
+      "type": "minecraft:generic.max_health",
+      "modifier": {
+        "name": "tiered:spell_accessory",
+        "operation": "ADD_VALUE",
+        "amount": 4
+      },
+      "optional_accessories_slots": [
+        "anklet",
+        "any",
+        "back",
+        "belt",
+        "cape",
+        "charm",
+        "face",
+        "hand",
+        "hat",
+        "necklace",
+        "ring",
+        "shoes",
+        "trinket_group_charm-trinket",
+        "trinket_group_misc-quiver",
+        "trinket_group_spell-book",
+        "trinket_group_spell-quiver",
+        "trinket_group_spell-scroll",
+        "trinket_group_spell-trinket",
+        "wrist"
+      ]
+    }
+  ],
+  "spells": [
+    {
+      "spell_id": "wizards:fireball",
+      "optional_accessories_slots": [
+        "anklet",
+        "any",
+        "back",
+        "belt",
+        "cape",
+        "charm",
+        "face",
+        "hand",
+        "hat",
+        "necklace",
+        "ring",
+        "shoes",
+        "trinket_group_charm-trinket",
+        "trinket_group_misc-quiver",
+        "trinket_group_spell-book",
+        "trinket_group_spell-quiver",
+        "trinket_group_spell-scroll",
+        "trinket_group_spell-trinket",
+        "wrist"
+      ]
+    }
+  ]
+}

@@ -26,5 +26,6 @@ public class ModComponents {
                         .packetCodec(SpecialStatsComponent.PACKET_CODEC)
                         .build()
         );
+
     }
 }

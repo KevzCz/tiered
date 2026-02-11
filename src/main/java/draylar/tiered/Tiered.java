@@ -40,15 +40,10 @@ import java.util.function.UnaryOperator;
 public class Tiered implements ModInitializer {
 
     public static final boolean isLevelZLoaded = FabricLoader.getInstance().isModLoaded("levelz");
+    public static final boolean isSpellEngineLoaded = FabricLoader.getInstance().isModLoaded("spell_engine");
 
-    /**
-     * Attribute Data Loader instance which handles loading attribute .json files from "data/modid/item_attributes".
-     */
     public static final AttributeDataLoader ATTRIBUTE_DATA_LOADER = new AttributeDataLoader();
 
-    /**
-     * data/tiered/reforge_item
-     */
     public static final ReforgeDataLoader REFORGE_DATA_LOADER = new ReforgeDataLoader();
 
     public static ScreenHandlerType<ReforgeScreenHandler> REFORGE_SCREEN_HANDLER_TYPE;
@@ -92,6 +87,7 @@ public class Tiered implements ModInitializer {
                 LOGGER.error("Failed to reload on {}", Thread.currentThread());
             }
         });
+
         ServerPlayConnectionEvents.INIT.register((handler, server) -> {
             ModifierUtils.updateItemStackComponent(handler.player.getInventory());
         });
@@ -102,12 +98,6 @@ public class Tiered implements ModInitializer {
         return Registry.register(Registries.DATA_COMPONENT_TYPE, id, builderOperator.apply(ComponentType.builder()).build());
     }
 
-    /**
-     * Returns an {@link Identifier} namespaced with this mod's modid ("tiered").
-     *
-     * @param path path of identifier (eg. apple in "minecraft:apple")
-     * @return Identifier created with a namespace of this mod's modid ("tiered") and provided path
-     */
     public static Identifier id(String path) {
         return Identifier.of("tiered", path);
     }

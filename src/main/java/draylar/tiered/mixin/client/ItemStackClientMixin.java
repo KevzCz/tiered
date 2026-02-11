@@ -46,7 +46,6 @@ public abstract class ItemStackClientMixin {
     @Unique
     private Map<RegistryEntry<EntityAttribute>, List<EntityAttributeModifier>> tieredMap = new HashMap<>();
 
-    // Three methods to remove multiple "When Worn",...
     @Inject(method = "appendAttributeModifiersTooltip", at = @At("HEAD"))
     private void appendAttributeModifiersTooltipMixin(Consumer<Text> textConsumer, @Nullable PlayerEntity player, CallbackInfo info) {
         ItemStack itemStack = (ItemStack) (Object) this;
