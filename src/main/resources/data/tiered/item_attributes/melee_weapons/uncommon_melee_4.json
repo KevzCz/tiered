@@ -3,6 +3,9 @@
     "verifiers": [
         {
             "tag": "minecraft:swords"
+        },
+        {
+            "tag": "minecraft:enchantable/sword"
         }
     ],
     "weight": 45,

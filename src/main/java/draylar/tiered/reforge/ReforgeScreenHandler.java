@@ -30,6 +30,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ReforgeScreenHandler extends ScreenHandler {
@@ -46,6 +47,9 @@ public class ReforgeScreenHandler extends ScreenHandler {
     private final PlayerEntity player;
     private boolean reforgeReady;
     private BlockPos pos;
+    private boolean autoRefill = false;
+    private Item lastUsedBaseMaterial = null;
+    private Item lastUsedAddition = null;
 
     public ReforgeScreenHandler(int syncId, PlayerInventory playerInventory, ScreenHandlerContext context) {
         super(Tiered.REFORGE_SCREEN_HANDLER_TYPE, syncId);
@@ -325,10 +329,107 @@ public class ReforgeScreenHandler extends ScreenHandler {
         return this.pos;
     }
 
+    public void setAutoRefill(boolean enabled) {
+        this.autoRefill = enabled;
+    }
+
+    public boolean isAutoRefill() {
+        return this.autoRefill;
+    }
+
     private void decrementStack(int slot) {
         ItemStack itemStack = this.inventory.getStack(slot);
+        
+        if (slot == 0 && !itemStack.isEmpty()) {
+            lastUsedBaseMaterial = itemStack.getItem();
+        } else if (slot == 2 && !itemStack.isEmpty()) {
+            lastUsedAddition = itemStack.getItem();
+        }
+        
         itemStack.decrement(1);
         this.inventory.setStack(slot, itemStack);
+
+        if (autoRefill && itemStack.getCount() < 16) {
+            boolean refilled = tryRefillSlot(slot);
+            if (!refilled && itemStack.isEmpty() && player instanceof ServerPlayerEntity serverPlayer) {
+                TieredServerPacket.writeS2CStopAutoReforgePacket(serverPlayer);
+            }
+        }
+    }
+
+    private boolean tryRefillSlot(int slot) {
+        ItemStack slotStack = this.inventory.getStack(slot);
+        int currentCount = slotStack.isEmpty() ? 0 : slotStack.getCount();
+        int targetCount = 32;
+        int needed = targetCount - currentCount;
+        if (needed <= 0) return true;
+
+        if (slot == 0) {
+            if (lastUsedBaseMaterial == null) return currentCount > 0;
+            
+            ItemStack targetItem = this.inventory.getStack(1);
+            if (targetItem.isEmpty()) return currentCount > 0;
+
+            List<Item> validBaseItems = getValidBaseItems(targetItem);
+            if (validBaseItems.isEmpty() || !validBaseItems.contains(lastUsedBaseMaterial)) return currentCount > 0;
+
+            int gathered = 0;
+            for (int i = 3; i < this.slots.size() && gathered < needed; i++) {
+                ItemStack playerStack = this.slots.get(i).getStack();
+                if (!playerStack.isEmpty() && playerStack.getItem() == lastUsedBaseMaterial) {
+                    int toTake = Math.min(playerStack.getCount(), needed - gathered);
+                    if (slotStack.isEmpty()) {
+                        slotStack = new ItemStack(lastUsedBaseMaterial, toTake);
+                        this.inventory.setStack(slot, slotStack);
+                    } else {
+                        slotStack.increment(toTake);
+                    }
+                    playerStack.decrement(toTake);
+                    gathered += toTake;
+                }
+            }
+            return gathered > 0 || currentCount > 0;
+        } else if (slot == 2) {
+            if (lastUsedAddition == null) return currentCount > 0;
+            
+            int gathered = 0;
+            for (int i = 3; i < this.slots.size() && gathered < needed; i++) {
+                ItemStack playerStack = this.slots.get(i).getStack();
+                if (!playerStack.isEmpty() && playerStack.getItem() == lastUsedAddition) {
+                    int toTake = Math.min(playerStack.getCount(), needed - gathered);
+                    if (slotStack.isEmpty()) {
+                        slotStack = new ItemStack(lastUsedAddition, toTake);
+                        this.inventory.setStack(slot, slotStack);
+                    } else {
+                        slotStack.increment(toTake);
+                    }
+                    playerStack.decrement(toTake);
+                    gathered += toTake;
+                }
+            }
+            return gathered > 0 || currentCount > 0;
+        }
+        return currentCount > 0;
+    }
+
+    private List<Item> getValidBaseItems(ItemStack targetItem) {
+        List<Item> validItems = new ArrayList<>();
+        Item item = targetItem.getItem();
+
+        List<Item> items = Tiered.REFORGE_DATA_LOADER.getReforgeBaseItems(item);
+        if (!items.isEmpty()) {
+            validItems.addAll(items);
+        } else if (item instanceof ToolItem toolItem) {
+            for (ItemStack s : toolItem.getMaterial().getRepairIngredient().getMatchingStacks()) {
+                validItems.add(s.getItem());
+            }
+        } else if (item instanceof ArmorItem armorItem && armorItem.getMaterial().value().repairIngredient() != null) {
+            for (ItemStack s : armorItem.getMaterial().value().repairIngredient().get().getMatchingStacks()) {
+                validItems.add(s.getItem());
+            }
+        }
+
+        return validItems;
     }
 
     @Override

@@ -2,9 +2,9 @@ package draylar.tiered.mixin.client;
 
 import org.spongepowered.asm.mixin.Mixin;
 
+import draylar.tiered.lib.Tab;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.libz.api.Tab;
 import net.minecraft.client.gui.screen.ingame.AnvilScreen;
 
 @Environment(EnvType.CLIENT)

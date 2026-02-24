@@ -3,6 +3,9 @@
     "verifiers": [
         {
             "tag": "c:tools/shields"
+        },
+        {
+            "tag": "rpg_series:weapon_type/shield"
         }
     ],
     "weight": 45,

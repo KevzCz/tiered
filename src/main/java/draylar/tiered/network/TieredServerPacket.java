@@ -7,15 +7,17 @@ import draylar.tiered.Tiered;
 import draylar.tiered.access.AnvilScreenHandlerAccess;
 import draylar.tiered.data.AttributeDataLoader;
 import draylar.tiered.network.packet.AttributePacket;
+import draylar.tiered.network.packet.AutoRefillPacket;
 import draylar.tiered.network.packet.HealthPacket;
+import draylar.tiered.network.packet.MousePositionPacket;
 import draylar.tiered.network.packet.ReforgeItemSyncPacket;
 import draylar.tiered.network.packet.ReforgePacket;
 import draylar.tiered.network.packet.ReforgeReadyPacket;
 import draylar.tiered.network.packet.ReforgeScreenPacket;
+import draylar.tiered.network.packet.StopAutoReforgePacket;
 import draylar.tiered.reforge.ReforgeScreenHandler;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.libz.network.LibzServerPacket;
 import net.minecraft.registry.Registries;
 import net.minecraft.screen.AnvilScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
@@ -34,6 +36,9 @@ public class TieredServerPacket {
         PayloadTypeRegistry.playS2C().register(ReforgeReadyPacket.PACKET_ID, ReforgeReadyPacket.PACKET_CODEC);
         PayloadTypeRegistry.playS2C().register(ReforgeItemSyncPacket.PACKET_ID, ReforgeItemSyncPacket.PACKET_CODEC);
         PayloadTypeRegistry.playC2S().register(ReforgeScreenPacket.PACKET_ID, ReforgeScreenPacket.PACKET_CODEC);
+        PayloadTypeRegistry.playC2S().register(AutoRefillPacket.PACKET_ID, AutoRefillPacket.PACKET_CODEC);
+        PayloadTypeRegistry.playS2C().register(StopAutoReforgePacket.PACKET_ID, StopAutoReforgePacket.PACKET_CODEC);
+        PayloadTypeRegistry.playS2C().register(MousePositionPacket.PACKET_ID, MousePositionPacket.PACKET_CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(ReforgeScreenPacket.PACKET_ID, (payload, context) -> {
             int mouseX = payload.mouseX();
@@ -53,7 +58,7 @@ public class TieredServerPacket {
                             return new AnvilScreenHandler(syncId, playerInventory, ScreenHandlerContext.create(playerx.getWorld(), pos));
                         }, Text.translatable("container.repair")));
                     }
-                    LibzServerPacket.writeS2CMousePositionPacket(context.player(), mouseX, mouseY);
+                    ServerPlayNetworking.send(context.player(), new MousePositionPacket(mouseX, mouseY));
                 });
             }
         });
@@ -61,6 +66,13 @@ public class TieredServerPacket {
             context.server().execute(() -> {
                 if (context.player().currentScreenHandler instanceof ReforgeScreenHandler reforgeScreenHandler) {
                     reforgeScreenHandler.reforge();
+                }
+            });
+        });
+        ServerPlayNetworking.registerGlobalReceiver(AutoRefillPacket.PACKET_ID, (payload, context) -> {
+            context.server().execute(() -> {
+                if (context.player().currentScreenHandler instanceof ReforgeScreenHandler reforgeScreenHandler) {
+                    reforgeScreenHandler.setAutoRefill(payload.enabled());
                 }
             });
         });
@@ -106,6 +118,10 @@ public class TieredServerPacket {
         });
 
         ServerPlayNetworking.send(serverPlayerEntity, new AttributePacket(attributeIds, attributeJsons));
+    }
+
+    public static void writeS2CStopAutoReforgePacket(ServerPlayerEntity serverPlayerEntity) {
+        ServerPlayNetworking.send(serverPlayerEntity, new StopAutoReforgePacket());
     }
 
 }

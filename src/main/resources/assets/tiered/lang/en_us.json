@@ -287,7 +287,22 @@
   "tooltip.tiered.cursed": "╚ \uD83D\uDC80 Cursed \uD83D\uDC80 ╝",
   "tooltip.tiered.cannot_reforge": "Cannot be Reforged",
   "item.tiered.blessed_scroll": "Blessed Scroll",
-  "item.tiered.special_tuning_ingot": "Special Tuning Ingot"
+  "item.tiered.special_tuning_ingot": "Special Tuning Ingot",
 
-
+  "screen.tiered.reforge.label.refill": "Refill",
+  "screen.tiered.reforge.label.auto": "Auto",
+  "screen.tiered.reforge.label.info": "Info",
+  "screen.tiered.reforge.tooltip.auto_refill": "Auto-refill materials from inventory",
+  "screen.tiered.reforge.tooltip.select_target": "Select a target modifier first",
+  "screen.tiered.reforge.tooltip.stop_auto": "Click to stop auto-reforging",
+  "screen.tiered.reforge.tooltip.auto_until_modifier": "Auto-reforge until: %s",
+  "screen.tiered.reforge.tooltip.auto_until_groups": "Auto-reforge until any: %s",
+  "screen.tiered.reforge.info.title": "Modifier Targeting Guide",
+  "screen.tiered.reforge.info.specific": "Target a specific modifier:",
+  "screen.tiered.reforge.info.specific_example": "  Left-click on ",
+  "screen.tiered.reforge.info.groups": "Target multiple groups:",
+  "screen.tiered.reforge.info.groups_example": "  Right-click on ",
+  "screen.tiered.reforge.info.stops": "Stops on ANY selected group/modifier",
+  "screen.tiered.reforge.achieved_modifier": "✔ Modifier Achieved",
+  "screen.tiered.reforge.achieved_groups": "✔ %s Achieved!"
 }

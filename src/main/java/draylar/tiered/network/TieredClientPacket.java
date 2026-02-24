@@ -10,11 +10,15 @@ import draylar.tiered.TieredClient;
 import draylar.tiered.api.PotentialAttribute;
 import draylar.tiered.data.AttributeDataLoader;
 import draylar.tiered.network.packet.AttributePacket;
+import draylar.tiered.network.packet.AutoRefillPacket;
 import draylar.tiered.network.packet.HealthPacket;
+import draylar.tiered.network.packet.MousePositionPacket;
 import draylar.tiered.network.packet.ReforgeItemSyncPacket;
 import draylar.tiered.network.packet.ReforgePacket;
 import draylar.tiered.network.packet.ReforgeReadyPacket;
 import draylar.tiered.network.packet.ReforgeScreenPacket;
+import draylar.tiered.network.packet.StopAutoReforgePacket;
+import draylar.tiered.lib.TabRegistry;
 import draylar.tiered.reforge.ReforgeScreen;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -65,16 +69,26 @@ public class TieredClientPacket {
             });
         });
         ClientPlayNetworking.registerGlobalReceiver(AttributePacket.PACKET_ID, (payload, context) -> {
-            // save old attributes
             TieredClient.CACHED_ATTRIBUTES.putAll(Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes());
             Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().clear();
 
-            // for each id/attribute pair, load it
             for (int i = 0; i < payload.attributeIds().size(); i++) {
                 Identifier id = Identifier.of(payload.attributeIds().get(i));
                 PotentialAttribute pa = AttributeDataLoader.GSON.fromJson(payload.attributeJsons().get(i), PotentialAttribute.class);
                 Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().put(id, pa);
             }
+        });
+        ClientPlayNetworking.registerGlobalReceiver(StopAutoReforgePacket.PACKET_ID, (payload, context) -> {
+            context.client().execute(() -> {
+                if (context.client().currentScreen instanceof ReforgeScreen reforgeScreen) {
+                    reforgeScreen.stopAutoReforgeFromServer();
+                }
+            });
+        });
+        ClientPlayNetworking.registerGlobalReceiver(MousePositionPacket.PACKET_ID, (payload, context) -> {
+            context.client().execute(() -> {
+                TabRegistry.setMousePosition(payload.mouseX(), payload.mouseY());
+            });
         });
     }
 
@@ -84,6 +98,10 @@ public class TieredClientPacket {
 
     public static void writeC2SReforgePacket() {
         ClientPlayNetworking.send(new ReforgePacket());
+    }
+
+    public static void writeC2SAutoRefillPacket(boolean enabled) {
+        ClientPlayNetworking.send(new AutoRefillPacket(enabled));
     }
 
 }

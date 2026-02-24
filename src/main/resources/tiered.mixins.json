@@ -29,6 +29,7 @@
     "client.DrawContextMixin",
     "client.HandledScreenMixin",
     "client.CursedItemMixin",
+    "client.TabRenderingMixin",
     "compat.ModAnvilScreenMixin"
   ],
   "injectors": {
