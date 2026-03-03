@@ -56,7 +56,7 @@
 		// Accessories Compat
 		modImplementation("io.wispforest:accessories-fabric:1.1.0-beta.43+1.21.1")
 
-		modCompileOnly "curse.maven:spell-engine-807653:7396348"
+		modCompileOnly "curse.maven:spell-engine-807653:7702688"
 	}
 
 	processResources {

@@ -47,17 +47,19 @@ public class ItemStackSpellMixin {
                 combinedSpells.addAll(modifierSpellIds);
 
                 SpellContainer mergedContainer = new SpellContainer(
-                        existingContainer.content(),
-                        existingContainer.is_proxy(),
+                        existingContainer.access(),
+                        existingContainer.access_param(),
                         existingContainer.pool(),
+                        existingContainer.slot(),
                         existingContainer.max_spell_count(),
-                        combinedSpells
+                        combinedSpells,
+                        existingContainer.extra_tier_binding()
                 );
                 cir.setReturnValue(mergedContainer);
             } else {
                 SpellContainer newContainer = new SpellContainer(
                         SpellContainer.ContentType.MAGIC,
-                        false,
+                        "",
                         "",
                         0,
                         modifierSpellIds
