@@ -3,6 +3,9 @@
     "verifiers": [
         {
             "tag": "accessories_compat_layer:all_trinkets_items"
+        },
+        {
+            "tag": "accessories_compat_layer:all_curios_items"
         }
     ],
     "weight": 50,
@@ -18,10 +21,12 @@
                 "amount": 0.01
             },
             "optional_accessories_slots": [
+                "accessory",
                 "anklet",
                 "any",
                 "back",
                 "belt",
+                "blessing",
                 "cape",
                 "charm",
                 "face",
@@ -29,13 +34,17 @@
                 "hat",
                 "necklace",
                 "ring",
+                "sheath",
+                "sherd",
                 "shoes",
+                "tome",
                 "trinket_group_charm-trinket",
                 "trinket_group_misc-quiver",
                 "trinket_group_spell-book",
                 "trinket_group_spell-quiver",
                 "trinket_group_spell-scroll",
                 "trinket_group_spell-trinket",
+                "trophy",
                 "wrist"
             ]
 
