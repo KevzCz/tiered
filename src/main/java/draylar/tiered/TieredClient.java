@@ -4,6 +4,7 @@ import draylar.tiered.api.AttributeTemplate;
 import draylar.tiered.api.BorderTemplate;
 import draylar.tiered.api.ModifierUtils;
 import draylar.tiered.api.PotentialAttribute;
+import draylar.tiered.compat.AccessoriesCompat;
 import draylar.tiered.data.TooltipBorderLoader;
 import draylar.tiered.lib.TabRegistry;
 import draylar.tiered.network.TieredClientPacket;
@@ -16,6 +17,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screen.ingame.AnvilScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreens;
 import net.minecraft.entity.EquipmentSlot;
@@ -33,15 +35,15 @@ public class TieredClient implements ClientModInitializer {
     public static final Map<Identifier, PotentialAttribute> CACHED_ATTRIBUTES = new HashMap<>();
 
     public static final List<BorderTemplate> BORDER_TEMPLATES = new ArrayList<BorderTemplate>();
-    private ItemStack lastStack = ItemStack.EMPTY;
+    private final ItemStack lastStack = ItemStack.EMPTY;
     private int tickCounter = 0;
-    private boolean debugMessage = false;
+    private final boolean debugMessage = false;
     private static final Identifier ANVIL_TAB_ICON = Identifier.of("tiered:textures/gui/anvil_tab_icon.png");
     private static final Identifier REFORGE_TAB_ICON = Identifier.of("tiered:textures/gui/reforge_tab_icon.png");
     public static final Queue<Runnable> TASK_QUEUE = new LinkedList<>();
     @Override
     public void onInitializeClient() {
-        HandledScreens.<ReforgeScreenHandler, ReforgeScreen>register(Tiered.REFORGE_SCREEN_HANDLER_TYPE, ReforgeScreen::new);
+        HandledScreens.register(Tiered.REFORGE_SCREEN_HANDLER_TYPE, ReforgeScreen::new);
         TieredClientPacket.init();
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new TooltipBorderLoader());
         TabRegistry.registerOtherTab(new AnvilTab(Text.translatable("container.repair"), ANVIL_TAB_ICON, 0, AnvilScreen.class), AnvilScreen.class);
@@ -65,14 +67,16 @@ public class TieredClient implements ClientModInitializer {
                 System.out.println("[Tiered Debug] [3s Interval] Currently held item: " + currentStack.getItem());
 
                 // --- Valid slots for the item
-                var validSlots = io.wispforest.accessories.api.AccessoriesAPI.getValidSlotTypes(client.player, currentStack);
-                if (!validSlots.isEmpty()) {
-                    System.out.println("  • Valid accessory slots:");
-                    for (var slot : validSlots) {
-                        System.out.println("    - " + slot.name());
+                if (FabricLoader.getInstance().isModLoaded("accessories")) {
+                    var validSlots = AccessoriesCompat.getValidSlotTypes(client.player, currentStack);
+                    if (!validSlots.isEmpty()) {
+                        System.out.println("  • Valid accessory slots:");
+                        for (var slot : validSlots) {
+                            System.out.println("    - " + slot.name());
+                        }
+                    } else {
+                        System.out.println("  • No valid accessory slots found.");
                     }
-                } else {
-                    System.out.println("  • No valid accessory slots found.");
                 }
 
                 // --- Tiered info

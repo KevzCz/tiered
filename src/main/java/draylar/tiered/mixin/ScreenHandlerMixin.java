@@ -1,13 +1,16 @@
 package draylar.tiered.mixin;
 
+import draylar.tiered.Tiered;
 import draylar.tiered.api.ModifierUtils;
 import draylar.tiered.api.PotentialAttribute;
 import draylar.tiered.registry.ModItems;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.WorldEvents;
 import org.spongepowered.asm.mixin.Mixin;
@@ -43,7 +46,7 @@ public abstract class ScreenHandlerMixin {
             // Check if item has a cursed modifier
             Identifier attributeId = ModifierUtils.getAttributeId(targetStack);
             if (attributeId != null) {
-                PotentialAttribute attribute = draylar.tiered.Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(attributeId);
+                PotentialAttribute attribute = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(attributeId);
                 if (attribute != null && attribute.isCursed()) {
 
                     ModifierUtils.removeItemStackAttribute(targetStack);
@@ -65,9 +68,9 @@ public abstract class ScreenHandlerMixin {
                         double z = player.getZ() + Math.sin(angle) * radius;
 
                         if (!player.getWorld().isClient()) {
-                            if (player.getWorld() instanceof net.minecraft.server.world.ServerWorld serverWorld) {
+                            if (player.getWorld() instanceof ServerWorld serverWorld) {
                                 serverWorld.spawnParticles(
-                                        net.minecraft.particle.ParticleTypes.WITCH,
+                                        ParticleTypes.WITCH,
                                         x, height, z,
                                         1,
                                         0.0, 0.0, 0.0, 0.0

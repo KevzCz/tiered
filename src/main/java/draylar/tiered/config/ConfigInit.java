@@ -11,7 +11,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ConfigInit {
 
@@ -62,7 +64,7 @@ public class ConfigInit {
 
                 if (data.tuningIngotConfigs != null) {
                     List<TuningIngotConfig> defs = createDefaultTuningConfigs();
-                    java.util.Map<String, TuningIngotConfig> defByGroup = new java.util.HashMap<>();
+                    Map<String, TuningIngotConfig> defByGroup = new HashMap<>();
                     for (TuningIngotConfig d : defs) defByGroup.put(d.group, d);
 
                     for (TuningIngotConfig t : data.tuningIngotConfigs) {

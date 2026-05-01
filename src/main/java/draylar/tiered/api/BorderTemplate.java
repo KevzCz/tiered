@@ -15,7 +15,7 @@ public class BorderTemplate {
     private final int endGradient;
     private final int backgroundGradient;
     private final List<String> decider;
-    private List<ItemStack> stacks = new ArrayList<ItemStack>();
+    private final List<ItemStack> stacks = new ArrayList<ItemStack>();
 
     public BorderTemplate(int index, String texture, int startGradient, int endGradient, int backgroundGradient, List<String> decider) {
         this.index = index;
@@ -57,10 +57,7 @@ public class BorderTemplate {
     }
 
     public boolean containsDecider(String string) {
-        if (this.decider.contains(string)) {
-            return true;
-        }
-        return false;
+        return this.decider.contains(string);
     }
 
     public void addStack(ItemStack itemStack) {

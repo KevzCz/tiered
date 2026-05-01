@@ -4,6 +4,8 @@ import draylar.tiered.api.PotentialAttribute;
 import draylar.tiered.api.SpellTemplate;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.mixin.client.keybinding.KeyBindingAccessor;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
@@ -14,7 +16,10 @@ import net.minecraft.util.Identifier;
 import net.spell_engine.api.spell.Spell;
 import net.spell_engine.api.spell.container.SpellContainerHelper;
 import net.spell_engine.api.spell.registry.SpellRegistry;
+import net.spell_engine.client.SpellEngineClient;
 import net.spell_engine.client.gui.SpellTooltip;
+import net.spell_engine.client.input.Keybindings;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +63,7 @@ public class SpellTooltipHelper {
             insertionIndex = tooltip.size();
         }
 
-        boolean showDetails = net.spell_engine.client.SpellEngineClient.config.alwaysShowFullTooltip
+        boolean showDetails = SpellEngineClient.config.alwaysShowFullTooltip
                 || isDetailsKeyPressed();
 
         int indentLevel = 1;
@@ -78,7 +83,7 @@ public class SpellTooltipHelper {
         }
 
         if (!itemHasSpells && !showDetails && !spellEntries.isEmpty()) {
-            var keybinding = net.spell_engine.client.input.Keybindings.bypass_spell_hotbar;
+            var keybinding = Keybindings.bypass_spell_hotbar;
             if (!keybinding.isUnbound()) {
                 tooltip.add(insertionIndex, Text.translatable("spell.tooltip.hold_for_details",
                                 keybinding.getBoundKeyLocalizedText())
@@ -119,15 +124,15 @@ public class SpellTooltipHelper {
 
     private static boolean isDetailsKeyPressed() {
         try {
-            var keybinding = net.spell_engine.client.input.Keybindings.bypass_spell_hotbar;
+            var keybinding = Keybindings.bypass_spell_hotbar;
             if (keybinding.isUnbound()) return false;
 
-            long handle = net.minecraft.client.MinecraftClient.getInstance().getWindow().getHandle();
-            var boundKey = ((net.fabricmc.fabric.mixin.client.keybinding.KeyBindingAccessor) keybinding).fabric_getBoundKey();
+            long handle = MinecraftClient.getInstance().getWindow().getHandle();
+            var boundKey = ((KeyBindingAccessor) keybinding).fabric_getBoundKey();
 
             int keyCode = boundKey.getCode();
-            int action = org.lwjgl.glfw.GLFW.glfwGetKey(handle, keyCode);
-            return action == org.lwjgl.glfw.GLFW.GLFW_PRESS;
+            int action = GLFW.glfwGetKey(handle, keyCode);
+            return action == GLFW.GLFW_PRESS;
         } catch (Throwable t) {
             return false;
         }

@@ -150,7 +150,7 @@ public class ModifierUtils {
     }
 
     public static void setItemStackAttribute(@Nullable PlayerEntity playerEntity, ItemStack stack, boolean reforge, @Nullable String group, boolean skipCursed, boolean useAllowedGroupsFilter) {
-        if (stack.get(Tiered.TIER) == null && !stack.isIn(draylar.tiered.api. TieredItemTags. MODIFIER_RESTRICTED)) {
+        if (stack.get(Tiered.TIER) == null && !stack.isIn(TieredItemTags. MODIFIER_RESTRICTED)) {
             Identifier potentialAttributeID = getRandomAttributeIDFor(playerEntity, stack.getItem(), reforge, group, skipCursed, useAllowedGroupsFilter);
             if (potentialAttributeID != null) {
                 float durableFactor = -1f;

@@ -25,7 +25,7 @@ public class TieredMixinPlugin implements IMixinConfigPlugin {
         if (!FabricLoader.getInstance().isModLoaded("easyanvils") && mixinClassName.contains("ModAnvilScreenMixin"))
             return false;
 
-        return true;
+        return FabricLoader.getInstance().isModLoaded("accessories") || !mixinClassName.contains("AccessoriesAPIMixin");
     }
 
     @Override

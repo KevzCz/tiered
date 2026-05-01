@@ -83,17 +83,17 @@ public class TieredTooltip {
         context.getMatrices().push();
         context.getMatrices().translate(0.0f, 0.0f, 400.0f);
         // left top corner
-        context.drawTexture(borderTemplate.getIdentifier(), n - 6, o - 6, 0 + secondHalf * 64, 0 + border * 16, 8, 8, 128, 128);
+        context.drawTexture(borderTemplate.getIdentifier(), n - 6, o - 6, secondHalf * 64, border * 16, 8, 8, 128, 128);
         // right top corner
-        context.drawTexture(borderTemplate.getIdentifier(), n + l - 2, o - 6, 56 + secondHalf * 64, 0 + border * 16, 8, 8, 128, 128);
+        context.drawTexture(borderTemplate.getIdentifier(), n + l - 2, o - 6, 56 + secondHalf * 64, border * 16, 8, 8, 128, 128);
 
         // left down corner
-        context.drawTexture(borderTemplate.getIdentifier(), n - 6, o + m - 2, 0 + secondHalf * 64, 8 + border * 16, 8, 8, 128, 128);
+        context.drawTexture(borderTemplate.getIdentifier(), n - 6, o + m - 2, secondHalf * 64, 8 + border * 16, 8, 8, 128, 128);
         // right down corner
         context.drawTexture(borderTemplate.getIdentifier(), n + l - 2, o + m - 2, 56 + secondHalf * 64, 8 + border * 16, 8, 8, 128, 128);
 
         // middle header
-        context.drawTexture(borderTemplate.getIdentifier(), (n - 6 + n + l + 6) / 2 - 24, o - 9, 8 + secondHalf * 64, 0 + border * 16, 48, 8, 128, 128);
+        context.drawTexture(borderTemplate.getIdentifier(), (n - 6 + n + l + 6) / 2 - 24, o - 9, 8 + secondHalf * 64, border * 16, 48, 8, 128, 128);
         // bottom footer
         context.drawTexture(borderTemplate.getIdentifier(), (n - 6 + n + l + 6) / 2 - 24, o + m + 1, 8 + secondHalf * 64, 8 + border * 16, 48, 8, 128, 128);
 

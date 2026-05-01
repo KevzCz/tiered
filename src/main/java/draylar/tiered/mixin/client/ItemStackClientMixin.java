@@ -44,7 +44,7 @@ public abstract class ItemStackClientMixin {
     @Unique
     private boolean slotInfo;
     @Unique
-    private Map<RegistryEntry<EntityAttribute>, List<EntityAttributeModifier>> tieredMap = new HashMap<>();
+    private final Map<RegistryEntry<EntityAttribute>, List<EntityAttributeModifier>> tieredMap = new HashMap<>();
 
     @Inject(method = "appendAttributeModifiersTooltip", at = @At("HEAD"))
     private void appendAttributeModifiersTooltipMixin(Consumer<Text> textConsumer, @Nullable PlayerEntity player, CallbackInfo info) {

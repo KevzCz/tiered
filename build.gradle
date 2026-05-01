@@ -53,8 +53,8 @@
 		modCompileOnly ("curse.maven:easy-anvils-682567:4556543"){
 			exclude(group: "net.fabricmc.fabric-api")
 		}
-		// Accessories Compat
-		modImplementation("io.wispforest:accessories-fabric:1.1.0-beta.43+1.21.1")
+		// Accessories Compat (optional)
+		modCompileOnly("io.wispforest:accessories-fabric:1.1.0-beta.43+1.21.1")
 
 		modCompileOnly "curse.maven:spell-engine-807653:7702688"
 	}

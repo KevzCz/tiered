@@ -31,6 +31,7 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerListener;
 import net.minecraft.screen.ScreenTexts;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -46,8 +47,8 @@ import static draylar.tiered.util.ReforgeUtil.formatModifierName;
 public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implements ScreenHandlerListener, Tab {
     @Nullable
     private Identifier targetModifier = null;
-    private Set<String> targetModifierGroups = new HashSet<>();
-    private Set<Identifier> targetGroupModifiers = new HashSet<>();
+    private final Set<String> targetModifierGroups = new HashSet<>();
+    private final Set<Identifier> targetGroupModifiers = new HashSet<>();
     private boolean modifierAchieved = false;
     public static final Identifier TEXTURE = Identifier.of("tiered", "textures/gui/reforging_screen.png");
     private final List<FloatingText> floatingTexts = new ArrayList<>();
@@ -372,9 +373,9 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
 
         if (this.client != null && this.client.player != null) {
             if (isAchieved) {
-                this.client.player.playSound(net.minecraft.sound.SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.2f);
+                this.client.player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.2f);
             } else {
-                this.client.player.playSound(net.minecraft.sound.SoundEvents.BLOCK_ANVIL_USE, 0.5f, 1.0f + (float)(Math.random() * 0.2 - 0.1));
+                this.client.player.playSound(SoundEvents.BLOCK_ANVIL_USE, 0.5f, 1.0f + (float)(Math.random() * 0.2 - 0.1));
             }
         }
     }
@@ -805,7 +806,7 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                         String label = "• " + niceName;
                         int modColor = ReforgeUtil.getColorForModifier(id);
                         int maxTextWidth = 120;
-                        String trimmed = textRenderer.trimToWidth(label, maxTextWidth).toString();
+                        String trimmed = textRenderer.trimToWidth(label, maxTextWidth);
                         int textX = listX + 5;
                         int textY = modY + 2;
                         context.drawText(textRenderer, Text.literal(trimmed), textX, textY, modColor, false);
@@ -866,7 +867,7 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                 String label = "• " + niceName;
                 int modColor = ReforgeUtil.getColorForModifier(id);
                 int maxTextWidth = 120;
-                String trimmed = textRenderer.trimToWidth(label, maxTextWidth).toString();
+                String trimmed = textRenderer.trimToWidth(label, maxTextWidth);
                 int textX = listX + 5;
                 int textY = modY + 2;
                 context.drawText(textRenderer, Text.literal(trimmed), textX, textY, modColor, false);

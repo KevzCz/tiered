@@ -20,6 +20,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolItem;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.slot.Slot;
@@ -28,6 +29,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldEvents;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -193,7 +195,7 @@ public class ReforgeScreenHandler extends ScreenHandler {
             for (String t : cfg.blockedItemTags) {
                 String raw = t.startsWith("#") ? t.substring(1) : t;
                 var tagId = Identifier.of(raw);
-                var tag = net.minecraft.registry.tag.TagKey.of(Registries.ITEM.getKey(), tagId);
+                var tag = TagKey.of(Registries.ITEM.getKey(), tagId);
                 if (target.isIn(tag)) return true;
             }
         }
@@ -231,7 +233,7 @@ public class ReforgeScreenHandler extends ScreenHandler {
     @Override
     public ItemStack quickMove(PlayerEntity player, int index) {
         ItemStack itemStack = ItemStack.EMPTY;
-        Slot slot = (Slot) this.slots.get(index);
+        Slot slot = this.slots.get(index);
         if (slot != null && slot.hasStack()) {
             ItemStack itemStack2 = slot.getStack();
             itemStack = itemStack2.copy();
@@ -301,7 +303,7 @@ public class ReforgeScreenHandler extends ScreenHandler {
 
                 this.decrementStack(0);
                 this.decrementStack(2);
-                this.context.run((world, pos) -> world.syncWorldEvent(net.minecraft.world.WorldEvents.ANVIL_USED, this.pos, 0));
+                this.context.run((world, pos) -> world.syncWorldEvent(WorldEvents.ANVIL_USED, this.pos, 0));
                 return;
             }
         }
@@ -318,7 +320,7 @@ public class ReforgeScreenHandler extends ScreenHandler {
 
         this.decrementStack(0);
         this.decrementStack(2);
-        this.context.run((world, pos) -> world.syncWorldEvent(net. minecraft.world.WorldEvents. ANVIL_USED, this. pos, 0));
+        this.context.run((world, pos) -> world.syncWorldEvent(WorldEvents. ANVIL_USED, this. pos, 0));
     }
 
     public void setPos(BlockPos pos) {

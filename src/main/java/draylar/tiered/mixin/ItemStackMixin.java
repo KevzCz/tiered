@@ -4,12 +4,16 @@ import draylar.tiered.Tiered;
 import draylar.tiered.api.AttributeTemplate;
 import draylar.tiered.api.ModifierUtils;
 import draylar.tiered.api.PotentialAttribute;
-import io.wispforest.accessories.api.slot.SlotReference;
+import draylar.tiered.api.SpecialStatsComponent;
+import draylar.tiered.compat.AccessoriesCompat;
+import draylar.tiered.registry.ModComponents;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -24,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 
 @Mixin(ItemStack.class)
 public abstract class ItemStackMixin {
@@ -53,11 +58,11 @@ public abstract class ItemStackMixin {
         return EntityAttributeModifier.Operation.ID_TO_VALUE.apply(id);
     }
 
-    private void applyStatEntry(ItemStack stack, draylar.tiered.api.SpecialStatsComponent.Entry e, @Nullable EquipmentSlot equipmentSlot, @Nullable AttributeModifierSlot attributeModifierSlot, BiConsumer<RegistryEntry<EntityAttribute>, EntityAttributeModifier> out) {
-        var attrRef = net.minecraft.registry.Registries.ATTRIBUTE.getEntry(Identifier.of(e.attribute()));
+    private void applyStatEntry(ItemStack stack, SpecialStatsComponent.Entry e, @Nullable EquipmentSlot equipmentSlot, @Nullable AttributeModifierSlot attributeModifierSlot, BiConsumer<RegistryEntry<EntityAttribute>, EntityAttributeModifier> out) {
+        var attrRef = Registries.ATTRIBUTE.getEntry(Identifier.of(e.attribute()));
         if (attrRef.isEmpty()) return;
 
-        java.util.function.Predicate<EquipmentSlot> slotMatch = s -> {
+        Predicate<EquipmentSlot> slotMatch = s -> {
             if (e.slots().contains("any")) return true;
             return e.slots().stream().anyMatch(n -> n.equalsIgnoreCase(s.getName()));
         };
@@ -88,7 +93,7 @@ public abstract class ItemStackMixin {
     private void applyAttributeModifier(@Nullable EquipmentSlot equipmentSlot, @Nullable AttributeModifierSlot attributeModifierSlot, BiConsumer<RegistryEntry<EntityAttribute>, EntityAttributeModifier> attributeModifierConsumer) {
         ItemStack itemStack = (ItemStack) (Object) this;
         if (itemStack.get(Tiered.TIER) != null && "tiered:special".equals(itemStack.get(Tiered.TIER).tier())) {
-            var comp = itemStack.get(draylar.tiered.registry.ModComponents.SPECIAL_STATS);
+            var comp = itemStack.get(ModComponents.SPECIAL_STATS);
             if (comp != null) {
                 for (var e : comp.specials()) {
                     applyStatEntry(itemStack, e, equipmentSlot, attributeModifierSlot, attributeModifierConsumer);
@@ -118,10 +123,9 @@ public abstract class ItemStackMixin {
                     }
                     if (template.isOnlyForAccessories()) continue;
 
-                    if (template.getOptionalAccessoriesSlots() != null) {
+                    if (FabricLoader.getInstance().isModLoaded("accessories") && template.getOptionalAccessoriesSlots() != null) {
                         for (String slotName : template.getOptionalAccessoriesSlots()) {
-                            SlotReference ref = SlotReference.of(null, slotName, 0);
-                            template.applyAccessoryModifiers(itemStack, ref, attributeModifierConsumer);
+                            AccessoriesCompat.applyAccessoryModifiers(itemStack, slotName, template, attributeModifierConsumer);
                         }
                     }
 

@@ -2,7 +2,6 @@ package draylar.tiered.api;
 
 import com.google.common.collect.Multimap;
 import com.google.gson.annotations.SerializedName;
-import io.wispforest.accessories.api.slot.SlotReference;
 import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.component.type.AttributeModifiersComponent;
 import net.minecraft.entity.EquipmentSlot;
@@ -65,28 +64,6 @@ public class AttributeTemplate {
         return attributeTypeID;
     }
 
-    /**
-     * Uses this {@link AttributeTemplate} to create an {@link EntityAttributeModifier}, which is placed into the given {@link Multimap}.
-     * <p>
-     * Note that this method assumes the given {@link Multimap} is mutable.
-     *
-     * @param attributeConsumer biconsumer to accept {@link AttributeTemplate}
-     * @param slot
-     */
-    public void applyAccessoryModifiers(ItemStack stack, SlotReference ref, BiConsumer<RegistryEntry<EntityAttribute>, EntityAttributeModifier> attributeConsumer) {
-        Optional<RegistryEntry.Reference<EntityAttribute>> optional = Registries.ATTRIBUTE.getEntry(Identifier.of(this.attributeTypeID));
-        if (optional.isPresent()) {
-            EntityAttributeModifier clonedModifier = new EntityAttributeModifier(
-                    Identifier.of(entityAttributeModifier.id().getNamespace(),
-                            (entityAttributeModifier.id().getPath() + "_" + ref.slotName().toLowerCase())),
-                    entityAttributeModifier.value(),
-                    entityAttributeModifier.operation()
-            );
-
-
-            attributeConsumer.accept(optional.get(), clonedModifier);
-        }
-    }
     public boolean isOnlyForAccessories() {
         return (requiredEquipmentSlots == null || requiredEquipmentSlots.length == 0)
                 && (optionalEquipmentSlots == null || optionalEquipmentSlots.length == 0)
