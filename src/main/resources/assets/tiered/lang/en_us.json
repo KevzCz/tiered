@@ -255,7 +255,7 @@
   "commands.tiered.rune.show_bias_groups": "Bias groups: %s",
   "commands.tiered.rune.show_bias_favor": "Bias favor: %s x%s",
   "commands.tiered.rune.bias": "Set bias %s",
-  "tooltip.tiered.cursed": "â•š ðŸ’€ Cursed ðŸ’€ â•",
+  "tooltip.tiered.cursed": "└ 💀 Cursed 💀 ┘",
   "tooltip.tiered.cannot_reforge": "Cannot be Reforged",
   "item.tiered.blessed_scroll": "Blessed Scroll",
   "item.tiered.special_tuning_ingot": "Special Tuning Ingot",
@@ -426,6 +426,6 @@
   "screen.tiered.reforge.info.groups": "Target multiple groups:",
   "screen.tiered.reforge.info.groups_example": "  Right-click on ",
   "screen.tiered.reforge.info.stops": "Stops on ANY selected group/modifier",
-  "screen.tiered.reforge.achieved_modifier": "âœ” Modifier Achieved",
-  "screen.tiered.reforge.achieved_groups": "âœ” %s Achieved!"
+  "screen.tiered.reforge.achieved_modifier": "✔ Modifier Achieved",
+  "screen.tiered.reforge.achieved_groups": "✔ %s Achieved!"
 }
