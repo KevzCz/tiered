@@ -6,11 +6,18 @@ import java.util.List;
 import draylar.tiered.Tiered;
 import draylar.tiered.access.AnvilScreenHandlerAccess;
 import draylar.tiered.data.AttributeDataLoader;
+import draylar.tiered.data.EffectDefinitionLoader;
+import draylar.tiered.data.ImprintDefinitionLoader;
+import draylar.tiered.data.ImprintSlotLoader;
 import draylar.tiered.network.packet.AttributePacket;
 import draylar.tiered.network.packet.AutoRefillPacket;
+import draylar.tiered.network.packet.ExtractSlotPacket;
 import draylar.tiered.network.packet.HealthPacket;
+import draylar.tiered.network.packet.ImprintDataSyncPacket;
 import draylar.tiered.network.packet.MousePositionPacket;
+import draylar.tiered.data.ReforgeMaterialLoader;
 import draylar.tiered.network.packet.ReforgeItemSyncPacket;
+import draylar.tiered.network.packet.ReforgeMaterialSyncPacket;
 import draylar.tiered.network.packet.ReforgePacket;
 import draylar.tiered.network.packet.ReforgeReadyPacket;
 import draylar.tiered.network.packet.ReforgeScreenPacket;
@@ -39,6 +46,9 @@ public class TieredServerPacket {
         PayloadTypeRegistry.playC2S().register(AutoRefillPacket.PACKET_ID, AutoRefillPacket.PACKET_CODEC);
         PayloadTypeRegistry.playS2C().register(StopAutoReforgePacket.PACKET_ID, StopAutoReforgePacket.PACKET_CODEC);
         PayloadTypeRegistry.playS2C().register(MousePositionPacket.PACKET_ID, MousePositionPacket.PACKET_CODEC);
+        PayloadTypeRegistry.playS2C().register(ReforgeMaterialSyncPacket.PACKET_ID, ReforgeMaterialSyncPacket.PACKET_CODEC);
+        PayloadTypeRegistry.playS2C().register(ImprintDataSyncPacket.PACKET_ID, ImprintDataSyncPacket.PACKET_CODEC);
+        PayloadTypeRegistry.playC2S().register(ExtractSlotPacket.PACKET_ID, ExtractSlotPacket.PACKET_CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(ReforgeScreenPacket.PACKET_ID, (payload, context) -> {
             int mouseX = payload.mouseX();
@@ -66,6 +76,13 @@ public class TieredServerPacket {
             context.server().execute(() -> {
                 if (context.player().currentScreenHandler instanceof ReforgeScreenHandler reforgeScreenHandler) {
                     reforgeScreenHandler.reforge();
+                }
+            });
+        });
+        ServerPlayNetworking.registerGlobalReceiver(ExtractSlotPacket.PACKET_ID, (payload, context) -> {
+            context.server().execute(() -> {
+                if (context.player().currentScreenHandler instanceof ReforgeScreenHandler reforgeScreenHandler) {
+                    reforgeScreenHandler.performExtract(payload.slotIndex());
                 }
             });
         });
@@ -106,6 +123,41 @@ public class TieredServerPacket {
         });
 
         ServerPlayNetworking.send(serverPlayerEntity, new ReforgeItemSyncPacket(ids, listSize, itemIds));
+    }
+
+    public static void writeS2CReforgeMaterialSyncPacket(ServerPlayerEntity serverPlayerEntity) {
+        List<String> itemIds = new ArrayList<String>();
+        List<String> materialJsons = new ArrayList<String>();
+
+        Tiered.REFORGE_MATERIAL_LOADER.getMaterials().forEach((id, material) -> {
+            itemIds.add(id.toString());
+            materialJsons.add(ReforgeMaterialLoader.GSON.toJson(material));
+        });
+
+        ServerPlayNetworking.send(serverPlayerEntity, new ReforgeMaterialSyncPacket(itemIds, materialJsons));
+    }
+
+    public static void writeS2CImprintDataSyncPacket(ServerPlayerEntity serverPlayerEntity) {
+        List<String> imprintIds = new ArrayList<>();
+        List<String> imprintJsons = new ArrayList<>();
+        Tiered.IMPRINT_DEFINITION_LOADER.getDefinitions().forEach((id, def) -> {
+            imprintIds.add(id);
+            imprintJsons.add(ImprintDefinitionLoader.GSON.toJson(def));
+        });
+
+        List<String> effectIds = new ArrayList<>();
+        List<String> effectJsons = new ArrayList<>();
+        Tiered.EFFECT_DEFINITION_LOADER.getDefinitions().forEach((id, def) -> {
+            effectIds.add(id);
+            effectJsons.add(EffectDefinitionLoader.GSON.toJson(def));
+        });
+
+        List<String> slotRuleJsons = new ArrayList<>();
+        Tiered.IMPRINT_SLOT_LOADER.getRules().forEach(rule ->
+                slotRuleJsons.add(ImprintSlotLoader.GSON.toJson(rule)));
+
+        ServerPlayNetworking.send(serverPlayerEntity, new ImprintDataSyncPacket(
+                imprintIds, imprintJsons, effectIds, effectJsons, slotRuleJsons));
     }
 
     public static void writeS2CAttributePacket(ServerPlayerEntity serverPlayerEntity) {

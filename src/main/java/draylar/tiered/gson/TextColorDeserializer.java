@@ -9,7 +9,6 @@ import net.minecraft.util.Formatting;
 
 import java.lang.reflect.Type;
 
-// Unused cause of FormattingDeserializer usage
 public class TextColorDeserializer implements JsonDeserializer<TextColor> {
 
     @Override

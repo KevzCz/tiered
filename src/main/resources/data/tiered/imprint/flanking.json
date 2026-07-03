@@ -1,0 +1,33 @@
+{
+  "id": "tiered:flanking",
+  "color": "#9B59B6",
+  "name_key": "imprint.tiered.flanking.name",
+  "line_key": "imprint.tiered.flanking",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "reapply": "HIGHEST",
+  "group": "weapon",
+  "types": [
+    {
+      "type": "behavioral",
+      "value_min": 0.03,
+      "value_max": 0.08,
+      "max_bonus": 0.30,
+      "value_display": "percent",
+      "behavior": "tiered:flanking",
+      "params": {
+        "bonus_angle_threshold": 120.0,
+        "penalty_angle_threshold": 60.0
+      },
+      "extra_ranges": [
+        {
+          "key": "penalty",
+          "value_min": -0.02,
+          "value_max": -0.05,
+          "max_bonus": -0.15,
+          "value_display": "percent"
+        }
+      ]
+    }
+  ]
+}

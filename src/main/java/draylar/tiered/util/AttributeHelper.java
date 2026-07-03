@@ -1,11 +1,35 @@
 package draylar.tiered.util;
 
 import draylar.tiered.api.CustomEntityAttributes;
+import draylar.tiered.api.imprint.ImprintResolver;
+import draylar.tiered.api.imprint.behavior.RetaliationBehavior;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 
 public class AttributeHelper {
+
+    public static float applyMeleeDamageImprints(PlayerEntity player, LivingEntity target, float baseDamage) {
+
+        float bonusFraction = ImprintResolver.resolveDataMeleeDamageFraction(player, target);
+
+        bonusFraction += RetaliationBehavior.consumeCharge(player);
+        if (bonusFraction <= 0f) return baseDamage;
+        return baseDamage * (1.0f + bonusFraction);
+    }
+
+    public static float applyRangedDamageImprints(PlayerEntity player, LivingEntity target, float baseDamage) {
+        float bonusFraction = ImprintResolver.resolveDataRangedDamageFraction(player, target);
+        return bonusFraction <= 0f ? baseDamage : baseDamage * (1.0f + bonusFraction);
+    }
+
+    public static float applyMagicDamageImprints(PlayerEntity player, LivingEntity target, DamageSource source,
+            float baseDamage) {
+        float bonusFraction = ImprintResolver.resolveDataMagicDamageFraction(player, target, source);
+        return bonusFraction <= 0f ? baseDamage : baseDamage * (1.0f + bonusFraction);
+    }
 
     public static boolean shouldMeeleCrit(PlayerEntity playerEntity) {
         EntityAttributeInstance instance = playerEntity.getAttributeInstance(CustomEntityAttributes.CRIT_CHANCE);

@@ -1,0 +1,24 @@
+{
+  "id": "tiered:momentum",
+  "color": "#F39C12",
+  "name_key": "imprint.tiered.momentum.name",
+  "line_key": "imprint.tiered.momentum",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "reapply": "HIGHEST",
+  "group": "combat",
+  "types": [
+    {
+      "type": "behavioral",
+      "value_min": 0.05,
+      "value_max": 0.1,
+      "max_bonus": 0.25,
+      "value_display": "percent",
+      "behavior": "tiered:momentum",
+      "params": {
+        "reset_ticks": 60.0,
+        "max_stacks": 5.0
+      }
+    }
+  ]
+}

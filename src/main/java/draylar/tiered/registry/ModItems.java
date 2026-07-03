@@ -14,7 +14,10 @@ import net.minecraft.registry.Registry;
 import net.minecraft.text.Text;
 import net.minecraft.util.Rarity;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -23,7 +26,22 @@ public class ModItems {
     public static Item SPECIAL_TUNING_INGOT;
 
     public static final Map<String, Item> TUNING_INGOTS = new HashMap<>();
+    public static final Map<String, Item> RUNES = new HashMap<>();
     public static ItemGroup TIERED_TAB;
+
+    private static final String[] RUNE_NAMES = {
+            "rune_verdant", "rune_obsidian", "rune_amber", "rune_steel", "rune_arcane",
+            "rune_crimson", "rune_sandstone", "rune_ember", "rune_frost", "rune_shadow"
+    };
+
+    private static final List<String> EXTRA_RUNE_NAMES = new ArrayList<>();
+
+    public static void addRune(String runeName) {
+        if (runeName != null && !runeName.isBlank()
+                && !EXTRA_RUNE_NAMES.contains(runeName) && !RUNES.containsKey(runeName)) {
+            EXTRA_RUNE_NAMES.add(runeName);
+        }
+    }
 
     public static void init() {
         for (TuningIngotConfig entry : ConfigInit.CUSTOM_TUNING_INGOTS) {
@@ -60,6 +78,18 @@ public class ModItems {
                 }
         );
 
+        List<String> allRunes = new ArrayList<>(Arrays.asList(RUNE_NAMES));
+        allRunes.addAll(EXTRA_RUNE_NAMES);
+        for (String runeName : allRunes) {
+            if (RUNES.containsKey(runeName)) continue;
+            Item rune = Registry.register(
+                    Registries.ITEM,
+                    Tiered.id(runeName),
+                    new Item(new Item.Settings().rarity(Rarity.RARE))
+            );
+            RUNES.put(runeName, rune);
+        }
+
         TIERED_TAB = FabricItemGroup.builder()
                 .icon(() -> new ItemStack(TUNING_INGOTS.values().iterator().next()))
                 .displayName(Text.translatable("itemGroup.tiered.tab"))
@@ -67,6 +97,7 @@ public class ModItems {
                     TUNING_INGOTS.values().forEach(entries::add);
                     entries.add(BLESSED_SCROLL);
                     if (SPECIAL_TUNING_INGOT != null) entries.add(SPECIAL_TUNING_INGOT);
+                    RUNES.values().forEach(entries::add);
                 })
                 .build();
 

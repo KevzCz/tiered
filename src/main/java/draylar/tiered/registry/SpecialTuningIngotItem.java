@@ -59,13 +59,10 @@ public class SpecialTuningIngotItem extends Item {
 
         Random r = new Random();
 
-        // choose 3 distinct special stats by weight
         List<SpecialStatEntry> chosen = pickWeighted(pool, 3, r);
 
-        // choose 1 basic stat by weight
         BasicStatEntry basic = (BasicStatEntry) pickWeighted(basics, 1, r).get(0);
 
-        // split total special percentage randomly across the 3 chosen specials
         double total = cfg.totalSpecialPercent;
         double a = r.nextDouble(), b = r.nextDouble(), c = r.nextDouble();
         double sum = a + b + c;

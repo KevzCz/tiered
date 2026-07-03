@@ -1,0 +1,19 @@
+{
+  "id": "tiered:stalwart",
+  "color": "#5D6D7E",
+  "name_key": "imprint.tiered.stalwart.name",
+  "line_key": "imprint.tiered.stalwart",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "group": "defense",
+  "types": [
+    {
+      "type": "behavioral",
+      "value_min": 0.01,
+      "value_max": 0.02,
+      "max_bonus": 0.1,
+      "value_display": "percent",
+      "behavior": "tiered:stalwart"
+    }
+  ]
+}

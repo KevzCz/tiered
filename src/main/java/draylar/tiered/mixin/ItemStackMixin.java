@@ -5,6 +5,11 @@ import draylar.tiered.api.AttributeTemplate;
 import draylar.tiered.api.ModifierUtils;
 import draylar.tiered.api.PotentialAttribute;
 import draylar.tiered.api.SpecialStatsComponent;
+import draylar.tiered.api.imprint.ImprintAttributes;
+import draylar.tiered.api.imprint.ImprintResolver;
+import draylar.tiered.api.imprint.MaxDurabilityImprint;
+import draylar.tiered.api.imprint.behavior.StalwartBehavior;
+import draylar.tiered.api.imprint.behavior.TemperedBehavior;
 import draylar.tiered.compat.AccessoriesCompat;
 import draylar.tiered.registry.ModComponents;
 import net.fabricmc.loader.api.FabricLoader;
@@ -12,14 +17,18 @@ import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -28,6 +37,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 @Mixin(ItemStack.class)
@@ -43,7 +53,33 @@ public abstract class ItemStackMixin {
                 info.setReturnValue(info.getReturnValue() + (int) ((float) info.getReturnValue() * stack.get(Tiered.TIER).durable()));
             }
         }
+
+        var imprints = stack.get(ModComponents.IMPRINTS);
+        if (imprints != null) {
+            float bonus = imprints.valueOf(MaxDurabilityImprint.ID);
+            if (bonus > 0) {
+                info.setReturnValue(info.getReturnValue() + (int) bonus);
+            }
+        }
     }
+
+    @ModifyVariable(method = "damage(ILnet/minecraft/server/world/ServerWorld;Lnet/minecraft/server/network/ServerPlayerEntity;Ljava/util/function/Consumer;)V", at = @At("HEAD"), ordinal = 0, argsOnly = true)
+    private int tieredDurabilityImprints(int amount, int originalAmount, ServerWorld world, ServerPlayerEntity player, Consumer<Item> breakCallback) {
+        if (amount <= 0 || player == null) return amount;
+
+        float tempered = ImprintResolver.resolveValue(player, TemperedBehavior.ID);
+        if (tempered > 0f) {
+            int reduced = (int) Math.floor(amount * (1.0f - tempered));
+            amount = Math.max(reduced, 1);
+        }
+
+        float stalwart = ImprintResolver.resolveValue(player, StalwartBehavior.ID);
+        if (stalwart > 0f && player.getRandom().nextFloat() < stalwart) {
+            return 0;
+        }
+        return amount;
+    }
+
     @Inject(method = "Lnet/minecraft/item/ItemStack;applyAttributeModifier(Lnet/minecraft/component/type/AttributeModifierSlot;Ljava/util/function/BiConsumer;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/enchantment/EnchantmentHelper;applyAttributeModifiers(Lnet/minecraft/item/ItemStack;Lnet/minecraft/component/type/AttributeModifierSlot;Ljava/util/function/BiConsumer;)V"))
     private void applyAttributeModifierMixin(AttributeModifierSlot slot, BiConsumer<RegistryEntry<EntityAttribute>, EntityAttributeModifier> attributeModifierConsumer, CallbackInfo info) {
         applyAttributeModifier(null, slot, attributeModifierConsumer);
@@ -108,7 +144,7 @@ public abstract class ItemStackMixin {
             PotentialAttribute potentialAttribute = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(tier);
             if (potentialAttribute != null) {
                 for (AttributeTemplate template : potentialAttribute.getAttributes()) {
-                    // get required equipment slots
+
                     if (template.getRequiredEquipmentSlots() != null) {
                         List<EquipmentSlot> requiredEquipmentSlots = new ArrayList<>(Arrays.asList(template.getRequiredEquipmentSlots()));
 
@@ -129,10 +165,9 @@ public abstract class ItemStackMixin {
                         }
                     }
 
-                    // get optional equipment slots
                     if (template.getOptionalEquipmentSlots() != null) {
                         List<EquipmentSlot> optionalEquipmentSlots = new ArrayList<>(Arrays.asList(template.getOptionalEquipmentSlots()));
-                        // optional equipment slots are valid ONLY IF the equipment slot is valid for the thing
+
                         if (equipmentSlot != null && optionalEquipmentSlots.contains(equipmentSlot) && Tiered.isPreferredEquipmentSlot(itemStack, equipmentSlot)) {
                             template.applyModifiers(equipmentSlot, attributeModifierConsumer);
                         } else if (attributeModifierSlot != null && attributeModifierSlot != AttributeModifierSlot.ANY && attributeModifierSlot != AttributeModifierSlot.HAND) {
@@ -145,5 +180,7 @@ public abstract class ItemStackMixin {
                 }
             }
         }
+
+        ImprintAttributes.apply(itemStack, equipmentSlot, attributeModifierSlot, attributeModifierConsumer);
     }
 }

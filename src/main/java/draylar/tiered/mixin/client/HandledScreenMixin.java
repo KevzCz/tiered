@@ -1,7 +1,6 @@
 package draylar.tiered.mixin.client;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -41,8 +40,7 @@ public abstract class HandledScreenMixin extends Screen {
                 } else if (TieredClient.BORDER_TEMPLATES.get(i).containsStack(stack)) {
                     List<Text> text = Screen.getTooltipFromItem(client, stack);
 
-                    List<TooltipComponent> list = text.stream().map(Text::asOrderedText).map(TooltipComponent::of).collect(Collectors.toList());
-                    stack.getTooltipData().ifPresent(data -> list.add(1, TooltipComponent.of(data)));
+                    List<TooltipComponent> list = TieredTooltip.buildComponents(text, stack.getTooltipData(), stack);
 
                     TieredTooltip.renderTieredTooltipFromComponents(context, this.textRenderer, list, x, y, HoveredTooltipPositioner.INSTANCE, TieredClient.BORDER_TEMPLATES.get(i));
 

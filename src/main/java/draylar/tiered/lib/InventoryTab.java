@@ -10,17 +10,17 @@ import org.jetbrains.annotations.Nullable;
 
 @Environment(EnvType.CLIENT)
 public abstract class InventoryTab {
-    
+
     protected final Text title;
     @Nullable
     protected final Identifier texture;
     protected final int preferredPos;
     protected final Class<?>[] screenClasses;
-    
+
     public static final int TAB_WIDTH = 28;
     public static final int TAB_HEIGHT = 28;
     public static final int TAB_SPACING = 1;
-    
+
     public InventoryTab(Text title, @Nullable Identifier texture, int preferredPos, Class<?>... screenClasses) {
         this.title = title;
         this.texture = texture;
@@ -33,17 +33,17 @@ public abstract class InventoryTab {
     public void render(DrawContext context, int x, int y, boolean selected, boolean hovered) {
         int bgColor = selected ? 0xFFC6C6C6 : (hovered ? 0xFFB0B0B0 : 0xFF8B8B8B);
         int borderColor = 0xFF373737;
-        
+
         int drawY = selected ? y : y + 3;
         int drawHeight = selected ? TAB_HEIGHT : TAB_HEIGHT - 3;
-        
+
         context.fill(x, drawY, x + TAB_WIDTH, drawY + drawHeight, bgColor);
-        
+
         context.fill(x, drawY, x + TAB_WIDTH, drawY + 1, borderColor);
         context.fill(x, drawY, x + 1, drawY + drawHeight, borderColor);
-        context.fill(x + TAB_WIDTH - 1, drawY, x + TAB_WIDTH, drawY + drawHeight, borderColor); // Right
+        context.fill(x + TAB_WIDTH - 1, drawY, x + TAB_WIDTH, drawY + drawHeight, borderColor);
         if (!selected) {
-            context.fill(x, drawY + drawHeight - 1, x + TAB_WIDTH, drawY + drawHeight, borderColor); // Bottom for non-selected
+            context.fill(x, drawY + drawHeight - 1, x + TAB_WIDTH, drawY + drawHeight, borderColor);
         }
 
         if (texture != null) {
@@ -55,31 +55,9 @@ public abstract class InventoryTab {
     public void renderTooltip(DrawContext context, int mouseX, int mouseY) {
         context.drawTooltip(MinecraftClient.getInstance().textRenderer, title, mouseX, mouseY);
     }
-    
-    public Text getTitle() {
-        return title;
-    }
-    
-    @Nullable
-    public Identifier getTexture() {
-        return texture;
-    }
-    
+
     public int getPreferredPos() {
         return preferredPos;
-    }
-    
-    public Class<?>[] getScreenClasses() {
-        return screenClasses;
-    }
-
-    public boolean shouldShow(Class<?> screenClass) {
-        for (Class<?> clazz : screenClasses) {
-            if (clazz.isAssignableFrom(screenClass)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public boolean isSelected(Class<?> screenClass) {

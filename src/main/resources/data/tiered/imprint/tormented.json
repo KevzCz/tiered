@@ -1,0 +1,20 @@
+{
+  "id": "tiered:tormented",
+  "color": "#5B2C6F",
+  "name_key": "imprint.tiered.tormented.name",
+  "line_key": "imprint.tiered.tormented",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "reapply": "HIGHEST",
+  "group": "combat",
+  "types": [
+    {
+      "type": "behavioral",
+      "value_min": 0.005,
+      "value_max": 0.015,
+      "max_bonus": 0.075,
+      "value_display": "percent",
+      "behavior": "tiered:tormented"
+    }
+  ]
+}

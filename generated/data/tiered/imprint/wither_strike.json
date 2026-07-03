@@ -1,0 +1,22 @@
+{
+  "id": "tiered:wither_strike",
+  "color": "#1C1C1C",
+  "name_key": "imprint.tiered.wither_strike.name",
+  "line_key": "imprint.tiered.wither_strike",
+  "combine": "UNIQUE",
+  "multiplicity": "SLOT",
+  "reapply": "HIGHEST",
+  "group": "combat",
+  "types": [
+    {
+      "type": "behavioral",
+      "value_display": "none",
+      "behavior": "tiered:wither_strike",
+      "params": {
+        "chance": 1.0,
+        "duration_ticks": 60.0,
+        "amplifier": 1.0
+      }
+    }
+  ]
+}

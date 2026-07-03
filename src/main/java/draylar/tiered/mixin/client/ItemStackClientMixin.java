@@ -2,6 +2,8 @@ package draylar.tiered.mixin.client;
 
 import draylar.tiered.Tiered;
 import draylar.tiered.api.PotentialAttribute;
+import draylar.tiered.api.imprint.DataImprint;
+import draylar.tiered.api.imprint.ImprintAttributes;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.component.type.AttributeModifierSlot;
@@ -56,6 +58,10 @@ public abstract class ItemStackClientMixin {
             for (AttributeModifierSlot attributeModifierSlot : AttributeModifierSlot.values()) {
                 MutableBoolean mutableBoolean = new MutableBoolean(false);
                 this.applyAttributeModifier(attributeModifierSlot, (attribute, modifier) -> {
+
+                    if (tiered$isImprintModifier(modifier)) {
+                        return;
+                    }
                     List<EntityAttributeModifier> modifiers;
                     if (this.tieredMap.containsKey(attribute)) {
                         modifiers = this.tieredMap.get(attribute);
@@ -92,6 +98,7 @@ public abstract class ItemStackClientMixin {
 
     @Inject(method = "appendAttributeModifierTooltip(Ljava/util/function/Consumer;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/registry/entry/RegistryEntry;Lnet/minecraft/entity/attribute/EntityAttributeModifier;)V", at = @At(value = "INVOKE", target = "Ljava/util/function/Consumer;accept(Ljava/lang/Object;)V", ordinal = 0), locals = LocalCapture.CAPTURE_FAILSOFT, cancellable = true)
     private void appendAttributeModifierTooltipMixin(Consumer<Text> textConsumer, @Nullable PlayerEntity player, RegistryEntry<EntityAttribute> attribute, EntityAttributeModifier modifier, CallbackInfo info, double d, boolean bl, double e) {
+        if (tiered$isImprintModifier(modifier)) { info.cancel(); return; }
         if (this.isTiered && this.tieredMap.containsKey(attribute)) {
             MutableText text = ScreenTexts.space();
             text.append(Text.translatable(
@@ -126,6 +133,7 @@ public abstract class ItemStackClientMixin {
 
     @Inject(method = "appendAttributeModifierTooltip(Ljava/util/function/Consumer;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/registry/entry/RegistryEntry;Lnet/minecraft/entity/attribute/EntityAttributeModifier;)V", at = @At(value = "INVOKE", target = "Ljava/util/function/Consumer;accept(Ljava/lang/Object;)V", ordinal = 1), locals = LocalCapture.CAPTURE_FAILSOFT, cancellable = true)
     private void appendAttributeModifierTooltipTwoMixin(Consumer<Text> textConsumer, @Nullable PlayerEntity player, RegistryEntry<EntityAttribute> attribute, EntityAttributeModifier modifier, CallbackInfo info, double d, boolean bl, double e) {
+        if (tiered$isImprintModifier(modifier)) { info.cancel(); return; }
         if (this.isTiered && this.tieredMap.containsKey(attribute)) {
             MutableText text = Text.translatable(
                             "tiered.attribute.modifier.plus." + modifier.operation().getId(),
@@ -160,6 +168,7 @@ public abstract class ItemStackClientMixin {
 
     @Inject(method = "appendAttributeModifierTooltip(Ljava/util/function/Consumer;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/registry/entry/RegistryEntry;Lnet/minecraft/entity/attribute/EntityAttributeModifier;)V", at = @At(value = "INVOKE", target = "Ljava/util/function/Consumer;accept(Ljava/lang/Object;)V", ordinal = 2), locals = LocalCapture.CAPTURE_FAILSOFT, cancellable = true)
     private void appendAttributeModifierTooltipThreeMixin(Consumer<Text> textConsumer, @Nullable PlayerEntity player, RegistryEntry<EntityAttribute> attribute, EntityAttributeModifier modifier, CallbackInfo info, double d, boolean bl, double e) {
+        if (tiered$isImprintModifier(modifier)) { info.cancel(); return; }
         if (this.isTiered && this.tieredMap.containsKey(attribute)) {
             MutableText text = Text.translatable(
                             "tiered.attribute.modifier.take." + modifier.operation().getId(),
@@ -196,7 +205,7 @@ public abstract class ItemStackClientMixin {
     private void getNameMixin(CallbackInfoReturnable<Text> info) {
         ItemStack stack = (ItemStack) (Object) this;
         if (stack.get(Tiered.TIER) != null) {
-            // attempt to display attribute if it is valid
+
             if (Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().containsKey(Identifier.of(stack.get(Tiered.TIER).tier()))) {
                 PotentialAttribute potentialAttribute = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(Identifier.of(stack.get(Tiered.TIER).tier()));
 
@@ -205,6 +214,12 @@ public abstract class ItemStackClientMixin {
                 }
             }
         }
+    }
+
+    @Unique
+    private static boolean tiered$isImprintModifier(EntityAttributeModifier modifier) {
+        Identifier id = modifier.id();
+        return "tiered".equals(id.getNamespace()) && id.getPath().startsWith("imprint_");
     }
 
     @Shadow

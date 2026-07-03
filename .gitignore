@@ -4,7 +4,9 @@
 build/
 out/
 classes/
-
+.decompile/
+docs/
+scripts/
 # eclipse
 
 *.launch

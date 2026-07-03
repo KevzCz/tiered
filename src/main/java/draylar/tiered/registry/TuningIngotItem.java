@@ -35,21 +35,10 @@ public class TuningIngotItem extends Item {
                 .findFirst()
                 .orElse(null);
 
-
         if (match != null) {
             tooltip.add(Text.literal("Loot Chance: " + (int)(match.lootChance * 100) + "%").formatted(Formatting.GRAY));
         }
 
         super.appendTooltip(stack, context, tooltip, type);
     }
-
-    public String getGroup() {
-        return group;
-    }
-
-    public String getColor() {
-        return color;
-    }
 }
-
-

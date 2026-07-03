@@ -6,6 +6,7 @@ import java.util.List;
 
 import draylar.tiered.Tiered;
 import draylar.tiered.api.AttributeTemplate;
+import draylar.tiered.config.ConfigInit;
 import draylar.tiered.api.ModifierUtils;
 import draylar.tiered.api.TierComponent;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -40,13 +41,16 @@ public class CommandInit {
                 return executeCommand(commandContext.getSource(), EntityArgumentType.getPlayers(commandContext, "targets"), 5);
             })))).then(CommandManager.literal("untier").then(CommandManager.argument("targets", EntityArgumentType.players()).executes((commandContext) -> {
                 return executeCommand(commandContext.getSource(), EntityArgumentType.getPlayers(commandContext, "targets"), -1);
-            }))));
+            }))).then(CommandManager.literal("reload").then(CommandManager.literal("slot_scaling").executes((commandContext) -> {
+                ConfigInit.reloadSlotScalingConfig();
+                commandContext.getSource().sendFeedback(() -> Text.translatable("commands.tiered.reload.slot_scaling"), true);
+                return 1;
+            }))).then(RuneCommand.build()).then(DumpCommand.build()));
         });
     }
 
-    // 0: common; 1: uncommon; 2: rare; 3: epic; 4: legendary; 5: unique
     private static int executeCommand(ServerCommandSource source, Collection<ServerPlayerEntity> targets, int tier) {
-        // loop over players
+
         for (ServerPlayerEntity serverPlayerEntity : targets) {
             ItemStack itemStack = serverPlayerEntity.getMainHandStack();
 
@@ -94,7 +98,7 @@ public class CommandInit {
 
                         Identifier attribute = potentialTier.get(serverPlayerEntity.getWorld().getRandom().nextInt(potentialTier.size()));
                         if (attribute != null) {
-                            // add durability nbt
+
                             float durableFactor = -1f;
                             int operation = 0;
                             List<AttributeTemplate> attributeList = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(Identifier.of(attribute.toString())).getAttributes();

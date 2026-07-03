@@ -1,0 +1,78 @@
+{
+  "item": "tiered:rune_frost",
+  "color": "aqua",
+  "skip_reforge": true,
+  "imprint_pool_choices": {
+    "candidates": [
+      {
+        "weight": 1,
+        "pool": {
+          "roll_min": 1,
+          "roll_max": 2,
+          "imprint_groups": [
+            "defense",
+            "vitality"
+          ],
+          "allow_duplicates": true,
+          "roll_scaling": [
+            {
+              "source": "entity_max_health",
+              "per": 100,
+              "min_bonus_per": 1,
+              "min_bonus_cap": 3,
+              "max_bonus_per": 1,
+              "max_bonus_cap": 1
+            }
+          ]
+        }
+      },
+      {
+        "weight": 1,
+        "pool": {
+          "roll_min": 1,
+          "roll_max": 2,
+          "imprint_groups": [
+            "vitality",
+            "survival"
+          ],
+          "allow_duplicates": true,
+          "roll_scaling": [
+            {
+              "source": "entity_max_health",
+              "per": 100,
+              "min_bonus_per": 1,
+              "min_bonus_cap": 3,
+              "max_bonus_per": 1,
+              "max_bonus_cap": 1
+            }
+          ]
+        }
+      },
+      {
+        "weight": 1,
+        "pool": {
+          "roll_min": 1,
+          "roll_max": 2,
+          "imprint_groups": [
+            "defense",
+            "survival"
+          ],
+          "allow_duplicates": true,
+          "roll_scaling": [
+            {
+              "source": "entity_max_health",
+              "per": 100,
+              "min_bonus_per": 1,
+              "min_bonus_cap": 3,
+              "max_bonus_per": 1,
+              "max_bonus_cap": 1
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "description": [
+    "item.tiered.rune_frost.lore"
+  ]
+}

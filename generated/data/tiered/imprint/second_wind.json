@@ -1,0 +1,25 @@
+{
+  "id": "tiered:second_wind",
+  "color": "LIGHT_PURPLE",
+  "name_key": "imprint.tiered.second_wind.name",
+  "line_key": "imprint.tiered.second_wind",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "reapply": "HIGHEST",
+  "group": "survival",
+  "types": [
+    {
+      "type": "behavioral",
+      "value_min": 0.05,
+      "value_max": 0.1,
+      "max_bonus": 0.65,
+      "value_display": "percent",
+      "behavior": "tiered:second_wind",
+      "params": {
+        "heal_ticks": 40.0,
+        "health_threshold": 0.35,
+        "cooldown_ticks": 300.0
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "id": "tiered:ravenous",
+  "color": "#CA6F1E",
+  "name_key": "imprint.tiered.ravenous.name",
+  "line_key": "imprint.tiered.ravenous",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "reapply": "HIGHEST",
+  "group": "vitality",
+  "types": [
+    {
+      "type": "behavioral",
+      "value_min": 0.025,
+      "value_max": 0.07,
+      "max_bonus": 0.35,
+      "value_display": "percent",
+      "behavior": "tiered:ravenous",
+      "params": {
+        "saturation_max_multiplier": 1.5
+      }
+    }
+  ]
+}

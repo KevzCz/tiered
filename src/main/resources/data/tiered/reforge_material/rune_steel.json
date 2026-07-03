@@ -1,0 +1,21 @@
+{
+  "item": "tiered:rune_steel",
+  "color": "gray",
+  "group_weight_multipliers": {
+    "rare": 3.0
+  },
+  "effect_pools": [
+    {
+      "roll_min": 0,
+      "roll_max": 1,
+      "nothing_weight": 7,
+      "candidates": [
+        { "effect": "tiered:stabilize", "weight": 2 },
+        { "effect": "tiered:overcharge", "weight": 1 }
+      ]
+    }
+  ],
+  "description": [
+    "item.tiered.rune_steel.lore"
+  ]
+}

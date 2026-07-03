@@ -1,0 +1,5 @@
+{
+  "id": "tiered:stabilize",
+  "type": "stabilize",
+  "description": "effect.tiered.stabilize.desc"
+}

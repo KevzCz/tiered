@@ -1,0 +1,28 @@
+{
+  "id": "tiered:crushing",
+  "color": "#A07040",
+  "name_key": "imprint.tiered.crushing.name",
+  "line_key": "imprint.tiered.crushing",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "reapply": "HIGHEST",
+  "group": "weapon",
+  "active_when": {
+    "equipped_item": {
+      "slot": "mainhand",
+      "items": [
+        "minecraft:mace"
+      ]
+    }
+  },
+  "types": [
+    {
+      "type": "behavioral",
+      "value_min": 0.01,
+      "value_max": 0.05,
+      "max_bonus": 0.5,
+      "value_display": "percent",
+      "behavior": "tiered:universal_damage"
+    }
+  ]
+}

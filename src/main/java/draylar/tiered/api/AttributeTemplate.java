@@ -15,15 +15,6 @@ import net.minecraft.util.Identifier;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
-/**
- * Stores information on an AttributeModifier template applied to an ItemStack.
- * <p>
- * The ID of the AttributeTemplate is the logical ID used to determine what "type" of attribute of is. An EntityAttributeModifier has: - a UUID, which is a unique identifier to separate different
- * attributes of the same type - a name, which is used for generating a non-specified UUID and displaying in tooltips in some context - an amount, which is used in combination with the operation to
- * modify the final relevant value - a modifier, which can be something such as ADD_VALUE or subtraction
- * <p>
- * The EquipmentSlot is used to only apply this template to certain items.
- */
 public class AttributeTemplate {
     @SerializedName("type")
     private final String attributeTypeID;

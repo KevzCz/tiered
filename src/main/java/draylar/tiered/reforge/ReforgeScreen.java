@@ -2,10 +2,22 @@ package draylar.tiered.reforge;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import draylar.tiered.Tiered;
+import draylar.tiered.TieredKeybinds;
 import draylar.tiered.api.ModifierUtils;
+import draylar.tiered.api.ReforgeMaterial;
 import draylar.tiered.api.TieredItemTags;
+import draylar.tiered.api.effect.DataEffect;
+import draylar.tiered.api.effect.ReforgeEffects;
+import draylar.tiered.api.imprint.ImprintRegistry;
+import draylar.tiered.api.imprint.Imprints;
 import draylar.tiered.config.ConfigInit;
 import draylar.tiered.network.TieredClientPacket;
+import draylar.tiered.reforge.codex.CodexScreen;
+import draylar.tiered.registry.ModComponents;
+import draylar.tiered.util.ImprintPlatesComponent;
+import draylar.tiered.util.ImprintSlots;
+import draylar.tiered.util.ReforgeMaterialTooltip;
+import draylar.tiered.util.ReforgeMaterials;
 import draylar.tiered.util.ReforgeUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -14,9 +26,9 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.AnvilScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.util.InputUtil;
 import net.minecraft.component.type.MapIdComponent;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ArmorItem;
@@ -35,7 +47,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import draylar.tiered.util.ReforgeUtil;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -103,7 +114,6 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
         }
     }
 
-
     private Identifier lastSeenModifier = null;
     private ItemStack lastSeenStack = ItemStack.EMPTY;
 
@@ -112,6 +122,10 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
     private ClickableWidget autoReforgeToggle;
     private ClickableWidget autoRefillToggle;
     private ClickableWidget infoButton;
+    private ClickableWidget codexButton;
+
+    private static final float GLYPH_NUDGE_X = 0.5f;
+    private static final float GLYPH_NUDGE_Y = -0.5f;
 
     private boolean autoReforging = false;
     private boolean autoRefillEnabled = false;
@@ -124,6 +138,27 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
     private ItemStack last;
     private List<Item> baseItems;
 
+    private int previewCycleTick = 0;
+    private static final int PREVIEW_CYCLE_INTERVAL = 20;
+    private int previewPanelX = Integer.MIN_VALUE;
+    private int previewPanelY = Integer.MIN_VALUE;
+    private boolean draggingPreview = false;
+    private int dragOffsetX = 0;
+    private int dragOffsetY = 0;
+
+    private static boolean suppressNoSlotConfirm = false;
+
+    private static final float PREVIEW_SCALE_MIN = 0.5f;
+    private static final float PREVIEW_SCALE_MAX = 2.5f;
+
+    private float previewScale = PREVIEW_SCALE_MIN;
+    private static final int PREVIEW_RESIZE_GRIP = 8;
+    private boolean resizingPreview = false;
+    private int resizeStartMouseX = 0;
+    private int resizeStartMouseY = 0;
+    private float resizeStartScale = 1.0f;
+    private int resizeBaseW = 0;
+    private int resizeBaseH = 0;
 
     private boolean modifiersVisible = false;
     private final Map<String, List<Identifier>> groupedModifiers = new LinkedHashMap<>();
@@ -132,6 +167,16 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
     private final int entryHeight = 12;
     private final int maxVisibleEntries = 12;
     private final List<Identifier> ungroupedModifiers = new ArrayList<>();
+
+    @Nullable private Set<Identifier> producibleCache = null;
+    @Nullable private Item producibleCacheTarget = null;
+    @Nullable private Item producibleCacheAddition = null;
+    private boolean producibleCacheValid = false;
+
+    private Map<Identifier, Float> attributeOddsCache = Map.of();
+    @Nullable private Item oddsCacheTarget = null;
+    @Nullable private Item oddsCacheAddition = null;
+    private boolean oddsCacheValid = false;
 
     private float slotPulseAnimation = 0f;
     private float slotScaleAnimation = 1f;
@@ -152,7 +197,17 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
 
         this.reforgeButton = this.addDrawableChild(new ReforgeButton(x + 79, y + 56, (button) -> {
             if (!reforgeButton.disabled && !modifierAchieved) {
-                TieredClientPacket.writeC2SReforgePacket();
+
+                ItemStack target = handler.getSlot(1).getStack();
+                int extractChance = extractChancePercent(handler.getSlot(2).getStack());
+                if (extractChance >= 0 && Imprints.slotsUsed(target) > 0) {
+                    if (this.client != null) this.client.setScreen(new ExtractChooserScreen(this, target, extractChance));
+                } else if (noFreeImprintSlot() && !suppressNoSlotConfirm) {
+
+                    openNoSlotConfirm();
+                } else {
+                    TieredClientPacket.writeC2SReforgePacket();
+                }
             }
         }));
 
@@ -166,6 +221,11 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
             public void onClick(double mouseX, double mouseY) {
                 autoRefillEnabled = !autoRefillEnabled;
                 TieredClientPacket.writeC2SAutoRefillPacket(autoRefillEnabled);
+            }
+
+            @Override
+            public boolean isMouseOver(double mouseX, double mouseY) {
+                return super.isMouseOver(mouseX, mouseY) && !isOverPreviewPanel(mouseX, mouseY);
             }
 
             @Override
@@ -185,6 +245,11 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
         this.addDrawableChild(autoRefillToggle);
 
         this.autoReforgeToggle = new ClickableWidget(toggleX, toggleY + toggleSpacing, toggleSize, toggleSize, Text.empty()) {
+            @Override
+            public boolean isMouseOver(double mouseX, double mouseY) {
+                return super.isMouseOver(mouseX, mouseY) && !isOverPreviewPanel(mouseX, mouseY);
+            }
+
             @Override
             public void onClick(double mouseX, double mouseY) {
                 if (autoReforging) {
@@ -216,6 +281,11 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
             public void onClick(double mouseX, double mouseY) {}
 
             @Override
+            public boolean isMouseOver(double mouseX, double mouseY) {
+                return super.isMouseOver(mouseX, mouseY) && !isOverPreviewPanel(mouseX, mouseY);
+            }
+
+            @Override
             protected void appendClickableNarrations(NarrationMessageBuilder builder) {}
 
             @Override
@@ -224,10 +294,62 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                 int borderColor = isHovered() ? 0xFFFFFFFF : 0xFF888888;
                 context.fill(getX(), getY(), getX() + width, getY() + height, bgColor);
                 context.drawBorder(getX(), getY(), width, height, borderColor);
-                context.drawText(textRenderer, Text.literal("?"), getX() + 3, getY() + 1, 0xFFFFFF, false);
+                drawCenteredGlyph(context, "?", 0xFFFFFFFF);
+            }
+
+            private void drawCenteredGlyph(DrawContext context, String glyph, int color) {
+                int gw = textRenderer.getWidth(glyph);
+                int gx = getX() + (width - gw + 1) / 2;
+                int gy = getY() + (height - textRenderer.fontHeight + 1) / 2 + 1;
+
+                context.getMatrices().push();
+                context.getMatrices().translate(GLYPH_NUDGE_X, GLYPH_NUDGE_Y, 0f);
+                context.drawText(textRenderer, Text.literal(glyph), gx, gy, color, false);
+                context.getMatrices().pop();
             }
         };
         this.addDrawableChild(infoButton);
+
+        int codexSize = 12;
+        int codexX = x + this.backgroundWidth - codexSize - 4;
+        int codexY = y + 4;
+        this.codexButton = new ClickableWidget(codexX, codexY, codexSize, codexSize,
+                Text.translatable("screen.tiered.codex.title")) {
+            @Override
+            public void onClick(double mouseX, double mouseY) {
+                if (client != null) client.setScreen(new CodexScreen(ReforgeScreen.this));
+            }
+
+            @Override
+            public boolean isMouseOver(double mouseX, double mouseY) {
+                return super.isMouseOver(mouseX, mouseY) && !isOverPreviewPanel(mouseX, mouseY);
+            }
+
+            @Override
+            protected void appendClickableNarrations(NarrationMessageBuilder builder) {}
+
+            @Override
+            protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+                int bgColor = isHovered() ? 0xFF5A3A82 : 0xFF4A2E6E;
+                int borderColor = isHovered() ? 0xFFB088E0 : 0xFF8A6AB0;
+                context.fill(getX(), getY(), getX() + width, getY() + height, bgColor);
+                context.drawBorder(getX(), getY(), width, height, borderColor);
+                String glyph = "✦";
+                int gw = textRenderer.getWidth(glyph);
+                int gx = getX() + (width - gw + 1) / 2;
+                int gy = getY() + (height - textRenderer.fontHeight + 1) / 2 + 1;
+                context.getMatrices().push();
+                context.getMatrices().translate(GLYPH_NUDGE_X, GLYPH_NUDGE_Y, 0f);
+                context.drawText(textRenderer, Text.literal(glyph), gx, gy,
+                        isHovered() ? 0xFFFFFFFF : 0xFFE0C8FF, false);
+                context.getMatrices().pop();
+                if (isHovered()) {
+                    setTooltip(Tooltip.of(
+                            Text.translatable("screen.tiered.codex.title")));
+                }
+            }
+        };
+        this.addDrawableChild(codexButton);
 
         int iconX = ConfigInit.CONFIG.leftSideModifierList ? x + 5 : x + 155;
         int iconY = y + 5;
@@ -249,7 +371,6 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                                 .comparing(ReforgeUtil::getRarityOrder)
                                 .thenComparing(ReforgeUtil::getNumericSuffixOrZero)
                         );
-
 
                         Map<String, Integer> prefixCount = new HashMap<>();
                         for (Identifier id : modifiers) {
@@ -313,6 +434,8 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
     @Override
     public void handledScreenTick() {
         super.handledScreenTick();
+
+        previewCycleTick++;
 
         if (slotPulseAnimation > 0) {
             slotPulseAnimation -= 0.05f;
@@ -392,6 +515,28 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
+        if (button == 0) {
+            int[] bounds = previewPanelBounds();
+            if (bounds != null && mouseX >= bounds[0] && mouseX <= bounds[0] + bounds[2]
+                    && mouseY >= bounds[1] && mouseY <= bounds[1] + bounds[3]) {
+                if (isOverResizeGrip(mouseX, mouseY, bounds)) {
+                    int[] size = previewPanelContentSize();
+                    if (size != null) {
+                        resizingPreview = true;
+                        resizeStartMouseX = (int) mouseX;
+                        resizeStartMouseY = (int) mouseY;
+                        resizeStartScale = previewScale;
+                        resizeBaseW = size[0];
+                        resizeBaseH = size[1];
+                    }
+                    return true;
+                }
+                draggingPreview = true;
+                dragOffsetX = (int) mouseX - previewPanelX;
+                dragOffsetY = (int) mouseY - previewPanelY;
+                return true;
+            }
+        }
 
         int x = ConfigInit.CONFIG.leftSideModifierList
                 ? this.x - 130
@@ -427,7 +572,7 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                         }
                         return true;
                     }
-                    
+
                     if (modifiers.size() == 1) {
                         Identifier id = modifiers.get(0);
                         if (targetModifier != null && targetModifier.equals(id)) {
@@ -444,8 +589,6 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                     }
                     return true;
                 }
-
-
 
                 rendered++;
 
@@ -482,6 +625,34 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (resizingPreview && button == 0) {
+
+            float ratioX = resizeBaseW <= 0 ? 1f : (resizeBaseW * resizeStartScale + (float) (mouseX - resizeStartMouseX)) / (resizeBaseW * resizeStartScale);
+            float ratioY = resizeBaseH <= 0 ? 1f : (resizeBaseH * resizeStartScale + (float) (mouseY - resizeStartMouseY)) / (resizeBaseH * resizeStartScale);
+            float scale = resizeStartScale * (ratioX + ratioY) / 2f;
+            previewScale = Math.max(PREVIEW_SCALE_MIN, Math.min(PREVIEW_SCALE_MAX, scale));
+            return true;
+        }
+        if (draggingPreview && button == 0) {
+            previewPanelX = (int) mouseX - dragOffsetX;
+            previewPanelY = (int) mouseY - dragOffsetY;
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 0 && (draggingPreview || resizingPreview)) {
+            draggingPreview = false;
+            resizingPreview = false;
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     private void clearTarget() {
@@ -535,8 +706,6 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
         return null;
     }
 
-
-
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         if (!modifiersVisible) return false;
@@ -555,6 +724,160 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
         if (input == null || input.isEmpty()) return input;
         return input.substring(0, 1).toUpperCase() + input.substring(1);
     }
+
+    private static String formatOddsPercent(float fraction) {
+        float pct = fraction * 100f;
+        if (pct > 0f && pct < 0.1f) return "<0.1";
+        return String.format(Locale.ROOT, "%.1f", pct);
+    }
+
+    private ItemStack buildPreviewStack() {
+        ItemStack target = handler.getSlot(1).getStack();
+        if (target == null || target.isEmpty()) return null;
+        if (target.isIn(TieredItemTags.MODIFIER_RESTRICTED)) return null;
+
+        ItemStack addition = handler.getSlot(2).getStack();
+        ReforgeMaterial material = (addition == null || addition.isEmpty())
+                ? null : ReforgeMaterials.resolve(addition);
+
+        List<Identifier> producible = ModifierUtils.getProducibleAttributes(target.getItem(), material);
+        if (producible.isEmpty()) return null;
+
+        ItemStack preview = target.copy();
+        int idx = (previewCycleTick / PREVIEW_CYCLE_INTERVAL) % producible.size();
+        ModifierUtils.setItemStackAttributeWithId(preview, producible.get(idx));
+        return preview;
+    }
+
+    @Nullable
+    private Set<Identifier> computeProducibleSet() {
+        Item targetItem = handler.getSlot(1).getStack().getItem();
+        Item additionItem = handler.getSlot(2).getStack().getItem();
+
+        if (producibleCacheValid && targetItem == producibleCacheTarget && additionItem == producibleCacheAddition) {
+            return producibleCache;
+        }
+
+        producibleCacheTarget = targetItem;
+        producibleCacheAddition = additionItem;
+        producibleCacheValid = true;
+        producibleCache = computeProducibleSetUncached();
+        return producibleCache;
+    }
+
+    private Map<Identifier, Float> computeAttributeOdds() {
+        Item targetItem = handler.getSlot(1).getStack().getItem();
+        Item additionItem = handler.getSlot(2).getStack().getItem();
+
+        if (oddsCacheValid && targetItem == oddsCacheTarget && additionItem == oddsCacheAddition) {
+            return attributeOddsCache;
+        }
+
+        oddsCacheTarget = targetItem;
+        oddsCacheAddition = additionItem;
+        oddsCacheValid = true;
+        attributeOddsCache = computeAttributeOddsUncached();
+        return attributeOddsCache;
+    }
+
+    private Map<Identifier, Float> computeAttributeOddsUncached() {
+        ItemStack target = handler.getSlot(1).getStack();
+        if (target == null || target.isEmpty()) return Map.of();
+
+        ItemStack addition = handler.getSlot(2).getStack();
+        ReforgeMaterial material = (addition == null || addition.isEmpty())
+                ? null : ReforgeMaterials.resolve(addition);
+
+        return ModifierUtils.previewAttributeOdds(this.client != null ? this.client.player : null,
+                target.getItem(), true, material);
+    }
+
+    private int extractChancePercent(ItemStack addition) {
+        if (addition == null || addition.isEmpty()) return -1;
+        ReforgeMaterial mat = ReforgeMaterials.resolve(addition);
+        if (mat == null) return -1;
+        DataEffect extract = ReforgeEffects.findExtract(mat.getEffects());
+        if (extract == null) return -1;
+        return Math.round(extract.definition().getValue() * 100);
+    }
+
+    private void openNoSlotConfirm() {
+        if (this.client == null) return;
+        this.client.setScreen(new NoSlotConfirmScreen(this,
+                () -> TieredClientPacket.writeC2SReforgePacket(),
+                () -> { suppressNoSlotConfirm = true; TieredClientPacket.writeC2SReforgePacket(); }));
+    }
+
+    private boolean noFreeImprintSlot() {
+        ItemStack target = handler.getSlot(1).getStack();
+        ItemStack addition = handler.getSlot(2).getStack();
+        if (target.isEmpty() || addition.isEmpty()) return false;
+        var content = addition.get(ModComponents.RUNE_CONTENT);
+        boolean wouldGrant = content != null && !content.isEmpty();
+        if (!wouldGrant) return false;
+        return !Imprints.hasFreeSlot(target);
+    }
+
+    @Nullable
+    private Set<Identifier> computeProducibleSetUncached() {
+        ItemStack target = handler.getSlot(1).getStack();
+        if (target == null || target.isEmpty()) return null;
+
+        ItemStack addition = handler.getSlot(2).getStack();
+        ReforgeMaterial material = (addition == null || addition.isEmpty())
+                ? null : ReforgeMaterials.resolve(addition);
+
+        if (material == null) return null;
+
+        return new HashSet<>(ModifierUtils.getProducibleAttributes(target.getItem(), material));
+    }
+
+    private List<Text> buildPreviewTooltip(ItemStack preview) {
+        Item.TooltipContext ctx = new Item.TooltipContext() {
+            @Nullable public RegistryWrapper.WrapperLookup getRegistryLookup() { return null; }
+            public float getUpdateTickRate() { return 0; }
+            @Nullable public MapState getMapState(MapIdComponent id) { return null; }
+        };
+        List<Text> lines = new ArrayList<>(preview.getTooltip(ctx, client.player, TooltipType.BASIC));
+        lines.add(0, Text.translatable("screen.tiered.reforge.preview.header").styled(s -> s.withColor(Formatting.DARK_GRAY).withItalic(true)));
+
+        var imprints = preview.get(ModComponents.IMPRINTS);
+        int cap = ImprintSlots.capacity(preview);
+        if (cap > 0 || (imprints != null && !imprints.entries().isEmpty())) {
+            int used = imprints == null ? 0 : imprints.slotsUsed();
+            lines.add(Text.empty());
+            lines.add(Text.translatable("screen.tiered.imprints.header.slots", used, cap)
+                    .styled(s -> s.withColor(Formatting.GRAY)));
+            if (imprints != null) {
+                for (var entry : imprints.entries()) {
+                    if (ImprintRegistry.get(entry.id()) == null) continue;
+                    lines.add(ReforgeMaterialTooltip.imprintMarker(entry.id(), entry.value(), entry.extraValues()));
+                }
+            }
+        }
+
+        ItemStack addition = handler.getSlot(2).getStack();
+        var content = addition.get(ModComponents.RUNE_CONTENT);
+        if (content != null && !content.isEmpty()) {
+            lines.add(Text.empty());
+            lines.add(Text.translatable("screen.tiered.rune.grants.header").styled(s -> s.withColor(Formatting.GRAY)));
+            for (var entry : content.entries()) {
+                if (ImprintRegistry.get(entry.imprintId()) == null) continue;
+                lines.add(ReforgeMaterialTooltip.imprintMarker(entry.imprintId(), entry.value(), entry.extraValues()));
+            }
+        }
+
+        while (!lines.isEmpty() && lines.get(lines.size() - 1).getString().isEmpty()) {
+            lines.remove(lines.size() - 1);
+        }
+        return lines;
+    }
+
+    private static final int PANEL_PAD = 6;
+    private static final int PANEL_LINE_H = 11;
+    private static final int PANEL_HANDLE_H = 9;
+
+    private static final int MAX_PREVIEW_PLATE_W = 200;
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
@@ -589,6 +912,8 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
 
             context.drawBorder(centerX - glowSize, centerY - glowSize, glowSize * 2, glowSize * 2, color | 0xFF000000);
         }
+
+        renderPreviewPanel(context);
 
         drawMouseoverTooltip(context, mouseX, mouseY);
 
@@ -644,10 +969,22 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
 
             List<Text> tooltip = new ArrayList<>();
 
+            ReforgeMaterial additionMaterial = (additionSlot == null || additionSlot.isEmpty())
+                    ? null : ReforgeMaterials.resolve(additionSlot);
+            boolean noReforgeAddition = additionMaterial != null && additionMaterial.isSkipsBaseItem();
+
             if (itemStack == null || itemStack.isEmpty()) {
                 tooltip.add(Text.literal("Place an item to reforge").styled(s -> s.withColor(Formatting.GRAY)));
             } else if (itemStack.isIn(TieredItemTags.MODIFIER_RESTRICTED)) {
                 tooltip.add(Text.literal("This item cannot be reforged").styled(s -> s.withColor(Formatting.RED)));
+            } else if (noReforgeAddition) {
+
+                if (!additionSlot.isIn(TieredItemTags.REFORGE_ADDITION)) {
+                    tooltip.add(Text.literal("Reforge Addition:").styled(s -> s.withColor(Formatting.AQUA)));
+                    for (RegistryEntry<Item> itemEntry : Registries.ITEM.getOrCreateEntryList(TieredItemTags.REFORGE_ADDITION)) {
+                        tooltip.add(Text.literal("  ").append(itemEntry.value().getName()).styled(s -> s.withColor(Formatting.DARK_AQUA)));
+                    }
+                }
             } else {
                 if (itemStack != last) {
                     last = itemStack;
@@ -706,9 +1043,10 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
             context.drawTexture(TEXTURE, this.x + 74, this.y + 29, 0, 166, 28, 26);
         }
 
-
         if (modifiersVisible && (!groupedModifiers.isEmpty() || !ungroupedModifiers.isEmpty())) {
             boolean hoveredTooltipDrawn = false;
+
+            Set<Identifier> producible = computeProducibleSet();
 
             int listX = ConfigInit.CONFIG.leftSideModifierList
                     ? this.x - 135
@@ -717,17 +1055,14 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
             int listY = this.y + 10;
             int maxWidth = 130;
 
-
             int totalHeight = maxVisibleEntries * entryHeight;
             int top = listY - 4;
             int bottom = top + totalHeight + 8;
             context.fill(listX - 4, top, listX + maxWidth + 4, bottom, 0xBB111111);
             context.drawBorder(listX - 4, top, maxWidth + 8, bottom - top, 0xFF666666);
 
-
             List<Text> tooltipToDraw = null;
             int tooltipX = 0, tooltipY = 0;
-
 
             int scaleFactor = (int) this.client.getWindow().getScaleFactor();
             RenderSystem.enableScissor(
@@ -737,6 +1072,8 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                     (maxVisibleEntries * entryHeight + 8) * scaleFactor
             );
 
+            Map<Identifier, Float> attributeOdds = computeAttributeOdds();
+
             int rendered = 0;
             for (Map.Entry<String, List<Identifier>> entry : groupedModifiers.entrySet()) {
                 String rarity = entry.getKey();
@@ -745,15 +1082,21 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
 
                 boolean groupHeaderVisible = !(groupY + entryHeight < listY || groupY > listY + (maxVisibleEntries * entryHeight));
 
-
                 String displayName = capitalize(rarity);
                 boolean isSingleEntry = modifiers.size() == 1 && groupedModifiers.get(rarity).size() == 1;
                 String prefix = isSingleEntry ? "• " : (expandedGroups.contains(rarity) ? "▼ " : "▶ ");
 
+                if (!attributeOdds.isEmpty()) {
+                    float groupOdds = 0f;
+                    for (Identifier id : modifiers) groupOdds += attributeOdds.getOrDefault(id, 0f);
+                    displayName += " (" + formatOddsPercent(groupOdds) + "%)";
+                }
+
+                boolean groupBlocked = producible != null && modifiers.stream().noneMatch(producible::contains);
 
                 context.fill(listX - 2, groupY - 1, listX + maxWidth - 2, groupY + entryHeight, 0x55222222);
                 Text groupText = Text.literal(prefix + displayName).styled(s -> s.withBold(true));
-                context.drawText(this.textRenderer, groupText, listX, groupY, 0xFFFFFF, false);
+                context.drawText(this.textRenderer, groupText, listX, groupY, groupBlocked ? 0x777777 : 0xFFFFFF, false);
 
                 if (targetModifierGroups.contains(rarity)) {
                     Identifier lockIcon = Identifier.of("kevs", "textures/gui/lock.png");
@@ -803,8 +1146,9 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                             context.fill(listX - 2, modY - 1, listX + maxWidth - 2, modY + entryHeight, 0x44FFFFFF);
                         }
 
+                        boolean blocked = producible != null && !producible.contains(id);
                         String label = "• " + niceName;
-                        int modColor = ReforgeUtil.getColorForModifier(id);
+                        int modColor = blocked ? 0xFF555555 : ReforgeUtil.getColorForModifier(id);
                         int maxTextWidth = 120;
                         String trimmed = textRenderer.trimToWidth(label, maxTextWidth);
                         int textX = listX + 5;
@@ -864,8 +1208,9 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                     context.fill(listX - 2, modY - 1, listX + maxWidth - 2, modY + entryHeight, 0x44FFFFFF);
                 }
 
+                boolean blocked = producible != null && !producible.contains(id);
                 String label = "• " + niceName;
-                int modColor = ReforgeUtil.getColorForModifier(id);
+                int modColor = blocked ? 0xFF555555 : ReforgeUtil.getColorForModifier(id);
                 int maxTextWidth = 120;
                 String trimmed = textRenderer.trimToWidth(label, maxTextWidth);
                 int textX = listX + 5;
@@ -914,7 +1259,6 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                 context.drawTooltip(this.textRenderer, tooltipToDraw, tooltipX, tooltipY);
             }
 
-
             int groupedCount = groupedModifiers.entrySet().stream()
                     .mapToInt(entry -> 1 + (expandedGroups.contains(entry.getKey()) ? entry.getValue().size() : 0))
                     .sum();
@@ -954,6 +1298,191 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
         }
     }
 
+    private void renderPreviewPanel(DrawContext context) {
+        int[] bounds = previewPanelBounds();
+        if (bounds == null) return;
+        int px = bounds[0], py = bounds[1], pw = bounds[2], ph = bounds[3];
+
+        List<Text> lines = buildPreviewTooltip(buildPreviewStack());
+
+        context.fill(px, py, px + pw, py + ph, 0xF0100010);
+        context.drawBorder(px, py, pw, ph, (draggingPreview || resizingPreview) ? 0xFF8888FF : 0xFF4A2A6A);
+
+        context.getMatrices().push();
+        context.getMatrices().translate(px, py, 0);
+        context.getMatrices().scale(previewScale, previewScale, 1.0f);
+
+        int unscaledW = Math.round(pw / previewScale);
+        int handleColor = (draggingPreview || resizingPreview) ? 0xFFAAAAFF : 0xFF6A4A8A;
+        context.fill(1, 1, unscaledW - 1, PANEL_HANDLE_H, handleColor & 0x66FFFFFF | 0x40000000);
+        context.drawText(this.textRenderer, Text.literal(previewHandleText()).styled(s -> s.withColor(Formatting.GRAY)),
+                PANEL_PAD, 1, 0xFFAAAAAA, false);
+
+        boolean shift = TieredKeybinds.descriptionsHeld();
+        int ly = PANEL_HANDLE_H + PANEL_PAD - 2;
+        int plateH = ImprintPlatesComponent.plateHeight();
+        int platePad = ImprintPlatesComponent.padX();
+        int rowX = PANEL_PAD;
+        boolean inPlateRow = false;
+        for (int li = 0; li < lines.size(); li++) {
+            Text line = lines.get(li);
+            boolean isMarker = ReforgeMaterialTooltip.isImprintMarker(line);
+
+            if (!isMarker && inPlateRow) {
+                ly += plateH + 2;
+                rowX = PANEL_PAD;
+                inPlateRow = false;
+            }
+            if (isMarker) {
+                if (shift) {
+
+                    if (inPlateRow) { ly += plateH + 2; rowX = PANEL_PAD; inPlateRow = false; }
+                    Text desc = ReforgeMaterialTooltip.imprintDescriptionLine(line, null);
+                    if (desc != null) {
+                        for (var wrapped : this.textRenderer.wrapLines(desc, unscaledW - PANEL_PAD * 2)) {
+                            context.drawText(this.textRenderer, wrapped, PANEL_PAD, ly, 0xFFFFFFFF, true);
+                            ly += PANEL_LINE_H;
+                        }
+                    }
+                } else {
+                    var plate = ReforgeMaterialTooltip.markerToPlate(line);
+                    if (plate != null) {
+                        int pw2 = platePad + this.textRenderer.getWidth(plate.label()) + platePad;
+
+                        if (inPlateRow && rowX + pw2 > unscaledW - PANEL_PAD) {
+                            ly += plateH + 2;
+                            rowX = PANEL_PAD;
+                        }
+                        ImprintPlatesComponent.drawStandalonePlate(
+                                context, this.textRenderer, rowX, ly - 1, plate.label(), plate.fillColor());
+                        rowX += pw2 + 3;
+                        inPlateRow = true;
+                    }
+                }
+                continue;
+            }
+            for (var wrapped : this.textRenderer.wrapLines(line, unscaledW - PANEL_PAD * 2)) {
+                context.drawText(this.textRenderer, wrapped, PANEL_PAD, ly, 0xFFFFFFFF, true);
+                ly += PANEL_LINE_H;
+            }
+        }
+
+        if (inPlateRow) ly += plateH + 2;
+        context.getMatrices().pop();
+
+        int gx = px + pw - PREVIEW_RESIZE_GRIP;
+        int gy = py + ph - PREVIEW_RESIZE_GRIP;
+        int gripColor = resizingPreview ? 0xFFAAAAFF : 0xFF6A4A8A;
+        for (int d = 0; d < PREVIEW_RESIZE_GRIP; d += 2) {
+            context.fill(gx + d, py + ph - 1, gx + PREVIEW_RESIZE_GRIP, py + ph, gripColor);
+            context.fill(px + pw - 1, gy + d, px + pw, gy + PREVIEW_RESIZE_GRIP, gripColor);
+        }
+    }
+
+    private boolean isOverResizeGrip(double mouseX, double mouseY, int[] bounds) {
+        int gx = bounds[0] + bounds[2] - PREVIEW_RESIZE_GRIP;
+        int gy = bounds[1] + bounds[3] - PREVIEW_RESIZE_GRIP;
+        return mouseX >= gx && mouseX <= bounds[0] + bounds[2] && mouseY >= gy && mouseY <= bounds[1] + bounds[3];
+    }
+
+    private String previewHandleText() {
+        return "⋮⋮⋮ " + Text.translatable("screen.tiered.reforge.preview.drag").getString()
+                + " • " + Text.translatable("screen.tiered.reforge.preview.resize").getString();
+    }
+
+    @Nullable
+    private int[] previewPanelContentSize() {
+        ItemStack preview = buildPreviewStack();
+        if (preview == null) return null;
+        List<Text> lines = buildPreviewTooltip(preview);
+        boolean shift = TieredKeybinds.descriptionsHeld();
+        int platePad = ImprintPlatesComponent.padX();
+        int w = 0;
+        int runWidth = 0;
+        for (Text t : lines) {
+            boolean isMarker = ReforgeMaterialTooltip.isImprintMarker(t);
+
+            if (shift && isMarker) {
+                Text desc = ReforgeMaterialTooltip.imprintDescriptionLine(t, null);
+                if (desc != null) { w = Math.max(w, this.textRenderer.getWidth(desc)); continue; }
+            }
+            if (!shift && isMarker) {
+
+                var plate = ReforgeMaterialTooltip.markerToPlate(t);
+                if (plate != null) {
+                    int pw2 = platePad + this.textRenderer.getWidth(plate.label()) + platePad;
+                    runWidth += (runWidth == 0 ? 0 : 3) + pw2;
+                    w = Math.max(w, runWidth);
+                    continue;
+                }
+            }
+            runWidth = 0;
+            w = Math.max(w, this.textRenderer.getWidth(t));
+        }
+
+        w = Math.min(w, MAX_PREVIEW_PLATE_W);
+        w = Math.max(w, this.textRenderer.getWidth(previewHandleText()));
+        int pw = w + PANEL_PAD * 2;
+
+        int wrapBound = pw - PANEL_PAD;
+        int textWrapBound = pw - PANEL_PAD * 2;
+        int plateH = ImprintPlatesComponent.plateHeight();
+        int h = 0;
+        int runRows = 0;
+        int rowX = PANEL_PAD;
+        for (Text t : lines) {
+            boolean isMarker = ReforgeMaterialTooltip.isImprintMarker(t);
+            if (!isMarker && runRows > 0) { h += runRows * (plateH + 2); runRows = 0; rowX = PANEL_PAD; }
+            if (isMarker) {
+                if (shift) {
+                    Text desc = ReforgeMaterialTooltip.imprintDescriptionLine(t, null);
+                    int rows = desc == null ? 0 : Math.max(1, this.textRenderer.wrapLines(desc, textWrapBound).size());
+                    h += rows * PANEL_LINE_H;
+                    continue;
+                }
+                var plate = ReforgeMaterialTooltip.markerToPlate(t);
+                if (plate == null) continue;
+                int pw2 = platePad + this.textRenderer.getWidth(plate.label()) + platePad;
+                if (runRows == 0) { runRows = 1; rowX = PANEL_PAD + pw2 + 3; }
+                else if (rowX + pw2 > wrapBound) { runRows++; rowX = PANEL_PAD + pw2 + 3; }
+                else rowX += pw2 + 3;
+            } else {
+                h += Math.max(1, this.textRenderer.wrapLines(t, textWrapBound).size()) * PANEL_LINE_H;
+            }
+        }
+
+        int trailing;
+        if (runRows > 0) {
+            trailing = 2;
+            h += runRows * (plateH + 2);
+        } else {
+            trailing = Math.max(0, PANEL_LINE_H - this.textRenderer.fontHeight);
+        }
+        int ph = PANEL_HANDLE_H + PANEL_PAD - 2 + h - trailing + PANEL_PAD;
+        return new int[]{pw, ph};
+    }
+
+    @Nullable
+    private int[] previewPanelBounds() {
+        int[] size = previewPanelContentSize();
+        if (size == null) return null;
+
+        if (previewPanelX == Integer.MIN_VALUE) {
+
+            previewPanelX = this.x + this.backgroundWidth + 12;
+            previewPanelY = this.y + 8;
+        }
+
+        int pw = Math.round(size[0] * previewScale);
+        int ph = Math.round(size[1] * previewScale);
+        return new int[]{previewPanelX, previewPanelY, pw, ph};
+    }
+
+    private boolean isOverPreviewPanel(double mouseX, double mouseY) {
+        int[] b = previewPanelBounds();
+        if (b == null) return false;
+        return mouseX >= b[0] && mouseX <= b[0] + b[2] && mouseY >= b[1] && mouseY <= b[1] + b[3];
+    }
 
     @Override
     protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
@@ -1014,7 +1543,6 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
                 }
             }
 
-
             if (!stack.isEmpty()) {
                 Identifier newId = ModifierUtils.getAttributeId(stack);
                 if (newId != null && (!newId.equals(lastSeenModifier) || !ItemStack.areItemsEqual(stack, lastSeenStack))) {
@@ -1068,12 +1596,6 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
         }
     }
 
-
-
-
-
-
-
     @Override public Class<?> getParentScreenClass() { return AnvilScreen.class; }
 
     public class ReforgeButton extends ButtonWidget {
@@ -1108,7 +1630,5 @@ public class ReforgeScreen extends HandledScreen<ReforgeScreenHandler> implement
             this.active = true;
         }
     }
-
-
 
 }

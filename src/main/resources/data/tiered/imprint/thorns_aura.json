@@ -1,0 +1,23 @@
+{
+  "id": "tiered:thorns_aura",
+  "color": "#27AE60",
+  "name_key": "imprint.tiered.thorns_aura.name",
+  "line_key": "imprint.tiered.thorns_aura",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "reapply": "HIGHEST",
+  "group": "defense",
+  "types": [
+    {
+      "type": "behavioral",
+      "value_min": 0.05,
+      "value_max": 0.15,
+      "max_bonus": 0.45,
+      "value_display": "percent",
+      "behavior": "tiered:thorns_aura",
+      "params": {
+        "min_damage": 0.5
+      }
+    }
+  ]
+}

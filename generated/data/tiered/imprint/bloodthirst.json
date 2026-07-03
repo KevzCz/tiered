@@ -1,0 +1,23 @@
+{
+  "id": "tiered:bloodthirst",
+  "color": "#922B21",
+  "name_key": "imprint.tiered.bloodthirst.name",
+  "line_key": "imprint.tiered.bloodthirst",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "reapply": "HIGHEST",
+  "group": "combat",
+  "types": [
+    {
+      "type": "behavioral",
+      "value_min": 0.01,
+      "value_max": 0.1,
+      "max_bonus": 0.35,
+      "value_display": "percent",
+      "behavior": "tiered:bloodthirst",
+      "params": {
+        "heal_fraction": 0.1
+      }
+    }
+  ]
+}

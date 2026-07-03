@@ -87,6 +87,16 @@
 		}
 	}
 
+	// Java autogeneration of imprint/effect definition JSON templates into generated/data/tiered/.
+	// Plain JavaExec (not Fabric datagen) so it never affects the mod build/runtime. Run: gradlew runImprintDatagen
+	tasks.register('runImprintDatagen', JavaExec) {
+		group = 'tiered'
+		description = 'Generates imprint/effect definition JSON templates under generated/data/tiered/.'
+		dependsOn tasks.named('classes')
+		classpath = sourceSets.main.runtimeClasspath
+		mainClass = 'draylar.tiered.datagen.ImprintEffectDefGenerator'
+	}
+
 	// configure the maven publication
 	publishing {
 		publications {

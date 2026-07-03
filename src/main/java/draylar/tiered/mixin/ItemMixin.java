@@ -1,5 +1,7 @@
 package draylar.tiered.mixin;
 
+import draylar.tiered.api.imprint.RuneContent;
+import draylar.tiered.registry.ModComponents;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -8,7 +10,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import draylar.tiered.Tiered;
 import draylar.tiered.api.ModifierUtils;
+import draylar.tiered.api.imprint.Imprint;
+import draylar.tiered.api.imprint.ImprintRegistry;
 import draylar.tiered.config.ConfigInit;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -18,8 +23,24 @@ import net.minecraft.world.World;
 @Mixin(Item.class)
 public class ItemMixin {
 
-    // onCraft in ItemStack class does get called too and get called in CraftingResultSlot
-    // but is air at onTakeItem in CraftingResultSlot when quick crafting is used
+    @Inject(method = "inventoryTick", at = @At("TAIL"))
+    private void tieredImprintInventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected, CallbackInfo info) {
+
+        if (!world.isClient()) {
+            var runeContent = stack.get(ModComponents.RUNE_CONTENT);
+            if ((runeContent == null || !runeContent.rolled()) && RuneContent.isRune(stack.getItem())) {
+                RuneContent.rollOnto(stack, null);
+            }
+        }
+
+        var component = stack.get(ModComponents.IMPRINTS);
+        if (component == null) return;
+        for (String id : component.ids()) {
+            Imprint imprint = ImprintRegistry.get(id);
+            if (imprint != null) imprint.inventoryTick(stack, world, entity, slot, selected);
+        }
+    }
+
     @Inject(method = "onCraftByPlayer", at = @At("TAIL"))
     private void onCraftByPlayerMixin(ItemStack stack, World world, PlayerEntity player, CallbackInfo info) {
         if (!world.isClient() && !stack.isEmpty() && ConfigInit.CONFIG.craftingModifier) {

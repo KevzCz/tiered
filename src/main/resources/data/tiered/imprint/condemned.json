@@ -1,0 +1,24 @@
+{
+  "id": "tiered:condemned",
+  "color": "#7D3C98",
+  "name_key": "imprint.tiered.condemned.name",
+  "line_key": "imprint.tiered.condemned",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "reapply": "HIGHEST",
+  "group": "combat",
+  "types": [
+    {
+      "type": "behavioral",
+      "value_min": 0.03,
+      "value_max": 0.05,
+      "max_bonus": 0.20,
+      "value_display": "percent",
+      "behavior": "tiered:condemned",
+      "params": {
+        "threshold_count": 4.0,
+        "threshold_multiplier": 1.2
+      }
+    }
+  ]
+}

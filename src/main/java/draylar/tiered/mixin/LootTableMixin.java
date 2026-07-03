@@ -24,7 +24,6 @@ import net.minecraft.util.math.random.Random;
 @Mixin(LootTable.class)
 public class LootTableMixin {
 
-    // lambda injection
     @Inject(method = "method_331", at = @At(value = "INVOKE", target = "Ljava/util/function/Consumer;accept(Ljava/lang/Object;)V", ordinal = 0))
     private static void processStacksMixin(ServerWorld world, Consumer<ItemStack> lootConsumer, ItemStack itemStack, CallbackInfo info) {
         if (!world.isClient() && ConfigInit.CONFIG.lootContainerModifier) {

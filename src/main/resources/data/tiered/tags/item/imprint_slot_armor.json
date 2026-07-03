@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:head_armor",
+    "#minecraft:chest_armor",
+    "#minecraft:leg_armor",
+    "#minecraft:foot_armor",
+    "#minecraft:enchantable/armor",
+    { "id": "#rpg_series:armor_type/melee", "required": false },
+    { "id": "#rpg_series:armor_type/magic", "required": false },
+    { "id": "#rpg_series:armor_type/archery", "required": false }
+  ]
+}

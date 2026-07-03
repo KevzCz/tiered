@@ -8,25 +8,16 @@ import java.util.*;
 
 @Environment(EnvType.CLIENT)
 public class TabRegistry {
-    
+
     private static final Map<Class<?>, List<InventoryTab>> TABS = new HashMap<>();
-    
+
     private static int lastMouseX = 0;
     private static int lastMouseY = 0;
-    
+
     public static void setMousePosition(int x, int y) {
         lastMouseX = x;
         lastMouseY = y;
     }
-    
-    public static int getLastMouseX() {
-        return lastMouseX;
-    }
-    
-    public static int getLastMouseY() {
-        return lastMouseY;
-    }
-    
 
     public static void registerOtherTab(InventoryTab tab, Class<?> parentScreenClass) {
         TABS.computeIfAbsent(parentScreenClass, k -> new ArrayList<>()).add(tab);

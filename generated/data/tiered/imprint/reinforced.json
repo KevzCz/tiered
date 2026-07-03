@@ -1,0 +1,16 @@
+{
+  "id": "tiered:reinforced",
+  "color": "GOLD",
+  "name_key": "imprint.tiered.reinforced.name",
+  "line_key": "imprint.tiered.reinforced",
+  "multiplicity": "SLOT",
+  "types": [
+    {
+      "type": "behavioral",
+      "value_min": 0.1,
+      "value_max": 0.25,
+      "value_display": "percent",
+      "behavior": "tiered:reinforce"
+    }
+  ]
+}

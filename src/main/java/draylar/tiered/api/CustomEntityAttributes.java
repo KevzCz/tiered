@@ -17,7 +17,7 @@ public class CustomEntityAttributes {
             new ClampedEntityAttribute("attribute.name.generic.range_attack_damage", 0.0D, 0.0D, 2048.0D).setTracked(true));
 
     public static void init() {
-        // NO-OP
+
     }
 
     private static RegistryEntry<EntityAttribute> register(String id, EntityAttribute attribute) {

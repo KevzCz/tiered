@@ -1,0 +1,13 @@
+{
+  "id": "tiered:overcharge",
+  "type": "overcharge",
+  "value_min": 0.1,
+  "value_max": 0.25,
+  "description": "effect.tiered.overcharge.desc",
+  "params": {
+    "boost_per_cost": 0.35,
+    "extra_cost_max": 2.0,
+    "min_rarity_order": 2.0,
+    "extra_cost_min": 1.0
+  }
+}

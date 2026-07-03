@@ -4,20 +4,28 @@ import draylar.tiered.api.AttributeTemplate;
 import draylar.tiered.api.BorderTemplate;
 import draylar.tiered.api.ModifierUtils;
 import draylar.tiered.api.PotentialAttribute;
+import draylar.tiered.api.ReforgeMaterial;
+import draylar.tiered.api.ReforgeMaterialBadgeData;
 import draylar.tiered.compat.AccessoriesCompat;
 import draylar.tiered.data.TooltipBorderLoader;
+import draylar.tiered.util.ReforgeMaterialBadgeComponent;
+import draylar.tiered.util.ReforgeMaterialTooltip;
 import draylar.tiered.lib.TabRegistry;
 import draylar.tiered.network.TieredClientPacket;
 import draylar.tiered.reforge.ReforgeScreen;
 import draylar.tiered.reforge.ReforgeScreenHandler;
 import draylar.tiered.reforge.widget.AnvilTab;
 import draylar.tiered.reforge.widget.ReforgeTab;
+import draylar.tiered.util.ReforgeMaterials;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.TooltipComponentCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.AnvilScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreens;
 import net.minecraft.entity.EquipmentSlot;
@@ -31,7 +39,6 @@ import java.util.*;
 @Environment(EnvType.CLIENT)
 public class TieredClient implements ClientModInitializer {
 
-    // map for storing attributes before logging into a server
     public static final Map<Identifier, PotentialAttribute> CACHED_ATTRIBUTES = new HashMap<>();
 
     public static final List<BorderTemplate> BORDER_TEMPLATES = new ArrayList<BorderTemplate>();
@@ -44,6 +51,7 @@ public class TieredClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         HandledScreens.register(Tiered.REFORGE_SCREEN_HANDLER_TYPE, ReforgeScreen::new);
+        TieredKeybinds.register();
         TieredClientPacket.init();
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new TooltipBorderLoader());
         TabRegistry.registerOtherTab(new AnvilTab(Text.translatable("container.repair"), ANVIL_TAB_ICON, 0, AnvilScreen.class), AnvilScreen.class);
@@ -53,12 +61,26 @@ public class TieredClient implements ClientModInitializer {
                 TASK_QUEUE.poll().run();
             }
         });
+
+        ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
+
+            ReforgeMaterial material = ReforgeMaterials.resolve(stack);
+            ReforgeMaterialTooltip.appendAll(lines, stack, material,
+                    MinecraftClient.getInstance().player);
+        });
+
+        TooltipComponentCallback.EVENT.register(data -> {
+            if (data instanceof ReforgeMaterialBadgeData badgeData) {
+                return new ReforgeMaterialBadgeComponent(badgeData);
+            }
+            return null;
+        });
         if (debugMessage) {
             ClientTickEvents.END_CLIENT_TICK.register(client -> {
                 if (client.player == null) return;
 
                 tickCounter++;
-                if (tickCounter < 60) return; // 60 ticks = 3 seconds (20 TPS)
+                if (tickCounter < 60) return;
                 tickCounter = 0;
 
                 ItemStack currentStack = client.player.getMainHandStack();
@@ -66,7 +88,6 @@ public class TieredClient implements ClientModInitializer {
 
                 System.out.println("[Tiered Debug] [3s Interval] Currently held item: " + currentStack.getItem());
 
-                // --- Valid slots for the item
                 if (FabricLoader.getInstance().isModLoaded("accessories")) {
                     var validSlots = AccessoriesCompat.getValidSlotTypes(client.player, currentStack);
                     if (!validSlots.isEmpty()) {
@@ -79,7 +100,6 @@ public class TieredClient implements ClientModInitializer {
                     }
                 }
 
-                // --- Tiered info
                 Identifier tier = ModifierUtils.getAttributeId(currentStack);
                 if (tier != null) {
                     System.out.println("  • Modifier ID: " + tier);

@@ -1,0 +1,21 @@
+{
+  "table_patterns": [
+    "chests/village",
+    "gameplay/hero_of_the_village"
+  ],
+  "pools": [
+    {
+      "items": [
+        { "item": "tiered:rune_amber", "weight": 1 },
+        { "item": "tiered:rune_ember", "weight": 1 },
+        { "item": "tiered:rune_obsidian", "weight": 1 },
+        { "item": "tiered:rune_sandstone", "weight": 1 },
+        { "item": "tiered:rune_steel", "weight": 1 },
+        { "item": "tiered:rune_verdant", "weight": 1 }
+      ],
+      "chance": 0.08,
+      "count_min": 1,
+      "count_max": 1
+    }
+  ]
+}

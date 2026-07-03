@@ -2,8 +2,11 @@ package draylar.tiered.util;
 
 import draylar.tiered.Tiered;
 import draylar.tiered.api.PotentialAttribute;
+import draylar.tiered.api.ReforgeMaterial;
+import draylar.tiered.config.ConfigInit;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
@@ -13,7 +16,12 @@ import java.util.Map;
 
 public class ReforgeUtil {
 
-    private static final List<String> ORDER = List.of("common", "uncommon", "rare", "epic", "legendary", "unique");
+    private static final List<String> DEFAULT_ORDER = List.of("common", "uncommon", "rare", "epic", "legendary", "unique");
+
+    private static List<String> order() {
+        List<String> configured = ConfigInit.RARITY_ORDER;
+        return (configured == null || configured.isEmpty()) ? DEFAULT_ORDER : configured;
+    }
     public static String getDynamicGroupName(Identifier id, Map<String, Integer> frequencyMap) {
         String path = id.getPath().toLowerCase();
         String[] parts = path.split("_");
@@ -21,10 +29,8 @@ public class ReforgeUtil {
         if (parts.length == 0) return "unknown";
         String prefix = parts[0];
 
-
         return frequencyMap.getOrDefault(prefix, 0) > 1 ? prefix : path;
     }
-
 
     public static String formatModifierName(Identifier id) {
         String path = id.getPath();
@@ -83,6 +89,33 @@ public class ReforgeUtil {
         return input.substring(0, 1).toUpperCase() + input.substring(1);
     }
 
+    public static List<Identifier> getAvailableModifiers(ItemStack stack) {
+        List<Identifier> modifiers = new ArrayList<>();
+        Map<Identifier, PotentialAttribute> allAttributes = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes();
+
+        Identifier itemId = Registries.ITEM.getId(stack.getItem());
+
+        for (Map.Entry<Identifier, PotentialAttribute> entry : allAttributes.entrySet()) {
+            PotentialAttribute attribute = entry.getValue();
+            if (attribute.isCursed()) continue;
+            if (attribute.isValid(itemId)) {
+                modifiers.add(entry.getKey());
+            }
+        }
+
+        return modifiers;
+    }
+
+    public static int getRarityOrder(Identifier id) {
+        List<String> order = order();
+        for (int i = 0; i < order.size(); i++) {
+            if (id.getPath().toLowerCase().contains(order.get(i))) {
+                return i;
+            }
+        }
+        return order.size();
+    }
+
     public static int getNumericSuffixOrZero(Identifier id) {
         String path = id.getPath();
         int underscoreIndex = path.lastIndexOf('_');
@@ -95,31 +128,42 @@ public class ReforgeUtil {
         return 0;
     }
 
-    public static List<Identifier> getAvailableModifiers(ItemStack stack) {
-        List<Identifier> modifiers = new ArrayList<>();
-        Map<Identifier, PotentialAttribute> allAttributes = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes();
-
-        Identifier itemId = Registries.ITEM.getId(stack.getItem());
-
-        for (Map.Entry<Identifier, PotentialAttribute> entry : allAttributes.entrySet()) {
-            PotentialAttribute attribute = entry.getValue();
-            if (attribute.isCursed()) continue; // ❌ Don't show cursed modifiers in reforge UI
-            if (attribute.isValid(itemId)) {
-                modifiers.add(entry.getKey());
-            }
-        }
-
-        return modifiers;
+    public static int getRarityOrderExact(String group) {
+        return order().indexOf(group.toLowerCase());
     }
 
+    public static boolean isMaterialCompatible(ReforgeMaterial material, ItemStack target) {
+        if (material == null || target.isEmpty()) return true;
 
-
-    public static int getRarityOrder(Identifier id) {
-        for (int i = 0; i < ORDER.size(); i++) {
-            if (id.getPath().toLowerCase().contains(ORDER.get(i))) {
-                return i;
+        List<String> incompatible = material.getIncompatible();
+        if (incompatible != null) {
+            for (String entry : incompatible) {
+                if (matchesEntry(entry, target)) return false;
             }
         }
-        return ORDER.size();
+
+        List<String> compatible = material.getCompatible();
+        if (compatible == null || compatible.isEmpty()) return true;
+        for (String entry : compatible) {
+            if (matchesEntry(entry, target)) return true;
+        }
+        return false;
+    }
+
+    public static boolean matchesEntry(String entry, ItemStack target) {
+        if (entry == null || entry.isEmpty()) return false;
+        if (entry.startsWith("#")) {
+            Identifier tagId = Identifier.of(entry.substring(1));
+            return target.isIn(TagKey.of(Registries.ITEM.getKey(), tagId));
+        }
+        return Registries.ITEM.getId(target.getItem()).toString().equalsIgnoreCase(entry);
+    }
+
+    public static boolean matchesAny(List<String> entries, ItemStack target) {
+        if (entries == null || entries.isEmpty()) return false;
+        for (String entry : entries) {
+            if (matchesEntry(entry, target)) return true;
+        }
+        return false;
     }
 }

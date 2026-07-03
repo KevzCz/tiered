@@ -17,26 +17,10 @@ public class ItemVerifier {
         this.tag = tag;
     }
 
-    /**
-     * Returns whether the given {@link Identifier} is valid for this ItemVerifier, which may check direct against either a {@link Identifier} or {@link TagKey<Item>}.
-     * <p>
-     * The given {@link Identifier} should be the ID of an {@link Item} in {@link Registries#ITEM}.
-     *
-     * @param itemID item registry ID to check against this verifier
-     * @return whether the check succeeded
-     */
     public boolean isValid(Identifier itemID) {
         return isValid(itemID.toString());
     }
 
-    /**
-     * Returns whether the given {@link String} is valid for this ItemVerifier, which may check direct against either a {@link Identifier} or {@link TagKey<Item>}.
-     * <p>
-     * The given {@link String} should be the ID of an {@link Item} in {@link Registries#ITEM}.
-     *
-     * @param itemID item registry ID to check against this verifier
-     * @return whether the check succeeded
-     */
     @SuppressWarnings("deprecation")
     public boolean isValid(String itemID) {
         if (id != null) {

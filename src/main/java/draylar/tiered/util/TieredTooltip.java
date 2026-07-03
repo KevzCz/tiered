@@ -1,10 +1,13 @@
 package draylar.tiered.util;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.joml.Vector2ic;
 
 import draylar.tiered.api.BorderTemplate;
+import draylar.tiered.api.ImprintPlatesData;
 import draylar.tiered.config.ConfigInit;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -12,9 +15,42 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
 import net.minecraft.client.gui.tooltip.TooltipPositioner;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.tooltip.TooltipData;
+import net.minecraft.text.Text;
 
 @Environment(EnvType.CLIENT)
 public class TieredTooltip {
+
+    public static List<TooltipComponent> buildComponents(List<Text> text, Optional<TooltipData> data, ItemStack stack) {
+
+        List<Text> siblings = new ArrayList<>();
+        for (Text line : text) {
+            if (!ReforgeMaterialTooltip.isSlotsMarker(line)) siblings.add(line);
+        }
+
+        boolean shift = ReforgeMaterialTooltip.shiftHeld();
+        List<TooltipComponent> components = new ArrayList<>(text.size() + 1);
+
+        for (Text line : text) {
+            if (ReforgeMaterialTooltip.isSlotsMarker(line)) {
+                if (shift) {
+
+                    for (Text desc : ReforgeMaterialTooltip.slotsMarkerToDescriptions(line)) {
+                        components.add(TooltipComponent.of(desc.asOrderedText()));
+                    }
+                } else {
+                    ImprintPlatesData pd = ReforgeMaterialTooltip.slotsMarkerToData(line, siblings);
+                    if (pd != null) components.add(new ImprintPlatesComponent(pd));
+                }
+                continue;
+            }
+            components.add(TooltipComponent.of(line.asOrderedText()));
+        }
+
+        data.ifPresent(d -> components.add(text.isEmpty() ? 0 : 1, TooltipComponent.of(d)));
+        return components;
+    }
 
     public static void renderTieredTooltipFromComponents(DrawContext context, TextRenderer textRenderer, List<TooltipComponent> components, int x, int y, TooltipPositioner positioner,
             BorderTemplate borderTemplate) {
@@ -82,19 +118,17 @@ public class TieredTooltip {
 
         context.getMatrices().push();
         context.getMatrices().translate(0.0f, 0.0f, 400.0f);
-        // left top corner
+
         context.drawTexture(borderTemplate.getIdentifier(), n - 6, o - 6, secondHalf * 64, border * 16, 8, 8, 128, 128);
-        // right top corner
+
         context.drawTexture(borderTemplate.getIdentifier(), n + l - 2, o - 6, 56 + secondHalf * 64, border * 16, 8, 8, 128, 128);
 
-        // left down corner
         context.drawTexture(borderTemplate.getIdentifier(), n - 6, o + m - 2, secondHalf * 64, 8 + border * 16, 8, 8, 128, 128);
-        // right down corner
+
         context.drawTexture(borderTemplate.getIdentifier(), n + l - 2, o + m - 2, 56 + secondHalf * 64, 8 + border * 16, 8, 8, 128, 128);
 
-        // middle header
         context.drawTexture(borderTemplate.getIdentifier(), (n - 6 + n + l + 6) / 2 - 24, o - 9, 8 + secondHalf * 64, border * 16, 48, 8, 128, 128);
-        // bottom footer
+
         context.drawTexture(borderTemplate.getIdentifier(), (n - 6 + n + l + 6) / 2 - 24, o + m + 1, 8 + secondHalf * 64, 8 + border * 16, 48, 8, 128, 128);
 
         context.getMatrices().pop();

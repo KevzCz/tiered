@@ -1,0 +1,32 @@
+{
+  "id": "tiered:affliction",
+  "color": "#48C9B0",
+  "name_key": "imprint.tiered.affliction.name",
+  "line_key": "imprint.tiered.affliction",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "reapply": "HIGHEST",
+  "group": "combat",
+  "types": [
+    {
+      "type": "behavioral",
+      "value_min": 0.075,
+      "value_max": 0.15,
+      "max_bonus": 1.0,
+      "value_display": "percent",
+      "behavior": "tiered:affliction",
+      "params": {
+        "effect_duration_ticks": 100.0
+      },
+      "extra_ranges": [
+        {
+          "key": "duration",
+          "value_min": 10.0,
+          "value_max": 20.0,
+          "max_bonus": 40.0,
+          "value_display": "seconds"
+        }
+      ]
+    }
+  ]
+}

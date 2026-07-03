@@ -43,7 +43,6 @@ public abstract class CursedItemMixin {
 
         List<Text> tooltip = cir.getReturnValue();
 
-        // Build centered "Cursed" line
         String displayName = formatModifierName(attributeId.getPath());
         MutableText cursedText = Text.translatable("tooltip.tiered.cursed", displayName)
                 .formatted(Formatting.DARK_RED, Formatting.BOLD);
@@ -56,10 +55,8 @@ public abstract class CursedItemMixin {
         String padding = " ".repeat(Math.max(0, spaceCount));
         MutableText centered = Text.literal(padding).append(cursedText);
 
-        // Remove existing "Cursed" lines (in case it's already been inserted)
         tooltip.removeIf(line -> line.getString().equalsIgnoreCase(cursedText.getString()));
 
-        // Insert "Cursed" after the title line (usually first non-empty)
         int insertIndex = -1;
         for (int i = 0; i < tooltip.size(); i++) {
             if (!tooltip.get(i).getString().trim().isEmpty()) {

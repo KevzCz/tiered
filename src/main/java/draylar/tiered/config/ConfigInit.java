@@ -26,14 +26,19 @@ public class ConfigInit {
     public static boolean SPECIAL_INGOT_ENABLED;
 
     public static List<String> ALLOWED_REROLL_GROUPS;
+    public static List<String> RARITY_ORDER;
+
+    public static SlotScalingConfig SLOT_SCALING;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final File FILE = new File("config/tiered_more.json");
+    private static final File FILE = new File("config/tiered_more/tiered_more.json");
+    private static final File SLOT_SCALING_FILE = new File("config/tiered_more/slot-scaling.json");
 
     public static void init() {
         AutoConfig.register(TieredConfig.class, JanksonConfigSerializer::new);
         CONFIG = AutoConfig.getConfigHolder(TieredConfig.class).getConfig();
         loadExtraTuningIngotConfig();
+        loadSlotScalingConfig();
     }
 
     private static void loadExtraTuningIngotConfig() {
@@ -48,7 +53,6 @@ public class ConfigInit {
 
                 boolean needsRewrite = false;
 
-
                 if (data.tuningIngotConfigs == null) {
                     data.tuningIngotConfigs = createDefaultTuningConfigs();
                     needsRewrite = true;
@@ -59,6 +63,10 @@ public class ConfigInit {
                 }
                 if (data.allowedRerollGroupsScroll == null) {
                     data.allowedRerollGroupsScroll = createDefaultAllowedRerollGroups();
+                    needsRewrite = true;
+                }
+                if (data.rarityOrder == null || data.rarityOrder.isEmpty()) {
+                    data.rarityOrder = createDefaultRarityOrder();
                     needsRewrite = true;
                 }
 
@@ -100,13 +108,11 @@ public class ConfigInit {
                     SpecialIngotConfig s = data.specialIngot;
                     boolean patch = false;
 
-
                     float clampedDrop = clamp01(s.dropChance);
                     if (s.dropChance != clampedDrop) { s.dropChance = clampedDrop; patch = true; }
 
                     float clampedTotal = clamp01(s.totalSpecialPercent);
                     if (s.totalSpecialPercent != clampedTotal) { s.totalSpecialPercent = clampedTotal; patch = true; }
-
 
                     if (s.lootTables == null) { s.lootTables = createDefaultSpecialLootTables(); patch = true; }
                     if (s.specialStats == null) { s.specialStats = createDefaultSpecialIngot().specialStats; patch = true; }
@@ -131,6 +137,8 @@ public class ConfigInit {
         CUSTOM_TUNING_INGOTS = data.tuningIngotConfigs;
         CUSTOM_TUNING_INGOT_LOOT_TABLES = data.tuningIngotLootTables;
         ALLOWED_REROLL_GROUPS = data.allowedRerollGroupsScroll;
+        RARITY_ORDER = (data.rarityOrder == null || data.rarityOrder.isEmpty())
+                ? createDefaultRarityOrder() : data.rarityOrder;
 
         SPECIAL_INGOT = data.specialIngot;
         SPECIAL_INGOT_ENABLED = Boolean.TRUE.equals(data.enableSpecialIngot);
@@ -145,6 +153,7 @@ public class ConfigInit {
         defaultData.tuningIngotConfigs = createDefaultTuningConfigs();
         defaultData.tuningIngotLootTables = createDefaultLootTables();
         defaultData.allowedRerollGroupsScroll = createDefaultAllowedRerollGroups();
+        defaultData.rarityOrder = createDefaultRarityOrder();
         defaultData.enableSpecialIngot = false;
         defaultData.specialIngot = createDefaultSpecialIngot();
         return defaultData;
@@ -234,11 +243,73 @@ public class ConfigInit {
         return List.of("rare", "epic", "legendary", "unique");
     }
 
+    private static List<String> createDefaultRarityOrder() {
+        return List.of("common", "uncommon", "rare", "epic", "legendary", "unique");
+    }
+
     private static void writeTuningConfig(TuningIngotConfigList data) {
+        FILE.getParentFile().mkdirs();
         try (FileWriter writer = new FileWriter(FILE)) {
             GSON.toJson(data, writer);
         } catch (IOException e) {
             Tiered.LOGGER.error("Failed to write tiered_more.json", e);
+        }
+    }
+
+    public static void reloadSlotScalingConfig() {
+        loadSlotScalingConfig();
+    }
+
+    private static void loadSlotScalingConfig() {
+        if (!SLOT_SCALING_FILE.exists()) {
+            SLOT_SCALING = new SlotScalingConfig();
+            writeSlotScalingConfig(SLOT_SCALING);
+            return;
+        }
+        try (FileReader reader = new FileReader(SLOT_SCALING_FILE)) {
+            SlotScalingConfig loaded = GSON.fromJson(reader, SlotScalingConfig.class);
+            boolean needsRewrite = false;
+
+            if (loaded == null) {
+                loaded = new SlotScalingConfig();
+                needsRewrite = true;
+            }
+
+            if (loaded.difficultyTiers == null) {
+                loaded = new SlotScalingConfig();
+                needsRewrite = true;
+            }
+            if (loaded.dimensions == null) {
+                loaded.dimensions = List.of();
+                needsRewrite = true;
+            }
+            if (loaded.bossTiers == null) {
+                loaded.bossTiers = List.of("bosses");
+                needsRewrite = true;
+            }
+            if (loaded.bonusCaps == null) {
+                loaded.bonusCaps = List.of();
+                needsRewrite = true;
+            }
+
+            SLOT_SCALING = loaded;
+            if (needsRewrite) {
+                writeSlotScalingConfig(SLOT_SCALING);
+                Tiered.LOGGER.info("Patched missing fields in slot-scaling.json.");
+            }
+        } catch (IOException | JsonSyntaxException e) {
+            Tiered.LOGGER.error("Failed to load slot-scaling.json, using defaults", e);
+            SLOT_SCALING = new SlotScalingConfig();
+            writeSlotScalingConfig(SLOT_SCALING);
+        }
+    }
+
+    private static void writeSlotScalingConfig(SlotScalingConfig data) {
+        SLOT_SCALING_FILE.getParentFile().mkdirs();
+        try (FileWriter writer = new FileWriter(SLOT_SCALING_FILE)) {
+            GSON.toJson(data, writer);
+        } catch (IOException e) {
+            Tiered.LOGGER.error("Failed to write slot-scaling.json", e);
         }
     }
 }

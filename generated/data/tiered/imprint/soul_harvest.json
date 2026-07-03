@@ -1,0 +1,22 @@
+{
+  "id": "tiered:soul_harvest",
+  "color": "#8E44AD",
+  "name_key": "imprint.tiered.soul_harvest.name",
+  "line_key": "imprint.tiered.soul_harvest",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "reapply": "HIGHEST",
+  "group": "combat",
+  "types": [
+    {
+      "type": "behavioral",
+      "value_display": "none",
+      "behavior": "tiered:soul_harvest",
+      "params": {
+        "max_duration_ticks": 400.0,
+        "duration_ticks": 100.0,
+        "amplifier": 0.0
+      }
+    }
+  ]
+}

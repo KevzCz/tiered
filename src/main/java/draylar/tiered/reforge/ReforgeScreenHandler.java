@@ -3,13 +3,23 @@ package draylar.tiered.reforge;
 import draylar.tiered.Tiered;
 import draylar.tiered.api.ModifierUtils;
 import draylar.tiered.api.PotentialAttribute;
+import draylar.tiered.api.ReforgeMaterial;
+import draylar.tiered.api.effect.DataEffect;
+import draylar.tiered.api.effect.ReforgeEffect;
+import draylar.tiered.api.effect.ReforgeEffects;
 import draylar.tiered.api.TierComponent;
 import draylar.tiered.api.TieredItemTags;
+import draylar.tiered.api.imprint.ImprintComponent;
+import draylar.tiered.api.imprint.Imprints;
+import draylar.tiered.api.imprint.RuneContent;
+import draylar.tiered.api.imprint.RuneContentComponent;
 import draylar.tiered.config.ConfigInit;
 import draylar.tiered.network.TieredServerPacket;
 import draylar.tiered.registry.ModComponents;
 import draylar.tiered.registry.ModItems;
 import draylar.tiered.registry.SpecialTuningIngotItem;
+import draylar.tiered.util.ReforgeMaterials;
+import draylar.tiered.util.ReforgeUtil;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -33,7 +43,9 @@ import net.minecraft.world.WorldEvents;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ReforgeScreenHandler extends ScreenHandler {
 
@@ -125,6 +137,21 @@ public class ReforgeScreenHandler extends ScreenHandler {
             }
         }
 
+        ReforgeMaterial additionMaterial = addition.isEmpty() ? null : ReforgeMaterials.resolve(addition);
+        if (additionMaterial != null && additionMaterial.isSkipsBaseItem()) {
+            RuneContentComponent readyComp =
+                    addition.get(ModComponents.RUNE_CONTENT);
+            List<String> readyEffects = (readyComp != null && !readyComp.rolledEffects().isEmpty())
+                    ? mergeEffects(additionMaterial.getEffects(), readyComp.rolledEffects())
+                    : additionMaterial.getEffects();
+            boolean ready = !stack.isEmpty()
+                    && ReforgeUtil.isMaterialCompatible(additionMaterial, stack)
+                    && (additionMaterial.hasImprintPool() || ReforgeEffects.anyCanRun(readyEffects, stack));
+            this.reforgeReady = ready;
+            TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, !ready);
+            return;
+        }
+
         if (baseItem.isEmpty() || stack.isEmpty() || addition.isEmpty()) {
             TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
             return;
@@ -146,16 +173,31 @@ public class ReforgeScreenHandler extends ScreenHandler {
 
         Item item = stack.getItem();
 
-        if (ModifierUtils.getRandomAttributeIDFor(null, item, true, null, true) == null) {
+        ReforgeMaterial material = ReforgeMaterials.resolve(addition);
+
+        boolean rerolls = material == null || !material.isSkipsReforge();
+
+        if (rerolls && ModifierUtils.getRandomAttributeIDFor(null, item, true, null, true) == null) {
             TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
             return;
         }
 
-        String group = getGroupFromTuningIngot(addition);
-        if (group != null) {
-            if (ModifierUtils.getRandomAttributeIDFor(null, item, true, group, true) == null) {
+        if (material != null) {
+            if (!ReforgeUtil.isMaterialCompatible(material, stack)) {
                 TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
                 return;
+            }
+            if (rerolls && ModifierUtils.getRandomAttributeIDFor(null, item, true, true, material) == null) {
+                TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
+                return;
+            }
+        } else {
+            String group = getGroupFromTuningIngot(addition);
+            if (group != null) {
+                if (ModifierUtils.getRandomAttributeIDFor(null, item, true, group, true) == null) {
+                    TieredServerPacket.writeS2CReforgeReadyPacket((ServerPlayerEntity) player, true);
+                    return;
+                }
             }
         }
 
@@ -171,6 +213,7 @@ public class ReforgeScreenHandler extends ScreenHandler {
         }
 
         if (this.reforgeReady
+                && rerolls
                 && !ConfigInit.CONFIG.uniqueReforge
                 && ModifierUtils.getAttributeId(stack) != null
                 && ModifierUtils.getAttributeId(stack).getPath().contains("unique")) {
@@ -288,6 +331,36 @@ public class ReforgeScreenHandler extends ScreenHandler {
         ItemStack itemStack = this.getSlot(1).getStack();
         ItemStack tuningIngot = this.getSlot(2).getStack();
 
+        ReforgeMaterial noReforgeMaterial = tuningIngot.isEmpty() ? null : ReforgeMaterials.resolve(tuningIngot);
+        if (noReforgeMaterial != null && noReforgeMaterial.isSkipsBaseItem()) {
+            if (itemStack.isEmpty() || !ReforgeUtil.isMaterialCompatible(noReforgeMaterial, itemStack)) return;
+
+            RuneContentComponent standaloneComp =
+                    tuningIngot.get(ModComponents.RUNE_CONTENT);
+            List<String> standaloneEffects = (standaloneComp != null && !standaloneComp.rolledEffects().isEmpty())
+                    ? mergeEffects(noReforgeMaterial.getEffects(), standaloneComp.rolledEffects())
+                    : noReforgeMaterial.getEffects();
+
+            DataEffect extract = ReforgeEffects.findExtract(standaloneEffects);
+            if (extract != null) {
+                performExtract(-1);
+                return;
+            }
+
+            boolean changed = ReforgeEffects.run(player, itemStack, standaloneEffects,
+                    noReforgeMaterial.getEffectParams(), player.getWorld(), this.pos, tuningIngot);
+
+            if (!changed && noReforgeMaterial.hasImprintPool()) {
+                RuneContent.rollOnto(tuningIngot, null);
+                changed = Imprints.grantFromContent(itemStack, tuningIngot);
+            }
+            if (!changed) return;
+
+            this.decrementStack(2);
+            this.context.run((world, pos) -> world.syncWorldEvent(WorldEvents.ANVIL_USED, this.pos, 0));
+            return;
+        }
+
         if (tuningIngot.getItem() == ModItems.SPECIAL_TUNING_INGOT) {
             if (! ConfigInit.SPECIAL_INGOT_ENABLED || ConfigInit.SPECIAL_INGOT == null) {
                 return;
@@ -308,19 +381,128 @@ public class ReforgeScreenHandler extends ScreenHandler {
             }
         }
 
-        String group = getGroupFromTuningIngot(tuningIngot);
-        ModifierUtils.removeItemStackAttribute(itemStack);
+        ReforgeMaterial material = ReforgeMaterials.resolve(tuningIngot);
+        boolean keepTier = material != null && material.isSkipsReforge();
 
-        itemStack.remove(ModComponents.SPECIAL_STATS);
-        if (hasSpecialPrefixName(itemStack)) {
-            itemStack.remove(DataComponentTypes.ITEM_NAME);
+        if (!keepTier && material == null) {
+            ModifierUtils.removeItemStackAttribute(itemStack);
+            itemStack.remove(ModComponents.SPECIAL_STATS);
+            if (hasSpecialPrefixName(itemStack)) {
+                itemStack.remove(DataComponentTypes.ITEM_NAME);
+            }
         }
 
-        ModifierUtils. setItemStackAttribute(player, itemStack, true, group, true, false);
+        if (material != null) {
+            if (!ReforgeUtil.isMaterialCompatible(material, itemStack)) {
+                return;
+            }
+
+            RuneContentComponent runeComp = tuningIngot.get(ModComponents.RUNE_CONTENT);
+            List<String> effectIds = (runeComp != null && !runeComp.rolledEffects().isEmpty())
+                    ? mergeEffects(material.getEffects(), runeComp.rolledEffects())
+                    : material.getEffects();
+            Map<String, Map<String, Float>> effectParams =
+                    mergeEffectParams(material.getEffectParams(), runeComp != null ? runeComp.rolledEffectParams() : null);
+            if (!keepTier) {
+
+                ReforgeEffect.RollBias rollBias = ReforgeEffects.preReforge(
+                        player, itemStack, effectIds, effectParams,
+                        player.getWorld(), this.pos, tuningIngot);
+
+                ModifierUtils.removeItemStackAttribute(itemStack);
+                itemStack.remove(ModComponents.SPECIAL_STATS);
+                if (hasSpecialPrefixName(itemStack)) {
+                    itemStack.remove(DataComponentTypes.ITEM_NAME);
+                }
+
+                for (int i = 0; i < rollBias.extraBaseCost; i++) {
+                    this.decrementStack(0);
+                }
+                ModifierUtils.setItemStackAttribute(player, itemStack, true, material, rollBias);
+            }
+
+            ReforgeEffects.run(player, itemStack, effectIds, effectParams,
+                    player.getWorld(), this.pos, tuningIngot);
+
+            Imprints.grantFromContent(itemStack, tuningIngot);
+        } else {
+            String group = getGroupFromTuningIngot(tuningIngot);
+            ModifierUtils.setItemStackAttribute(player, itemStack, true, group, true, false);
+        }
 
         this.decrementStack(0);
         this.decrementStack(2);
         this.context.run((world, pos) -> world.syncWorldEvent(WorldEvents. ANVIL_USED, this. pos, 0));
+    }
+
+    public void performExtract(int chosenIndex) {
+        ItemStack itemStack = this.getSlot(1).getStack();
+        ItemStack tuningIngot = this.getSlot(2).getStack();
+        if (itemStack.isEmpty() || tuningIngot.isEmpty()) return;
+
+        ReforgeMaterial material = ReforgeMaterials.resolve(tuningIngot);
+        RuneContentComponent extractComp =
+                tuningIngot.get(ModComponents.RUNE_CONTENT);
+        List<String> extractEffects = material == null ? List.of()
+                : ((extractComp != null && !extractComp.rolledEffects().isEmpty())
+                        ? mergeEffects(material.getEffects(), extractComp.rolledEffects())
+                        : material.getEffects());
+        DataEffect extract = ReforgeEffects.findExtract(extractEffects);
+        if (extract == null) return;
+        if (!ReforgeUtil.isMaterialCompatible(material, itemStack)) return;
+        if (Imprints.slotsUsed(itemStack) <= 0) return;
+
+        int index = chosenIndex < 0 ? Imprints.slotsUsed(itemStack) - 1 : chosenIndex;
+        boolean success = player.getRandom().nextFloat() < extract.definition().getValue();
+
+        ItemStack consumed = tuningIngot.copy();
+        this.decrementStack(2);
+        if (success) {
+            var group = Imprints.extractSlot(itemStack, index);
+            if (!group.isEmpty()) {
+                ItemStack returned = consumed.copyWithCount(1);
+                RuneContent.writeContent(returned, group);
+                ReforgeMaterials.setOverride(returned, bareImprintMaterial(returned, group));
+                if (!player.getInventory().insertStack(returned)) {
+                    player.dropItem(returned, false);
+                }
+            }
+        }
+        this.context.run((world, pos) -> world.syncWorldEvent(WorldEvents.ANVIL_USED, this.pos, 0));
+    }
+
+    private static Map<String, Map<String, Float>> mergeEffectParams(
+            @Nullable Map<String, Map<String, Float>> base,
+            @Nullable Map<String, Map<String, Float>> rolled) {
+        if (base == null && rolled == null) return Map.of();
+        if (base == null) return rolled;
+        if (rolled == null || rolled.isEmpty()) return base;
+        Map<String, Map<String, Float>> merged = new LinkedHashMap<>(base);
+        for (var e : rolled.entrySet()) {
+            merged.merge(e.getKey(), e.getValue(), (a, b) -> {
+                Map<String, Float> combined = new LinkedHashMap<>(a);
+                combined.putAll(b);
+                return combined;
+            });
+        }
+        return merged;
+    }
+
+    private static List<String> mergeEffects(@Nullable List<String> base, List<String> extra) {
+        if (base == null || base.isEmpty()) return extra;
+        List<String> merged = new ArrayList<>(base);
+        merged.addAll(extra);
+        return merged;
+    }
+
+    private static ReforgeMaterial bareImprintMaterial(ItemStack rune, List<ImprintComponent.Entry> group) {
+        List<ReforgeMaterial.Candidate> candidates = new ArrayList<>();
+        for (ImprintComponent.Entry e : group) {
+            candidates.add(new ReforgeMaterial.Candidate(e.id(), e.value(), e.value(), 1));
+        }
+        ReforgeMaterial.ImprintPool pool = new ReforgeMaterial.ImprintPool(group.size(), group.size(), candidates, null, null, null, null);
+        String itemId = Registries.ITEM.getId(rune.getItem()).toString();
+        return new ReforgeMaterial(itemId, null, null, null, null, null, null, null, null, null, null, null, pool, true, true);
     }
 
     public void setPos(BlockPos pos) {
@@ -341,13 +523,13 @@ public class ReforgeScreenHandler extends ScreenHandler {
 
     private void decrementStack(int slot) {
         ItemStack itemStack = this.inventory.getStack(slot);
-        
+
         if (slot == 0 && !itemStack.isEmpty()) {
             lastUsedBaseMaterial = itemStack.getItem();
         } else if (slot == 2 && !itemStack.isEmpty()) {
             lastUsedAddition = itemStack.getItem();
         }
-        
+
         itemStack.decrement(1);
         this.inventory.setStack(slot, itemStack);
 
@@ -368,7 +550,7 @@ public class ReforgeScreenHandler extends ScreenHandler {
 
         if (slot == 0) {
             if (lastUsedBaseMaterial == null) return currentCount > 0;
-            
+
             ItemStack targetItem = this.inventory.getStack(1);
             if (targetItem.isEmpty()) return currentCount > 0;
 
@@ -393,7 +575,7 @@ public class ReforgeScreenHandler extends ScreenHandler {
             return gathered > 0 || currentCount > 0;
         } else if (slot == 2) {
             if (lastUsedAddition == null) return currentCount > 0;
-            
+
             int gathered = 0;
             for (int i = 3; i < this.slots.size() && gathered < needed; i++) {
                 ItemStack playerStack = this.slots.get(i).getStack();

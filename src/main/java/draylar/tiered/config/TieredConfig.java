@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-@Config(name = "tiered")
+@Config(name = "tiered_more/tiered")
 @Config.Gui.Background("minecraft:textures/block/stone.png")
 public class TieredConfig implements ConfigData {
 

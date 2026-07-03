@@ -29,21 +29,19 @@ public abstract class ScreenHandlerMixin {
             PlayerEntity player,
             CallbackInfo ci
     ) {
-        if (actionType != SlotActionType.PICKUP) return; // Only trigger on normal click
+        if (actionType != SlotActionType.PICKUP) return;
         if (slotIndex < 0 || slotIndex >= ((ScreenHandler) (Object) this).slots.size()) return;
 
         ScreenHandler handler = (ScreenHandler) (Object) this;
         Slot targetSlot = handler.getSlot(slotIndex);
         ItemStack cursorStack = handler.getCursorStack();
 
-        // Only activate if holding Blessed Scroll and clicking a filled slot
         if (!cursorStack.isEmpty()
                 && cursorStack.getItem() == ModItems.BLESSED_SCROLL
                 && targetSlot.hasStack()) {
 
             ItemStack targetStack = targetSlot.getStack();
 
-            // Check if item has a cursed modifier
             Identifier attributeId = ModifierUtils.getAttributeId(targetStack);
             if (attributeId != null) {
                 PotentialAttribute attribute = Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().get(attributeId);

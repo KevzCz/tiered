@@ -2,15 +2,31 @@ package draylar.tiered.registry;
 
 import draylar.tiered.config.ConfigInit;
 import draylar.tiered.config.TuningIngotConfig;
+import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.minecraft.loot.LootPool;
 import net.minecraft.loot.entry.EmptyEntry;
 import net.minecraft.loot.entry.ItemEntry;
 import net.minecraft.loot.provider.number.ConstantLootNumberProvider;
+import net.minecraft.util.Identifier;
 
 public class ModLoot {
 
+    private static final Identifier LATE_PHASE = Identifier.of("tiered", "slot_scaling_late");
+
     public static void init() {
+
+        LootTableEvents.MODIFY.addPhaseOrdering(Event.DEFAULT_PHASE, LATE_PHASE);
+
+        LootTableEvents.MODIFY.register(LATE_PHASE, (key, tableBuilder, source, registries) -> {
+            final String tableId = key.getValue().toString();
+            if (isEntityLootTable(tableId)) {
+                tableBuilder.modifyPools(pool -> pool.apply(MobDropSlotScalingLootFunction.builder()));
+            } else {
+                tableBuilder.modifyPools(pool -> pool.apply(LootTableSlotScalingLootFunction.builder()));
+            }
+        });
+
         LootTableEvents.MODIFY.register((key, tableBuilder, source, registries) -> {
             final String tableId = key.getValue().toString();
             final int SCALE = 1000;
@@ -74,5 +90,11 @@ public class ModLoot {
                 }
             }
         });
+    }
+
+    private static boolean isEntityLootTable(String tableId) {
+        int slash = tableId.indexOf(':');
+        if (slash < 0) return false;
+        return tableId.substring(slash + 1).startsWith("entities/");
     }
 }

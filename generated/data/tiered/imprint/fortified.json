@@ -1,0 +1,20 @@
+{
+  "id": "tiered:fortified",
+  "color": "#5D6D7E",
+  "name_key": "imprint.tiered.fortified.name",
+  "line_key": "imprint.tiered.fortified",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "group": "defense",
+  "types": [
+    {
+      "type": "attribute",
+      "value_min": 1.0,
+      "value_max": 3.0,
+      "max_bonus": 10.0,
+      "attribute": "minecraft:generic.armor",
+      "operation": "ADD_VALUE",
+      "any_worn": true
+    }
+  ]
+}

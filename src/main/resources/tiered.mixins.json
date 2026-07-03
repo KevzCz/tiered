@@ -10,6 +10,7 @@
     "ItemMixin",
     "TridentEntityMixin",
     "LootTableMixin",
+    "ReloadableRegistriesMixin",
     "AnvilScreenHandlerMixin",
     "MerchantScreenHandlerMixin",
     "RangedWeaponItemMixin",
@@ -30,6 +31,7 @@
     "client.HandledScreenMixin",
     "client.CursedItemMixin",
     "client.TabRenderingMixin",
+    "client.ReforgeMaterialTooltipMixin",
     "compat.ModAnvilScreenMixin"
   ],
   "injectors": {

@@ -1,0 +1,21 @@
+{
+  "id": "tiered:swiftness",
+  "color": "#1ABC9C",
+  "name_key": "imprint.tiered.swiftness.name",
+  "line_key": "imprint.tiered.swiftness",
+  "multiplicity": "SLOT",
+  "combine": "ADDITIVE",
+  "group": "movement",
+  "types": [
+    {
+      "type": "attribute",
+      "value_display": "percent",
+      "value_min": 0.03,
+      "value_max": 0.06,
+      "max_bonus": 0.15,
+      "attribute": "minecraft:generic.movement_speed",
+      "operation": "MULTIPLY_BASE",
+      "any_worn": true
+    }
+  ]
+}
