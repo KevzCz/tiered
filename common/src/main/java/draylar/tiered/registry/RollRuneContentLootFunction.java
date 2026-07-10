@@ -58,7 +58,7 @@ public class RollRuneContentLootFunction extends LootItemConditionalFunction {
         return new RuneRollContext(maxHealth, type, dimension);
     }
 
-    public static net.minecraft.world.level.storage.loot.functions.LootItemConditionalFunction.Builder<?> builder() {
+    public static LootItemConditionalFunction.Builder<?> builder() {
         return simpleBuilder(RollRuneContentLootFunction::new);
     }
 }

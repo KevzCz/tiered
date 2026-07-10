@@ -21,7 +21,7 @@ public final class ModDataComponents {
     // namespace to match the original Fabric mod and downstream addon expectations.
     @SuppressWarnings("unchecked")
     private static final ResourceKey<Registry<DataComponentType<?>>> DATA_COMPONENT_TYPE_KEY =
-            (ResourceKey<Registry<DataComponentType<?>>>) (ResourceKey<?>) Registries.DATA_COMPONENT_TYPE;
+            Registries.DATA_COMPONENT_TYPE;
 
     public static final DeferredRegister<DataComponentType<?>> COMPONENTS =
             DeferredRegister.create("tiered_more", DATA_COMPONENT_TYPE_KEY);

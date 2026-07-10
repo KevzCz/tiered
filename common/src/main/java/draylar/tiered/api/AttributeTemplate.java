@@ -63,7 +63,7 @@ public class AttributeTemplate {
         Optional<Holder.Reference<Attribute>> optional = BuiltInRegistries.ATTRIBUTE.getHolder(ResourceLocation.parse(this.attributeTypeID));
 
         if (optional.isPresent()) {
-            AttributeModifier cloneModifier = new AttributeModifier(ResourceLocation.parse(entityAttributeModifier.id().toString() + "_" + slot.getName()), entityAttributeModifier.amount(), entityAttributeModifier.operation());
+            AttributeModifier cloneModifier = new AttributeModifier(ResourceLocation.parse(entityAttributeModifier.id() + "_" + slot.getName()), entityAttributeModifier.amount(), entityAttributeModifier.operation());
 
             ItemAttributeModifiers.Entry entry = new ItemAttributeModifiers.Entry(optional.get(), cloneModifier, EquipmentSlotGroup.bySlot(slot));
             if (entry.slot().test(slot)) {

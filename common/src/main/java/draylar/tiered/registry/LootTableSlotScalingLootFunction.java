@@ -60,7 +60,7 @@ public class LootTableSlotScalingLootFunction extends LootItemConditionalFunctio
         return stack;
     }
 
-    public static net.minecraft.world.level.storage.loot.functions.LootItemConditionalFunction.Builder<?> builder() {
+    public static LootItemConditionalFunction.Builder<?> builder() {
         return simpleBuilder(LootTableSlotScalingLootFunction::new);
     }
 }

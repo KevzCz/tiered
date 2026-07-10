@@ -47,7 +47,7 @@ public class GrantBonusImprintSlotsLootFunction extends LootItemConditionalFunct
         return stack;
     }
 
-    public static net.minecraft.world.level.storage.loot.functions.LootItemConditionalFunction.Builder<?> builder(int count, int maxTotal) {
+    public static LootItemConditionalFunction.Builder<?> builder(int count, int maxTotal) {
         return simpleBuilder(conditions -> new GrantBonusImprintSlotsLootFunction(conditions, count, maxTotal));
     }
 }

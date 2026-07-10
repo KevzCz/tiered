@@ -242,13 +242,13 @@ public class ReforgeMaterial {
     }
 
     public static class ImprintPoolChoice {
-        private final List<draylar.tiered.api.ReforgeMaterial.ImprintPoolChoice.Candidate> candidates;
+        private final List<ReforgeMaterial.ImprintPoolChoice.Candidate> candidates;
 
-        public ImprintPoolChoice(List<draylar.tiered.api.ReforgeMaterial.ImprintPoolChoice.Candidate> candidates) {
+        public ImprintPoolChoice(List<ReforgeMaterial.ImprintPoolChoice.Candidate> candidates) {
             this.candidates = candidates;
         }
 
-        public List<draylar.tiered.api.ReforgeMaterial.ImprintPoolChoice.Candidate> getCandidates() {
+        public List<ReforgeMaterial.ImprintPoolChoice.Candidate> getCandidates() {
             return candidates == null ? List.of() : candidates;
         }
 
@@ -258,13 +258,13 @@ public class ReforgeMaterial {
 
         @Nullable
         public ImprintPool pick(Random rng) {
-            List<draylar.tiered.api.ReforgeMaterial.ImprintPoolChoice.Candidate> pool = getCandidates();
+            List<ReforgeMaterial.ImprintPoolChoice.Candidate> pool = getCandidates();
             if (pool.isEmpty()) return null;
             int total = 0;
-            for (draylar.tiered.api.ReforgeMaterial.ImprintPoolChoice.Candidate c : pool) total += c.getWeight();
+            for (ReforgeMaterial.ImprintPoolChoice.Candidate c : pool) total += c.getWeight();
             if (total <= 0) return pool.get(rng.nextInt(pool.size())).getPool();
             int roll = rng.nextInt(total);
-            for (draylar.tiered.api.ReforgeMaterial.ImprintPoolChoice.Candidate c : pool) {
+            for (ReforgeMaterial.ImprintPoolChoice.Candidate c : pool) {
                 roll -= c.getWeight();
                 if (roll < 0) return c.getPool();
             }
@@ -292,13 +292,13 @@ public class ReforgeMaterial {
     }
 
     public static class EffectPoolChoice {
-        private final List<draylar.tiered.api.ReforgeMaterial.EffectPoolChoice.Candidate> candidates;
+        private final List<ReforgeMaterial.EffectPoolChoice.Candidate> candidates;
 
-        public EffectPoolChoice(List<draylar.tiered.api.ReforgeMaterial.EffectPoolChoice.Candidate> candidates) {
+        public EffectPoolChoice(List<ReforgeMaterial.EffectPoolChoice.Candidate> candidates) {
             this.candidates = candidates;
         }
 
-        public List<draylar.tiered.api.ReforgeMaterial.EffectPoolChoice.Candidate> getCandidates() {
+        public List<ReforgeMaterial.EffectPoolChoice.Candidate> getCandidates() {
             return candidates == null ? List.of() : candidates;
         }
 
@@ -308,7 +308,7 @@ public class ReforgeMaterial {
 
         @Nullable
         public EffectPool pick(Random rng) {
-            return weightedPickChoice(getCandidates(), rng, draylar.tiered.api.ReforgeMaterial.EffectPoolChoice.Candidate::getWeight, draylar.tiered.api.ReforgeMaterial.EffectPoolChoice.Candidate::getPool);
+            return weightedPickChoice(getCandidates(), rng, ReforgeMaterial.EffectPoolChoice.Candidate::getWeight, ReforgeMaterial.EffectPoolChoice.Candidate::getPool);
         }
 
         public static class Candidate {
@@ -328,13 +328,13 @@ public class ReforgeMaterial {
     }
 
     public static class BehaviorPoolChoice {
-        private final List<draylar.tiered.api.ReforgeMaterial.BehaviorPoolChoice.Candidate> candidates;
+        private final List<ReforgeMaterial.BehaviorPoolChoice.Candidate> candidates;
 
-        public BehaviorPoolChoice(List<draylar.tiered.api.ReforgeMaterial.BehaviorPoolChoice.Candidate> candidates) {
+        public BehaviorPoolChoice(List<ReforgeMaterial.BehaviorPoolChoice.Candidate> candidates) {
             this.candidates = candidates;
         }
 
-        public List<draylar.tiered.api.ReforgeMaterial.BehaviorPoolChoice.Candidate> getCandidates() {
+        public List<ReforgeMaterial.BehaviorPoolChoice.Candidate> getCandidates() {
             return candidates == null ? List.of() : candidates;
         }
 
@@ -344,7 +344,7 @@ public class ReforgeMaterial {
 
         @Nullable
         public BehaviorPool pick(Random rng) {
-            return weightedPickChoice(getCandidates(), rng, draylar.tiered.api.ReforgeMaterial.BehaviorPoolChoice.Candidate::getWeight, draylar.tiered.api.ReforgeMaterial.BehaviorPoolChoice.Candidate::getPool);
+            return weightedPickChoice(getCandidates(), rng, ReforgeMaterial.BehaviorPoolChoice.Candidate::getWeight, ReforgeMaterial.BehaviorPoolChoice.Candidate::getPool);
         }
 
         public static class Candidate {
@@ -789,9 +789,9 @@ public class ReforgeMaterial {
         private final Integer rollMax;
         @SerializedName("nothing_weight")
         private final Integer nothingWeight;
-        private final List<draylar.tiered.api.ReforgeMaterial.BehaviorPool.Candidate> candidates;
+        private final List<ReforgeMaterial.BehaviorPool.Candidate> candidates;
 
-        public BehaviorPool(Integer rollMin, Integer rollMax, Integer nothingWeight, List<draylar.tiered.api.ReforgeMaterial.BehaviorPool.Candidate> candidates) {
+        public BehaviorPool(Integer rollMin, Integer rollMax, Integer nothingWeight, List<ReforgeMaterial.BehaviorPool.Candidate> candidates) {
             this.rollMin = rollMin;
             this.rollMax = rollMax;
             this.nothingWeight = nothingWeight;
@@ -800,16 +800,16 @@ public class ReforgeMaterial {
 
         public int getRollMin() { return rollMin == null ? 1 : Math.max(0, rollMin); }
         public int getRollMax() { return rollMax == null ? getRollMin() : Math.max(getRollMin(), rollMax); }
-        public List<draylar.tiered.api.ReforgeMaterial.BehaviorPool.Candidate> getCandidates() { return candidates == null ? List.of() : candidates; }
+        public List<ReforgeMaterial.BehaviorPool.Candidate> getCandidates() { return candidates == null ? List.of() : candidates; }
 
         @Nullable
-        draylar.tiered.api.ReforgeMaterial.BehaviorPool.Candidate roll(Random rng) {
-            List<draylar.tiered.api.ReforgeMaterial.BehaviorPool.Candidate> pool = getCandidates();
+        ReforgeMaterial.BehaviorPool.Candidate roll(Random rng) {
+            List<ReforgeMaterial.BehaviorPool.Candidate> pool = getCandidates();
             if (pool.isEmpty()) return null;
             int min = getRollMin();
             if (min == 0) {
                 int candidateTotal = 0;
-                for (draylar.tiered.api.ReforgeMaterial.BehaviorPool.Candidate c : pool) candidateTotal += c.getWeight();
+                for (ReforgeMaterial.BehaviorPool.Candidate c : pool) candidateTotal += c.getWeight();
                 int nw = nothingWeight != null ? Math.max(0, nothingWeight) : candidateTotal;
                 int total = candidateTotal + nw;
                 if (total > 0 && rng.nextInt(total) < nw) return null;
@@ -817,12 +817,12 @@ public class ReforgeMaterial {
             return weightedPick(pool, rng);
         }
 
-        private static draylar.tiered.api.ReforgeMaterial.BehaviorPool.Candidate weightedPick(List<draylar.tiered.api.ReforgeMaterial.BehaviorPool.Candidate> candidates, Random rng) {
+        private static ReforgeMaterial.BehaviorPool.Candidate weightedPick(List<ReforgeMaterial.BehaviorPool.Candidate> candidates, Random rng) {
             int total = 0;
-            for (draylar.tiered.api.ReforgeMaterial.BehaviorPool.Candidate c : candidates) total += c.getWeight();
+            for (ReforgeMaterial.BehaviorPool.Candidate c : candidates) total += c.getWeight();
             if (total <= 0) return candidates.get(rng.nextInt(candidates.size()));
             int roll = rng.nextInt(total);
-            for (draylar.tiered.api.ReforgeMaterial.BehaviorPool.Candidate c : candidates) {
+            for (ReforgeMaterial.BehaviorPool.Candidate c : candidates) {
                 roll -= c.getWeight();
                 if (roll < 0) return c;
             }

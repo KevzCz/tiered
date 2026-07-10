@@ -22,7 +22,7 @@ public class CustomEntityAttributes {
     // RegisterEvent/mod init) avoids that entirely, matching the ModDataComponents fix.
     @SuppressWarnings("unchecked")
     private static final ResourceKey<Registry<Attribute>> ATTRIBUTE_KEY =
-            (ResourceKey<Registry<Attribute>>) (ResourceKey<?>) Registries.ATTRIBUTE;
+            Registries.ATTRIBUTE;
 
     public static final DeferredRegister<Attribute> ATTRIBUTES =
             DeferredRegister.create("tiered_more", ATTRIBUTE_KEY);

@@ -17,6 +17,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+
+import io.wispforest.accessories.data.SlotTypeLoader;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -113,7 +115,7 @@ public class ATCCompat {
 
     private static Set<String> getAllAccessoriesSlotIds() {
         try {
-            return new LinkedHashSet<>(io.wispforest.accessories.data.SlotTypeLoader.INSTANCE.getSlotTypes(false).keySet());
+            return new LinkedHashSet<>(SlotTypeLoader.INSTANCE.getSlotTypes(false).keySet());
         } catch (Throwable ignored) {
             return Collections.emptySet();
         }

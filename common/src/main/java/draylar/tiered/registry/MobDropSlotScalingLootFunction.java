@@ -81,7 +81,7 @@ public class MobDropSlotScalingLootFunction extends LootItemConditionalFunction 
         return stack;
     }
 
-    public static net.minecraft.world.level.storage.loot.functions.LootItemConditionalFunction.Builder<?> builder() {
+    public static LootItemConditionalFunction.Builder<?> builder() {
         return simpleBuilder(MobDropSlotScalingLootFunction::new);
     }
 }

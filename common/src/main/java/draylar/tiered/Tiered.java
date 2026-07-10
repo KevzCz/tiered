@@ -1,5 +1,6 @@
 package draylar.tiered;
 
+import dev.architectury.utils.GameInstance;
 import draylar.tiered.api.*;
 import draylar.tiered.api.imprint.ImprintRegistry;
 import draylar.tiered.command.CommandInit;
@@ -128,7 +129,7 @@ public class Tiered {
         // mod construction (before LOOT_FUNCTION_TYPE/MENU froze) and this is a guarded no-op, same
         // as ModItems.register() above. On Fabric this is the first call.
         ModMisc.register();
-        REFORGE_SCREEN_HANDLER_TYPE = (MenuType<ReforgeScreenHandler>) (MenuType<?>) ModMisc.REFORGE_SCREEN_HANDLER.get();
+        REFORGE_SCREEN_HANDLER_TYPE = (MenuType<ReforgeScreenHandler>) ModMisc.REFORGE_SCREEN_HANDLER.get();
 
         TieredServerPacket.init();
 
@@ -149,7 +150,7 @@ public class Tiered {
             DataValidator.validate();
             DataValidator.validateEffects();
 
-            var server = dev.architectury.utils.GameInstance.getServer();
+            var server = GameInstance.getServer();
             if (server != null) {
                 for (var player : server.getPlayerList().getPlayers()) {
                     ModifierUtils.updateItemStackComponent(player.getInventory());
@@ -167,7 +168,7 @@ public class Tiered {
             List<RuneInjection> matching = RUNE_INJECTION_LOADER.getMatching(tableId);
             if (matching.isEmpty()) return;
 
-            var server = dev.architectury.utils.GameInstance.getServer();
+            var server = GameInstance.getServer();
             if (server == null) return;
             HolderLookup.Provider registries = server.registryAccess();
 

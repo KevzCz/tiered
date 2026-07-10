@@ -47,7 +47,7 @@ public class GeometricExtraCountLootFunction extends LootItemConditionalFunction
         return stack;
     }
 
-    public static net.minecraft.world.level.storage.loot.functions.LootItemConditionalFunction.Builder<?> builder(float chance, int minCount, int maxCount) {
+    public static LootItemConditionalFunction.Builder<?> builder(float chance, int minCount, int maxCount) {
         return simpleBuilder(conditions -> new GeometricExtraCountLootFunction(conditions, chance, minCount, maxCount));
     }
 }
