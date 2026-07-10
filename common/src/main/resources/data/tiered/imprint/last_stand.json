@@ -1,0 +1,23 @@
+{
+  "id": "tiered:last_stand",
+  "color": "#E67E22",
+  "name_key": "imprint.tiered.last_stand.name",
+  "line_key": "imprint.tiered.last_stand",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "reapply": "HIGHEST",
+  "group": "combat",
+  "types": [
+    {
+      "type": "behavioral",
+      "value_min": 0.075,
+      "value_max": 0.15,
+      "max_bonus": 0.65,
+      "value_display": "percent",
+      "behavior": "tiered:last_stand",
+      "params": {
+        "health_threshold": 0.35
+      }
+    }
+  ]
+}

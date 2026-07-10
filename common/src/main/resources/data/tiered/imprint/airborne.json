@@ -1,0 +1,20 @@
+{
+  "id": "tiered:airborne",
+  "color": "AQUA",
+  "name_key": "imprint.tiered.airborne.name",
+  "line_key": "imprint.tiered.airborne",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "reapply": "HIGHEST",
+  "group": "movement",
+  "types": [
+    {
+      "type": "behavioral",
+      "value_min": 0.01,
+      "value_max": 0.05,
+      "max_bonus": 0.50,
+      "value_display": "percent",
+      "behavior": "tiered:airborne_melee"
+    }
+  ]
+}

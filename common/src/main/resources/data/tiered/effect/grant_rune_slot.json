@@ -1,0 +1,13 @@
+{
+  "id": "tiered:grant_rune_slot",
+  "type": "grant_rune_slot",
+  "value": 1.0,
+  "description": "effect.tiered.grant_rune_slot.desc",
+  "applies_to": [
+    "#minecraft:enchantable/weapon",
+    "#minecraft:enchantable/armor"
+  ],
+  "params": {
+    "max_total": 1.0
+  }
+}

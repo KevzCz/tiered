@@ -1,0 +1,141 @@
+{
+    "id": "tiered:tiny",
+    "verifiers": [
+        {
+            "tag": "accessories_compat_layer:all_trinkets_items"
+        },
+        {
+            "tag": "accessories_compat_layer:all_curios_items"
+        },
+        {
+            "custom": "tiered:all_trinkets_items"
+        },
+        {
+            "custom": "tiered:all_curios_items"
+        }
+    ],
+    "cursed": "true",
+    "weight": 25,
+    "style": {
+        "color": "red"
+    },
+    "attributes": [
+        {
+            "type": "minecraft:generic.scale",
+            "modifier": {
+                "name": "tiered:tiny",
+                "operation": "ADD_MULTIPLIED_TOTAL",
+                "amount": -0.05
+            },
+            "optional_accessories_slots": [
+                "all_accessories",
+                "all_trinkets",
+                "all_curios",
+                "accessory",
+                "anklet",
+                "any",
+                "back",
+                "belt",
+                "blessing",
+                "cape",
+                "charm",
+                "face",
+                "hand",
+                "hat",
+                "necklace",
+                "ring",
+                "sheath",
+                "sherd",
+                "shoes",
+                "tome",
+                "trinket_group_charm-trinket",
+                "trinket_group_misc-quiver",
+                "trinket_group_spell-book",
+                "trinket_group_spell-quiver",
+                "trinket_group_spell-scroll",
+                "trinket_group_spell-trinket",
+                "trophy",
+                "wrist"
+            ]
+
+        },
+        {
+            "type": "minecraft:generic.movement_speed",
+            "modifier": {
+                "name": "tiered:tiny",
+                "operation": "ADD_MULTIPLIED_TOTAL",
+                "amount": 0.04
+            },
+            "optional_accessories_slots": [
+                "all_accessories",
+                "all_trinkets",
+                "all_curios",
+                "accessory",
+                "anklet",
+                "any",
+                "back",
+                "belt",
+                "blessing",
+                "cape",
+                "charm",
+                "face",
+                "hand",
+                "hat",
+                "necklace",
+                "ring",
+                "sheath",
+                "sherd",
+                "shoes",
+                "tome",
+                "trinket_group_charm-trinket",
+                "trinket_group_misc-quiver",
+                "trinket_group_spell-book",
+                "trinket_group_spell-quiver",
+                "trinket_group_spell-scroll",
+                "trinket_group_spell-trinket",
+                "trophy",
+                "wrist"
+            ]
+
+        },
+        {
+            "type": "minecraft:generic.max_health",
+            "modifier": {
+                "name": "tiered:tiny",
+                "operation": "ADD_MULTIPLIED_TOTAL",
+                "amount": -0.05
+            },
+            "optional_accessories_slots": [
+                "all_accessories",
+                "all_trinkets",
+                "all_curios",
+                "accessory",
+                "anklet",
+                "any",
+                "back",
+                "belt",
+                "blessing",
+                "cape",
+                "charm",
+                "face",
+                "hand",
+                "hat",
+                "necklace",
+                "ring",
+                "sheath",
+                "sherd",
+                "shoes",
+                "tome",
+                "trinket_group_charm-trinket",
+                "trinket_group_misc-quiver",
+                "trinket_group_spell-book",
+                "trinket_group_spell-quiver",
+                "trinket_group_spell-scroll",
+                "trinket_group_spell-trinket",
+                "trophy",
+                "wrist"
+            ]
+
+        }
+    ]
+}

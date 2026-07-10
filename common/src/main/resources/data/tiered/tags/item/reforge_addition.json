@@ -1,0 +1,23 @@
+{
+    "replace": false,
+    "values": [
+        "minecraft:amethyst_shard",
+        "tiered:tuning_ingot_common",
+        "tiered:tuning_ingot_uncommon",
+        "tiered:tuning_ingot_rare",
+        "tiered:tuning_ingot_epic",
+        "tiered:tuning_ingot_legendary",
+        "tiered:tuning_ingot_unique",
+        "tiered:special_tuning_ingot",
+        "tiered:rune_verdant",
+        "tiered:rune_obsidian",
+        "tiered:rune_amber",
+        "tiered:rune_steel",
+        "tiered:rune_arcane",
+        "tiered:rune_crimson",
+        "tiered:rune_sandstone",
+        "tiered:rune_ember",
+        "tiered:rune_frost",
+        "tiered:rune_shadow"
+    ]
+}

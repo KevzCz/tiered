@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "id": "tiered_more",
+  "version": "${version}",
+  "name": "Tiered More",
+  "description": "Adds tiers to tools & accessories.",
+  "authors": [
+    "KevzCz",
+    "Draylar",
+    "Globox_Z"
+  ],
+  "contact": {
+    "issues": "https://github.com/KevzCz/tiered.git",
+    "homepage": "https://www.curseforge.com/minecraft/mc-mods/tiered-more"
+  },
+  "license": "MIT",
+  "icon": "assets/tiered/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "draylar.tiered.fabric.TieredFabric"
+    ],
+    "client": [
+      "draylar.tiered.fabric.client.TieredFabricClient"
+    ],
+    "modmenu": [
+      "draylar.tiered.fabric.config.ModMenuIntegration"
+    ],
+    "server": [
+      "draylar.tiered.fabric.TieredFabricServer"
+    ]
+  },
+  "mixins": [
+    "tiered.mixins.json",
+    "tiered.fabric.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "architectury": ">=13.0.8",
+    "fabric-api": "*",
+    "cloth-config2": "*"
+  },
+  "suggests": {
+    "accessories": "*",
+    "trinkets": "*",
+    "modmenu": "*",
+    "levelz": "*",
+    "easyanvils": "*",
+    "spell_engine": "*"
+  },
+  "breaks": {
+    "tiered": "*"
+  }
+}

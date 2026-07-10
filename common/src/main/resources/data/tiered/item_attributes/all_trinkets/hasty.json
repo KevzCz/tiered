@@ -1,0 +1,61 @@
+{
+    "id": "tiered:hasty",
+    "verifiers": [
+        {
+            "tag": "accessories_compat_layer:all_trinkets_items"
+        },
+        {
+            "tag": "accessories_compat_layer:all_curios_items"
+        },
+        {
+            "custom": "tiered:all_trinkets_items"
+        },
+        {
+            "custom": "tiered:all_curios_items"
+        }
+    ],
+    "weight": 50,
+    "style": {
+        "color": "blue"
+    },
+    "attributes": [
+        {
+            "type": "minecraft:player.block_break_speed",
+            "modifier": {
+                "name": "tiered:hasty",
+                "operation": "ADD_MULTIPLIED_TOTAL",
+                "amount": 0.05
+            },
+            "optional_accessories_slots": [
+                "all_accessories",
+                "all_trinkets",
+                "all_curios",
+                "accessory",
+                "anklet",
+                "any",
+                "back",
+                "belt",
+                "blessing",
+                "cape",
+                "charm",
+                "face",
+                "hand",
+                "hat",
+                "necklace",
+                "ring",
+                "sheath",
+                "sherd",
+                "shoes",
+                "tome",
+                "trinket_group_charm-trinket",
+                "trinket_group_misc-quiver",
+                "trinket_group_spell-book",
+                "trinket_group_spell-quiver",
+                "trinket_group_spell-scroll",
+                "trinket_group_spell-trinket",
+                "trophy",
+                "wrist"
+            ]
+        }
+    ]
+}

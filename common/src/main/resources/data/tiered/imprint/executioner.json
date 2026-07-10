@@ -1,0 +1,23 @@
+{
+  "id": "tiered:executioner",
+  "color": "#E74C3C",
+  "name_key": "imprint.tiered.executioner.name",
+  "line_key": "imprint.tiered.executioner",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "reapply": "HIGHEST",
+  "group": "combat",
+  "types": [
+    {
+      "type": "behavioral",
+      "value_min": 0.5,
+      "value_max": 1.0,
+      "max_bonus": 3.0,
+      "value_display": "raw",
+      "behavior": "tiered:executioner",
+      "params": {
+        "heal_amount": 1.0
+      }
+    }
+  ]
+}

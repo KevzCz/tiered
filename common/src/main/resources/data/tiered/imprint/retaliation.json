@@ -1,0 +1,23 @@
+{
+  "id": "tiered:retaliation",
+  "color": "#C0392B",
+  "name_key": "imprint.tiered.retaliation.name",
+  "line_key": "imprint.tiered.retaliation",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "reapply": "HIGHEST",
+  "group": "combat",
+  "types": [
+    {
+      "type": "behavioral",
+      "value_min": 0.05,
+      "value_max": 0.15,
+      "max_bonus": 0.35,
+      "value_display": "percent",
+      "behavior": "tiered:retaliation",
+      "params": {
+        "duration_ticks": 100.0
+      }
+    }
+  ]
+}

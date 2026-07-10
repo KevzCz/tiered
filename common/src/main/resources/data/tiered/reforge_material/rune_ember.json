@@ -1,0 +1,20 @@
+{
+  "item": "tiered:rune_ember",
+  "color": "red",
+  "rarity_boost": 0.3,
+  "guaranteed_min_rarity": "rare",
+  "effect_pools": [
+    {
+      "roll_min": 0,
+      "roll_max": 1,
+      "nothing_weight": 7,
+      "candidates": [
+        { "effect": "tiered:stabilize", "weight": 2 },
+        { "effect": "tiered:overcharge", "weight": 1 }
+      ]
+    }
+  ],
+  "description": [
+    "item.tiered.rune_ember.lore"
+  ]
+}

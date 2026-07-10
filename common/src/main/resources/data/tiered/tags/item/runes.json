@@ -1,0 +1,15 @@
+{
+  "replace": false,
+  "values": [
+    "tiered:rune_verdant",
+    "tiered:rune_obsidian",
+    "tiered:rune_amber",
+    "tiered:rune_steel",
+    "tiered:rune_arcane",
+    "tiered:rune_crimson",
+    "tiered:rune_sandstone",
+    "tiered:rune_ember",
+    "tiered:rune_frost",
+    "tiered:rune_shadow"
+  ]
+}

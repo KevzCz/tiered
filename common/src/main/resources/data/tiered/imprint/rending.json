@@ -1,0 +1,28 @@
+{
+  "id": "tiered:rending",
+  "color": "GOLD",
+  "name_key": "imprint.tiered.rending.name",
+  "line_key": "imprint.tiered.rending",
+  "combine": "ADDITIVE",
+  "multiplicity": "SLOT",
+  "reapply": "HIGHEST",
+  "group": "weapon",
+  "active_when": {
+    "equipped_item": {
+      "slot": "mainhand",
+      "tags": [
+        "#minecraft:axes"
+      ]
+    }
+  },
+  "types": [
+    {
+      "type": "behavioral",
+      "value_min": 0.01,
+      "value_max": 0.05,
+      "max_bonus": 0.50,
+      "value_display": "percent",
+      "behavior": "tiered:universal_damage"
+    }
+  ]
+}

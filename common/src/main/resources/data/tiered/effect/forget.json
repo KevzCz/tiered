@@ -1,0 +1,5 @@
+{
+  "id": "tiered:forget",
+  "type": "forget",
+  "description": "effect.tiered.forget.desc"
+}

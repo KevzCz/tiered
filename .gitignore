@@ -1,0 +1,34 @@
+# Gradle
+.gradle/
+build/
+*/build/
+!src/**/build/
+
+# Eclipse/VSCode Java compiler output
+bin/
+*/bin/
+
+# Loom / Architectury
+.architectury-transformer/
+*/run/
+run/
+*/generated/
+generated/
+
+# Windows shortcuts
+*.lnk
+
+# IDE
+.idea/
+*.iml
+.vscode/
+out/
+
+# Crash/replay logs
+hs_err_pid*.log
+replay_pid*.log
+*.hprof
+
+# OS
+.DS_Store
+Thumbs.db

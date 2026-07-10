@@ -1,0 +1,29 @@
+{
+  "table_patterns": [
+    "chests/simple_dungeon",
+    "chests/abandoned_mineshaft",
+    "chests/stronghold",
+    "chests/jungle_temple",
+    "chests/desert_pyramid",
+    "chests/pillager_outpost"
+  ],
+  "pools": [
+    {
+      "items": [
+        { "item": "tiered:rune_crimson", "weight": 1 },
+        { "item": "tiered:rune_arcane", "weight": 1 },
+        { "item": "tiered:rune_shadow", "weight": 1 },
+        { "item": "tiered:rune_frost", "weight": 1 },
+        { "item": "tiered:rune_amber", "weight": 3 },
+        { "item": "tiered:rune_ember", "weight": 3 },
+        { "item": "tiered:rune_obsidian", "weight": 3 },
+        { "item": "tiered:rune_sandstone", "weight": 3 },
+        { "item": "tiered:rune_steel", "weight": 3 },
+        { "item": "tiered:rune_verdant", "weight": 3 }
+      ],
+      "chance": 0.12,
+      "count_min": 1,
+      "count_max": 2
+    }
+  ]
+}

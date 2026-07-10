@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "package": "draylar.tiered.neoforge.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "compat.ModAnvilScreenMixin",
+    "access.HandledScreensAccessor"
+  ],
+  "mixins": [
+    "compat.AccessoriesAPIMixin",
+    "ItemStackSpellMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

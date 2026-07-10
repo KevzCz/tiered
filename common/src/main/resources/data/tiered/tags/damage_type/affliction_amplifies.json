@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "minecraft:magic", "required": false },
+    { "id": "minecraft:wither", "required": false },
+    { "id": "#c:is_magic", "required": false }
+  ]
+}

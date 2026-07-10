@@ -1,0 +1,30 @@
+architectury {
+    common rootProject.enabled_platforms.split(',')
+}
+
+dependencies {
+    // We depend on Fabric Loader here to use the Fabric @Environment annotations,
+    // which get remapped to the correct annotations on each platform.
+    // Do NOT use other classes from Fabric Loader.
+    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+
+    // Architectury API. This is optional, and you can comment it out if you don't need it.
+    modImplementation "dev.architectury:architectury:$rootProject.architectury_api_version"
+
+    // Accessories (optional compat) - common artifact, Architectury API is loader-agnostic
+    modCompileOnly "io.wispforest:accessories-common:$rootProject.accessories_version"
+
+    // Cloth Config - common artifact, used directly by TieredConfig's annotations
+    modImplementation "me.shedaniel.cloth:cloth-config:$rootProject.cloth_config_version"
+}
+
+// Java autogeneration of imprint/effect definition JSON templates into generated/data/tiered/.
+// Plain JavaExec (not a datapack/asset generator) so it never affects the mod build/runtime.
+// Run: gradlew :common:runImprintDatagen
+tasks.register('runImprintDatagen', JavaExec) {
+    group = 'tiered'
+    description = 'Generates imprint/effect definition JSON templates under generated/data/tiered/.'
+    dependsOn tasks.named('classes')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'draylar.tiered.datagen.ImprintEffectDefGenerator'
+}

@@ -1,0 +1,42 @@
+{
+  "item": "tiered:rune_crimson",
+  "color": "dark_red",
+  "skip_reforge": true,
+  "imprint_pools": [
+    {
+      "roll_min": 1,
+      "roll_max": 2,
+      "imprint_group": "weapon",
+      "allow_duplicates": true,
+      "roll_scaling": [
+        {
+          "source": "entity_max_health",
+          "per": 100,
+          "min_bonus_per": 1,
+          "min_bonus_cap": 3,
+          "max_bonus_per": 1,
+          "max_bonus_cap": 2
+        }
+      ]
+    },
+    {
+      "roll_min": 1,
+      "roll_max": 2,
+      "imprint_group": "combat",
+      "allow_duplicates": true,
+      "roll_scaling": [
+        {
+          "source": "entity_max_health",
+          "per": 100,
+          "min_bonus_per": 1,
+          "min_bonus_cap": 3,
+          "max_bonus_per": 1,
+          "max_bonus_cap": 2
+        }
+      ]
+    }
+  ],
+  "description": [
+    "item.tiered.rune_crimson.lore"
+  ]
+}

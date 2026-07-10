@@ -1,0 +1,37 @@
+{
+  "required": true,
+  "package": "draylar.tiered.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "mixins": [
+    "ItemStackMixin",
+    "LivingEntityMixin",
+    "PlayerEntityMixin",
+    "ItemMixin",
+    "TridentEntityMixin",
+    "LootTableMixin",
+    "ReloadableRegistriesMixin",
+    "AnvilScreenHandlerMixin",
+    "MerchantScreenHandlerMixin",
+    "RangedWeaponItemMixin",
+    "ItemFrameEntityMixin",
+    "MobEntityMixin",
+    "ScreenHandlerMixin",
+    "ArmorStandEntityMixin",
+    "CraftingScreenHandlerMixin",
+    "access.StyleAccessor",
+    "access.ServerPlayerEntityAccessor"
+  ],
+  "client": [
+    "client.ItemStackClientMixin",
+    "client.AnvilScreenMixin",
+    "client.DrawContextMixin",
+    "client.HandledScreenMixin",
+    "client.CursedItemMixin",
+    "client.TabRenderingMixin",
+    "client.ReforgeMaterialTooltipMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

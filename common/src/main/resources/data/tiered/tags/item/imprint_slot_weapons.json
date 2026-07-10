@@ -1,0 +1,18 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:swords",
+    "#minecraft:axes",
+    "#minecraft:enchantable/sword",
+    "#minecraft:enchantable/weapon",
+    "minecraft:trident",
+    "minecraft:bow",
+    "minecraft:crossbow",
+    "minecraft:mace",
+    { "id": "#rpg_series:archetype/melee_damage_weapon", "required": false },
+    { "id": "#rpg_series:archetype/ranged_damage_weapon", "required": false },
+    { "id": "#rpg_series:archetype/magic_damage_weapon", "required": false },
+    { "id": "#rpg_series:archetype/healing_weapon", "required": false },
+    { "id": "#rpg_series:archetype/defense_weapon", "required": false }
+  ]
+}

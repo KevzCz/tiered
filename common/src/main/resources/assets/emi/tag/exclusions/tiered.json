@@ -1,0 +1,6 @@
+{
+    "exclusions": [
+        "tiered:reforge_addition",
+        "tiered:reforge_base_item"
+    ]
+}

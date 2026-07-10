@@ -1,0 +1,18 @@
+{
+  "item": "tiered:rune_verdant",
+  "color": "green",
+  "effects": [
+    "tiered:mend"
+  ],
+  "imprint_pool": {
+    "roll_min": 0,
+    "roll_max": 1,
+    "nothing_weight": 2,
+    "candidates": [
+      { "imprint": "tiered:reinforced", "weight": 1 }
+    ]
+  },
+  "description": [
+    "item.tiered.rune_verdant.lore"
+  ]
+}

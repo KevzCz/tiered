@@ -1,0 +1,6 @@
+{
+  "id": "tiered:extract",
+  "type": "extract",
+  "value": 0.75,
+  "description": "effect.tiered.extract.desc"
+}

@@ -1,0 +1,37 @@
+{
+  "item": "tiered:rune_obsidian",
+  "color": "dark_gray",
+  "skip_reforge": true,
+  "skip_base_item": true,
+  "effect_pool_choices": {
+    "candidates": [
+      {
+        "weight": 2,
+        "pool": {
+          "roll_min": 1,
+          "roll_max": 1,
+          "candidates": [
+            {
+              "effect": "tiered:extract"
+            }
+          ]
+        }
+      },
+      {
+        "weight": 1,
+        "pool": {
+          "roll_min": 1,
+          "roll_max": 1,
+          "candidates": [
+            {
+              "effect": "tiered:grant_rune_slot"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "description": [
+    "item.tiered.rune_obsidian.lore"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "tables": [
+    "minecraft:chests/ancient_city",
+    "minecraft:chests/end_city_treasure",
+    "minecraft:chests/bastion_treasure"
+  ],
+  "pools": [
+    {
+      "items": [
+        { "item": "tiered:rune_crimson", "weight": 2 },
+        { "item": "tiered:rune_arcane", "weight": 2 },
+        { "item": "tiered:rune_shadow", "weight": 2 },
+        { "item": "tiered:rune_frost", "weight": 2 },
+        { "item": "tiered:rune_amber", "weight": 3 },
+        { "item": "tiered:rune_ember", "weight": 3 },
+        { "item": "tiered:rune_obsidian", "weight": 3 },
+        { "item": "tiered:rune_sandstone", "weight": 3 },
+        { "item": "tiered:rune_steel", "weight": 3 },
+        { "item": "tiered:rune_verdant", "weight": 3 }
+      ],
+      "chance": 0.25,
+      "count_min": 1,
+      "count_max": 4
+    }
+  ]
+}
