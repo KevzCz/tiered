@@ -80,12 +80,6 @@ public class ModLoot {
         });
     }
 
-    /**
-     * Applies {@link MobDropSlotScalingLootFunction}/{@link LootTableSlotScalingLootFunction} to
-     * every pool of every loot table. Fabric injects this straight into pool building via
-     * {@code LootTableEvents.MODIFY}; NeoForge has no equivalent pool-mutation hook, so it
-     * re-applies the same scaling logic post-roll via {@code IGlobalLootModifier} instead.
-     */
     @ExpectPlatform
     private static void registerSlotScaling() {
         throw new AssertionError();

@@ -16,9 +16,6 @@ import net.minecraft.resources.ResourceLocation;
 
 public final class ModDataComponents {
 
-    // "tiered_more" is the FML mod id, used only to locate the mod event bus for the
-    // NeoForge RegisterEvent hookup; resource ids below stay under the "tiered"
-    // namespace to match the original Fabric mod and downstream addon expectations.
     @SuppressWarnings("unchecked")
     private static final ResourceKey<Registry<DataComponentType<?>>> DATA_COMPONENT_TYPE_KEY =
             Registries.DATA_COMPONENT_TYPE;

@@ -1,6 +1,6 @@
 package draylar.tiered.util;
 
-import dev.architectury.platform.Platform;
+import draylar.tiered.Tiered;
 import draylar.tiered.api.ModifierUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
@@ -24,9 +24,53 @@ public final class TieredNeoForgeStyleTooltip {
     private TieredNeoForgeStyleTooltip() {
     }
 
-    public static void reformat(List<Component> tooltip, ItemStack stack) {
-        if (!Platform.isFabric()) appendAccessoryOnlyLines(tooltip, stack);
+    public static void appendAccessoryOnlyLines(List<Component> tooltip, ItemStack stack) {
+        if (stack.get(Tiered.TIER) == null) return;
+        for (var entry : ModifierUtils.getAccessoryOnlyModifiers(stack).entrySet()) {
+            Holder<Attribute> attribute = entry.getKey();
+            String descriptionId = attribute.value().getDescriptionId();
+            if (tooltipContainsAttributeLine(tooltip, descriptionId)) continue;
+            for (AttributeModifier modifier : entry.getValue()) {
+                double value = modifier.operation() == AttributeModifier.Operation.ADD_VALUE
+                        ? modifier.amount()
+                        : modifier.amount() * 100.0;
+                boolean addition = value > 0;
 
+                MutableComponent text = Component.translatable(
+                                (addition ? "attribute.modifier.plus." : "attribute.modifier.take.") + modifier.operation().id(),
+                                ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(Math.abs(value)),
+                                Component.translatable(descriptionId))
+                        .withStyle(attribute.value().getStyle(addition));
+                tooltip.add(text);
+            }
+        }
+    }
+
+    private static boolean tooltipContainsAttributeLine(List<Component> tooltip, String descriptionId) {
+        for (Component line : tooltip) {
+            if (lineReferencesDescription(line, descriptionId)) return true;
+            for (Component sibling : line.getSiblings()) {
+                if (lineReferencesDescription(sibling, descriptionId)) return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean lineReferencesDescription(Component component, String descriptionId) {
+        if (component.getContents() instanceof TranslatableContents contents) {
+            if (descriptionId.equals(contents.getKey())) return true;
+            for (Object arg : contents.getArgs()) {
+                if (arg instanceof Component argComponent
+                        && argComponent.getContents() instanceof TranslatableContents argContents
+                        && descriptionId.equals(argContents.getKey())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static void reformat(List<Component> tooltip, ItemStack stack) {
         Map<Holder<Attribute>, List<AttributeModifier>> tieredMap = new HashMap<>();
         for (EquipmentSlotGroup slot : EquipmentSlotGroup.values()) {
             boolean[] any = {false};
@@ -66,12 +110,15 @@ public final class TieredNeoForgeStyleTooltip {
                 }
             }
 
-            MutableComponent replacement = CommonComponents.space();
-            replacement.append(Component.translatable("tiered.attribute.modifier.equals.0", baseValueArg).withStyle(ChatFormatting.DARK_GREEN));
-            TieredAttributeTooltip.appendTieredSuffixes(replacement, attribute, entry.getValue(), ChatFormatting.DARK_GREEN);
-            replacement.append(CommonComponents.space());
-            replacement.append(Component.translatable(descriptionId).withStyle(ChatFormatting.DARK_GREEN));
-            tooltip.set(baseIndex, replacement);
+            MutableComponent nameWithSuffixes = Component.empty();
+            TieredAttributeTooltip.appendTieredSuffixes(nameWithSuffixes, attribute, entry.getValue(), ChatFormatting.DARK_GREEN);
+            nameWithSuffixes.append(CommonComponents.space());
+            nameWithSuffixes.append(Component.translatable(descriptionId));
+
+            MutableComponent replacement = Component.translatable("attribute.modifier.equals.0", baseValueArg, nameWithSuffixes)
+                    .withStyle(ChatFormatting.DARK_GREEN);
+            tooltip.set(baseIndex, Component.empty().withStyle(ChatFormatting.DARK_GREEN)
+                    .append(CommonComponents.space()).append(replacement));
         }
     }
 
@@ -104,26 +151,6 @@ public final class TieredNeoForgeStyleTooltip {
 
     private static boolean isImprintModifier(AttributeModifier modifier) {
         return "tiered".equals(modifier.id().getNamespace()) && modifier.id().getPath().startsWith("imprint_");
-    }
-
-    private static void appendAccessoryOnlyLines(List<Component> tooltip, ItemStack stack) {
-        for (var entry : ModifierUtils.getAccessoryOnlyModifiers(stack).entrySet()) {
-            Holder<Attribute> attribute = entry.getKey();
-            for (AttributeModifier modifier : entry.getValue()) {
-                double value = modifier.operation() == AttributeModifier.Operation.ADD_VALUE
-                        ? modifier.amount()
-                        : modifier.amount() * 100.0;
-                boolean addition = value > 0;
-
-                MutableComponent text = Component.translatable(
-                                (addition ? "tiered.attribute.modifier.plus." : "tiered.attribute.modifier.take.") + modifier.operation().id(),
-                                ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(Math.abs(value)))
-                        .withStyle(attribute.value().getStyle(addition));
-                text.append(CommonComponents.space());
-                text.append(Component.translatable(attribute.value().getDescriptionId()).withStyle(attribute.value().getStyle(addition)));
-                tooltip.add(text);
-            }
-        }
     }
 
 }

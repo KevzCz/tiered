@@ -18,11 +18,6 @@ public final class ImprintRegistry {
     private ImprintRegistry() {
     }
 
-    // No-op: calling this forces this class's static initializer (and REGISTRY's creation) to
-    // run at the call site's time rather than whenever something first references the class.
-    // On NeoForge, Architectury custom registries must be built during mod construction, before
-    // NewRegistryEvent aggregates - LifecycleEvent.SETUP (where init() below normally runs) is
-    // too late and throws "Cannot create registries when registries are already aggregated!".
     public static void touch() {
     }
 

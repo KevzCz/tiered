@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
@@ -55,6 +56,10 @@ public class AttributeDataLoader extends SimpleJsonResourceReloadListener {
 
     public Map<ResourceLocation, PotentialAttribute> getItemAttributes() {
         return itemAttributes;
+    }
+
+    public void setItemAttributes(Map<ResourceLocation, PotentialAttribute> attributes) {
+        itemAttributes = Collections.unmodifiableMap(new HashMap<>(attributes));
     }
 
 }

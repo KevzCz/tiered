@@ -23,8 +23,6 @@ public final class TieredNeoForge {
         CustomEntityAttributes.register();
         ModMisc.register();
         ImprintRegistry.touch();
-        // ConfigInit is pure file I/O + Cloth Config registration, safe this early; ModItems.register()
-        // needs CUSTOM_TUNING_INGOTS from it to build its dynamic item list before the ITEM registry freezes.
         ConfigInit.init();
         ModItems.register();
         PlayerAttributesNeoForge.register(modEventBus);

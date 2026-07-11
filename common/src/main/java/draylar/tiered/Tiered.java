@@ -102,11 +102,6 @@ public class Tiered {
 
         invokeAddons();
 
-        // On Fabric this is the first call (no freeze constraint, so it can run after addons have
-        // had a chance to addRune(...)); on NeoForge ModItems.register() already ran during mod
-        // construction (before the ITEM registry froze) and this is a guarded no-op - meaning any
-        // addon-contributed runes added via invokeAddons() above only take effect on Fabric today,
-        // since NeoForge has no addon-discovery mechanism yet (see neoforge/AddonLoaderImpl).
         ModItems.register();
 
         ModComponents.init();
@@ -125,9 +120,6 @@ public class Tiered {
         ReloadListenerRegistry.register(PackType.SERVER_DATA, Tiered.IMPRINT_DEFINITION_LOADER);
         ReloadListenerRegistry.register(PackType.SERVER_DATA, Tiered.EFFECT_DEFINITION_LOADER);
         registerRuneLootInjection();
-        // ModMisc.register() queues these via DeferredRegister; on NeoForge it already ran during
-        // mod construction (before LOOT_FUNCTION_TYPE/MENU froze) and this is a guarded no-op, same
-        // as ModItems.register() above. On Fabric this is the first call.
         ModMisc.register();
         REFORGE_SCREEN_HANDLER_TYPE = (MenuType<ReforgeScreenHandler>) ModMisc.REFORGE_SCREEN_HANDLER.get();
 
@@ -142,10 +134,6 @@ public class Tiered {
             ModifierUtils.updateItemStackComponent(player.getInventory());
         });
 
-        // Registered after all the data loaders above so its reload() runs last, marking
-        // "the datapack reload has finished" the same way Fabric's own
-        // ServerLifecycleEvents#END_DATA_PACK_RELOAD would - no equivalent cross-loader event
-        // exists in Architectury API 13.0.8.
         ReloadListenerRegistry.register(PackType.SERVER_DATA, (ResourceManagerReloadListener) resourceManager -> {
             DataValidator.validate();
             DataValidator.validateEffects();

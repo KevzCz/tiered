@@ -36,10 +36,6 @@ public class ConfigInit {
 
     private static boolean initialized = false;
 
-    // On NeoForge this must run during mod construction (ModItems needs CUSTOM_TUNING_INGOTS
-    // before the ITEM registry freezes), but Tiered.init() also calls this unconditionally from
-    // LifecycleEvent.SETUP on both loaders - guarded so the second call is a no-op instead of
-    // re-registering with Cloth Config or re-reading/rewriting the JSON files.
     public static void init() {
         if (initialized) return;
         initialized = true;

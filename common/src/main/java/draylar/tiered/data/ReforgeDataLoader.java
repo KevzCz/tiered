@@ -119,10 +119,6 @@ public class ReforgeDataLoader implements ResourceManagerReloadListener {
         });
     }
 
-    // #tiered:all_trinkets_items / #tiered:all_curios_items are virtual tags with no real
-    // registered HolderSet (Trinkets/Curios have no umbrella "all items" tag of their own) -
-    // recognized here the same way ItemVerifier/ImprintSlotLoader do, but since there's no tag to
-    // pull a HolderSet from, matching items are found by scanning the full item registry instead.
     private static boolean isCustomAccessoryTag(String entry) {
         if (!entry.startsWith("#")) return false;
         String withoutHash = entry.substring(1);

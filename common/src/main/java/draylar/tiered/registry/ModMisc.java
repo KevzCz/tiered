@@ -10,10 +10,6 @@ import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.storage.loot.functions.LootItemFunctionType;
 
-// Same unsafe-static-init class of bug as ModDataComponents/CustomEntityAttributes/ModItems:
-// these were previously registered via direct Registry.register(...) calls inside Tiered.init()
-// (LifecycleEvent.SETUP), which is after NeoForge's RegisterEvent has fired and frozen the
-// LOOT_FUNCTION_TYPE/MENU registries. Moved to a DeferredRegister committed during mod construction.
 public final class ModMisc {
 
     public static final DeferredRegister<LootItemFunctionType<?>> LOOT_FUNCTIONS =

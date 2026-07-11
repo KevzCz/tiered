@@ -9,9 +9,6 @@ public class ImprintSlotRule {
 
     @Nullable
     private final String target;
-    // Alternative to "target": a list of ItemVerifier-shaped objects ({"id"/"tag"/"custom": ...}),
-    // OR-matched. Lets a single rule target e.g. both Trinkets and Curios items via "custom" ids,
-    // without overloading the single-string "target" field's syntax.
     @Nullable
     private final List<ItemVerifier> targets;
     @SerializedName("slots")

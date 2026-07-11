@@ -36,7 +36,6 @@ public final class ImprintParamDisplay {
         return DISPLAY.getOrDefault(paramKey, "raw");
     }
 
-    // {key}, {key%}, {key:sec|raw|amp|percent} tokens, order-independent alternative to positional %s.
     private static final Pattern TOKEN = Pattern.compile("\\{([a-zA-Z0-9_]+)(%|:[a-zA-Z]+)?}");
 
     public static String resolveNamedTokens(String raw, Map<String, Float> params) {
@@ -47,11 +46,11 @@ public final class ImprintParamDisplay {
         m.reset();
         while (m.find()) {
             String key = m.group(1);
-            String hint = m.group(2); // "%" or ":<display>" or null
+            String hint = m.group(2);
             String display = hintToDisplay(hint, key);
             Float value = params == null ? null : params.get(key);
             String replacement = value == null
-                    ? "{" + key + "}" // leave unknown tokens visible for debugging
+                    ? "{" + key + "}"
                     : String.valueOf(DataImprint.formatParamPublic(value, display));
             m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
         }
@@ -78,7 +77,7 @@ public final class ImprintParamDisplay {
     private static String hintToDisplay(String hint, String key) {
         if (hint == null) return displayOf(key);
         if (hint.equals("%")) return "percent";
-        String d = hint.substring(1); // drop leading ':'
+        String d = hint.substring(1);
         return switch (d) {
             case "sec", "secs", "seconds" -> "seconds";
             case "pct", "percent" -> "percent";

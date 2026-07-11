@@ -8,11 +8,6 @@ import net.minecraft.world.inventory.MenuType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-/**
- * NeoForge has no equivalent of Fabric Loom's access widener applied to its Minecraft jar, so
- * {@code HandledScreens.register(...)} (private on both loaders in raw vanilla) stays
- * inaccessible here unlike on Fabric. Opened up via a mixin accessor instead.
- */
 @Mixin(MenuScreens.class)
 public interface HandledScreensAccessor {
 

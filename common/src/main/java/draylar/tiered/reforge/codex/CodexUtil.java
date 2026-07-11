@@ -91,8 +91,6 @@ public final class CodexUtil {
         return null;
     }
 
-    // For ability-driven imprints (Resonance): "<gate plate> + <self plate> = <ability plate>" recipes
-    // + the ability description, so players see which imprints unlock which ability and what it does.
     public static List<CodexEntry.AbilityRecipe> abilityRecipes(ImprintDefinition def) {
         List<CodexEntry.AbilityRecipe> out = new ArrayList<>();
         int selfFill = fillFromColor(def.getColor());

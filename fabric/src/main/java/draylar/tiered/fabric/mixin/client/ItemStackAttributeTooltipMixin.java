@@ -1,7 +1,6 @@
 package draylar.tiered.fabric.mixin.client;
 
 import draylar.tiered.Tiered;
-import draylar.tiered.api.ModifierUtils;
 import draylar.tiered.util.TieredAttributeTooltip;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -83,30 +82,6 @@ public abstract class ItemStackAttributeTooltipMixin {
     private void appendAttributeModifiersTooltipTwoMixin(Consumer<Component> textConsumer, @Nullable Player player, CallbackInfo info) {
         if (this.isTiered && !this.slotInfo) {
             info.cancel();
-        }
-    }
-
-    @Inject(method = "addAttributeTooltips", at = @At("RETURN"))
-    private void appendAccessoryOnlyAttributeTooltipsMixin(Consumer<Component> textConsumer, @Nullable Player player, CallbackInfo info) {
-        ItemStack itemStack = (ItemStack) (Object) this;
-        if (itemStack.get(Tiered.TIER) == null) return;
-
-        for (var entry : ModifierUtils.getAccessoryOnlyModifiers(itemStack).entrySet()) {
-            Holder<Attribute> attribute = entry.getKey();
-            for (AttributeModifier modifier : entry.getValue()) {
-                double value = modifier.operation() == AttributeModifier.Operation.ADD_VALUE
-                        ? modifier.amount()
-                        : modifier.amount() * 100.0;
-                boolean addition = value > 0;
-
-                MutableComponent text = Component.translatable(
-                                (addition ? "tiered.attribute.modifier.plus." : "tiered.attribute.modifier.take.") + modifier.operation().id(),
-                                ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(Math.abs(value)))
-                        .withStyle(attribute.value().getStyle(addition));
-                text.append(CommonComponents.space());
-                text.append(Component.translatable(attribute.value().getDescriptionId()).withStyle(attribute.value().getStyle(addition)));
-                textConsumer.accept(text);
-            }
         }
     }
 

@@ -21,12 +21,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Curios is NeoForge-only (no Fabric port) and Accessories already reimplements what it did,
- * but some users run Curios directly without Accessories installed, so tiered still needs to
- * read Curios slots. Registered into {@link ATCCompat} so eligibility/attribute checks
- * see items from either mod, merged, rather than picking a single active provider.
- */
 public final class CuriosCompat {
 
     private static final String MOD_ID = "curios";
@@ -54,11 +48,6 @@ public final class CuriosCompat {
         }
     }
 
-    // Curios has no umbrella "all curio items" tag of its own - slot definitions are validated
-    // per-slot by the built-in "curios:tag" predicate against #curios:<slot identifier>. Rather
-    // than hardcoding this mod's shipped slot names (which would silently miss custom slots added
-    // by other datapacks/addons), the slot identifiers are enumerated live via CuriosApi.getSlots()
-    // - the full slot type registry, independent of any entity/level - and each one's tag checked.
     @SuppressWarnings("deprecation")
     private static boolean isCurioItem(ItemStack stack) {
         if (stack.isEmpty()) return false;

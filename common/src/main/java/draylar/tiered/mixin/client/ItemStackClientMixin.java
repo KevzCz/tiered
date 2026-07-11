@@ -27,9 +27,6 @@ public abstract class ItemStackClientMixin {
 
                 if (potentialAttribute != null) {
                     MutableComponent label = Component.translatable(potentialAttribute.getID() + ".label");
-                    // A prior anvil rename can bake the already-prefixed name into CUSTOM_NAME,
-                    // which getHoverName then returns as-is - skip re-prepending in that case, or
-                    // renaming repeatedly stacks another copy of the label onto the name each time.
                     if (!info.getReturnValue().getString().startsWith(label.getString())) {
                         info.setReturnValue(label.append(" ").append(info.getReturnValue()).setStyle(potentialAttribute.getStyle()));
                     }

@@ -6,13 +6,17 @@ import java.util.Optional;
 
 import org.joml.Vector2ic;
 
+import draylar.tiered.Tiered;
+import draylar.tiered.TieredClient;
 import draylar.tiered.api.BorderTemplate;
 import draylar.tiered.api.ImprintPlatesData;
 import draylar.tiered.config.ConfigInit;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
 import net.minecraft.network.chat.Component;
@@ -21,6 +25,23 @@ import net.minecraft.world.item.ItemStack;
 
 @Environment(EnvType.CLIENT)
 public class TieredTooltip {
+
+    public static boolean tryRenderTieredBorder(GuiGraphics context, Font textRenderer, ItemStack stack, int x, int y, ClientTooltipPositioner positioner) {
+        if (!ConfigInit.CONFIG.tieredTooltip || stack.get(Tiered.TIER) == null) {
+            return false;
+        }
+        String tier = stack.get(Tiered.TIER).tier();
+        for (int i = 0; i < TieredClient.BORDER_TEMPLATES.size(); i++) {
+            BorderTemplate template = TieredClient.BORDER_TEMPLATES.get(i);
+            if (template.containsDecider(tier)) {
+                List<Component> text = Screen.getTooltipFromItem(Minecraft.getInstance(), stack);
+                List<ClientTooltipComponent> list = buildComponents(text, stack.getTooltipImage(), stack);
+                renderTieredTooltipFromComponents(context, textRenderer, list, x, y, positioner, template);
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static List<ClientTooltipComponent> buildComponents(List<Component> text, Optional<TooltipComponent> data, ItemStack stack) {
 

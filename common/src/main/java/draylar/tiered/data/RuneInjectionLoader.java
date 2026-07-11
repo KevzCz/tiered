@@ -28,12 +28,6 @@ public class RuneInjectionLoader extends SimpleJsonResourceReloadListener {
         super(GSON, "rune_injection");
     }
 
-    /**
-     * Invoked directly by {@code ReloadableRegistriesMixin} right before loot table registries
-     * are built, guaranteeing fresh {@link #injections} data by the time
-     * {@code Tiered#registerRuneLootInjection} reads it for each table - this runs earlier than
-     * (and independently of) this class's own {@link #apply} reload-listener callback.
-     */
     public void loadFrom(ResourceManager manager) {
         if (manager == lastManager) return;
         lastManager = manager;

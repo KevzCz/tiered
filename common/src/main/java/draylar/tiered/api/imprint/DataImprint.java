@@ -381,7 +381,6 @@ public class DataImprint extends Imprint {
         }
         ImprintDefinition.TypeComponent c = primaryBehavioralComponent();
 
-        // Prefer named {token} substitution (order-independent). Codex shows RANGES for value/extras.
         String rawLine = Language.getInstance().getOrDefault(key);
         Map<String, String> tokens = new HashMap<>();
         if (!"none".equals(display)) tokens.put("value", codexRange(def.getValueMin(), def.getValueMax(), display));

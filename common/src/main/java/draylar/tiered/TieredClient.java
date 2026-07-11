@@ -1,5 +1,6 @@
 package draylar.tiered;
 
+import dev.architectury.platform.Platform;
 import dev.architectury.event.events.client.ClientTickEvent;
 import dev.architectury.event.events.client.ClientTooltipEvent;
 import dev.architectury.registry.ReloadListenerRegistry;
@@ -35,9 +36,6 @@ public class TieredClient {
     public static final Queue<Runnable> TASK_QUEUE = new LinkedList<>();
 
     public static void init() {
-        // HandledScreens.register(...) is registered by each loader's client entrypoint instead
-        // of here: the vanilla HandledScreens.Provider inner type isn't accessible from common
-        // (only widened to public within Fabric's own Minecraft jar processing).
         TieredKeybinds.register();
         TieredClientPacket.init();
         ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new TooltipBorderLoader());
@@ -54,6 +52,7 @@ public class TieredClient {
             ReforgeMaterialTooltip.appendAll(lines, stack, material,
                     Minecraft.getInstance().player);
             TieredNeoForgeStyleTooltip.reformat(lines, stack);
+            if (Platform.isFabric()) TieredNeoForgeStyleTooltip.appendAccessoryOnlyLines(lines, stack);
         });
     }
 

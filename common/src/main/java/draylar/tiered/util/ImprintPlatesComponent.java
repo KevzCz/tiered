@@ -78,7 +78,6 @@ public class ImprintPlatesComponent implements ClientTooltipComponent {
         return rows;
     }
 
-    // Shift-only detail lines (works/scales with), one per plate, rendered below the plates.
     private List<String> detailLines(ImprintPlatesData.SlotView slot) {
         List<String> out = new ArrayList<>();
         if (!TieredKeybinds.worksWithHeld()) return out;

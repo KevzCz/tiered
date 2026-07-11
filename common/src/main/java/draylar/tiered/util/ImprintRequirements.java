@@ -22,7 +22,6 @@ public final class ImprintRequirements {
         return p == null ? List.of() : p.requirementTags();
     }
 
-    // Resonance plates: works-with = the weapon of the ability's mastered_when imprint.
     public static List<String> abilityTags(String imprintId, String abilityId) {
         if (abilityId == null || abilityId.isEmpty()) return List.of();
         Imprint imprint = ImprintRegistry.get(imprintId);

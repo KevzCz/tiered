@@ -80,13 +80,14 @@ public class TieredClientPacket {
         });
         NetworkManager.registerReceiver(NetworkManager.s2c(), AttributePacket.PACKET_ID, AttributePacket.PACKET_CODEC, (payload, context) -> {
             TieredClient.CACHED_ATTRIBUTES.putAll(Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes());
-            Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().clear();
 
+            Map<ResourceLocation, PotentialAttribute> received = new HashMap<>();
             for (int i = 0; i < payload.attributeIds().size(); i++) {
                 ResourceLocation id = ResourceLocation.parse(payload.attributeIds().get(i));
                 PotentialAttribute pa = AttributeDataLoader.GSON.fromJson(payload.attributeJsons().get(i), PotentialAttribute.class);
-                Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().put(id, pa);
+                received.put(id, pa);
             }
+            Tiered.ATTRIBUTE_DATA_LOADER.setItemAttributes(received);
         });
         NetworkManager.registerReceiver(NetworkManager.s2c(), ReforgeMaterialSyncPacket.PACKET_ID, ReforgeMaterialSyncPacket.PACKET_CODEC, (payload, context) -> {
             Map<ResourceLocation, ReforgeMaterial> incoming = new HashMap<>();

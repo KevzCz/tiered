@@ -52,10 +52,6 @@ public class ModItems {
         }
     }
 
-    // Queues item creation via Architectury's DeferredRegister so the actual Registry.register
-    // call happens through RegisterEvent, not directly here. Must run once ConfigInit has loaded
-    // (for CUSTOM_TUNING_INGOTS) but before the ITEM registry freezes - i.e. during mod
-    // construction, same timing as ModDataComponents/CustomEntityAttributes.
     public static void register() {
         if (registered) return;
         registered = true;
@@ -99,11 +95,6 @@ public class ModItems {
 
         ITEMS.register();
 
-        // CreativeModeTab.Builder's icon/displayItems callbacks are lazy (evaluated when the tab
-        // is actually opened), so this can be queued immediately, before any Item RegistrySupplier
-        // above has resolved. Registered via DeferredRegister (not a direct Registry.register call)
-        // since CREATIVE_MODE_TAB freezes on NeoForge even earlier than ITEM/ATTRIBUTE - it must go
-        // through RegisterEvent like every other registry, not be inserted directly at any fixed point.
         tieredTabSupplier = TABS.register(Tiered.id("tab"), () -> CreativeTabRegistry.create(builder -> {
             builder.icon(() -> new ItemStack(TUNING_INGOTS.values().iterator().next()));
             builder.title(Component.translatable("itemGroup.tiered.tab"));
@@ -117,11 +108,6 @@ public class ModItems {
         TABS.register();
     }
 
-    // Resolves the RegistrySupplier values into plain Item fields (populating TUNING_INGOTS,
-    // BLESSED_SCROLL, etc. that the tab's lazy callbacks above read) and appends the tuning
-    // ingots to vanilla's INGREDIENTS tab. Must run after RegisterEvent has actually populated
-    // the ITEM registry (register() above only queues); safe to call from LifecycleEvent.SETUP
-    // like the rest of Tiered.init().
     public static void init() {
         TUNING_INGOT_SUPPLIERS.forEach((group, supplier) -> TUNING_INGOTS.put(group, supplier.get()));
         BLESSED_SCROLL = blessedScrollSupplier.get();

@@ -6,7 +6,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.GuiGraphics;
 
-/** Shared color math + diagonal shine sweep for the plate-style tooltip components. */
 @Environment(EnvType.CLIENT)
 public final class PlateColors {
 

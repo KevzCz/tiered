@@ -37,10 +37,6 @@ import draylar.tiered.reforge.ReforgeScreenHandler;
 public class TieredServerPacket {
 
     public static void init() {
-        // Only needed on a dedicated server: registerReceiver in TieredClientPacket already
-        // registers these same S2C payload types on any JVM that also runs the client
-        // entrypoint (including singleplayer), so calling both there double-registers with
-        // Fabric's PayloadTypeRegistry and crashes at client init.
         if (Platform.getEnvironment() == Env.SERVER) {
             NetworkManager.registerS2CPayloadType(AttributePacket.PACKET_ID, AttributePacket.PACKET_CODEC);
             NetworkManager.registerS2CPayloadType(HealthPacket.PACKET_ID, HealthPacket.PACKET_CODEC);

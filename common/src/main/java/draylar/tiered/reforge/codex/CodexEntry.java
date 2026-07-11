@@ -22,7 +22,6 @@ public final class CodexEntry {
     public record WorksWithTag(String label, ItemStack icon, List<ItemStack> items) {
     }
 
-    // "<gate> + <self> = <ability>" recipe row + the ability's description, for ability imprints (Resonance).
     public record AbilityRecipe(String gateName, int gateFill, String selfName, int selfFill,
                                 String abilityName, int abilityFill, @Nullable String description) {
     }

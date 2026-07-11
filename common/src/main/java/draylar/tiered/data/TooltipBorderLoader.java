@@ -22,6 +22,7 @@ public class TooltipBorderLoader implements ResourceManagerReloadListener {
 
     @Override
     public void onResourceManagerReload(ResourceManager resourceManager) {
+        TieredClient.BORDER_TEMPLATES.clear();
 
         resourceManager.listResources("tooltips", id -> id.getPath().endsWith(".json")).forEach((id, resourceRef) -> {
             try {

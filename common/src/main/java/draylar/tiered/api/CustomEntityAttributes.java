@@ -13,13 +13,6 @@ import net.minecraft.world.entity.ai.attributes.RangedAttribute;
 
 public class CustomEntityAttributes {
 
-    // Registering entity attributes directly via Registry.registerReference in a static
-    // initializer is unsafe: PlayerEntityMixin's injected code references these fields, so
-    // this class gets loaded (triggering its <clinit>) the moment Mixin finishes transforming
-    // PlayerEntity - i.e. mid mixin-transform, on whichever thread is doing that transform.
-    // Registering into a live registry from inside that nested classloading context can hang
-    // instead of throwing. Deferring via Architectury's DeferredRegister (applied later, on
-    // RegisterEvent/mod init) avoids that entirely, matching the ModDataComponents fix.
     @SuppressWarnings("unchecked")
     private static final ResourceKey<Registry<Attribute>> ATTRIBUTE_KEY =
             Registries.ATTRIBUTE;
@@ -45,12 +38,6 @@ public class CustomEntityAttributes {
     public static Holder<Attribute> DURABLE;
     public static Holder<Attribute> RANGE_ATTACK_DAMAGE;
 
-    // Holder fields are resolved fresh from BuiltInRegistries rather than via
-    // RegistrySupplier#getRegistrar().delegate(...): on NeoForge, feeding Architectury's
-    // RegistrySupplier wrapper (which implements both Holder and Architectury's own
-    // DeferredSupplier) into AttributeSupplier.Builder throws IncompatibleClassChangeError
-    // ("Conflicting default methods") against NeoForge's own DeferredHolder/IHolderExtension.
-    // A plain vanilla Holder.Reference looked up by id has no such conflict.
     public static void init() {
         DIG_SPEED = getHolder(DIG_SPEED_SUPPLIER.getId());
         CRIT_CHANCE = getHolder(CRIT_CHANCE_SUPPLIER.getId());
