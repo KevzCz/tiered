@@ -13,6 +13,7 @@ public class ItemVerifier {
 
     private static final String ALL_TRINKETS_ID = "tiered:all_trinkets_items";
     private static final String ALL_CURIOS_ID = "tiered:all_curios_items";
+    private static final String ALL_ACCESSORIES_ID = "tiered:all_accessories_items";
 
     private final String id;
     private final String tag;
@@ -40,6 +41,8 @@ public class ItemVerifier {
                 return ATCCompat.isAnyTrinketItem(stack);
             } else if (ALL_CURIOS_ID.equals(custom)) {
                 return ATCCompat.isAnyCurioItem(stack);
+            } else if (ALL_ACCESSORIES_ID.equals(custom)) {
+                return ATCCompat.isAnyAccessoryItem(stack);
             } else {
                 Tiered.LOGGER.error(custom + " was specified as an item verifier custom id, but it is not recognized!");
                 return false;

@@ -5,13 +5,13 @@
             "tag": "accessories_compat_layer:all_trinkets_items"
         },
         {
-            "tag": "accessories_compat_layer:all_curios_items"
-        },
-        {
             "custom": "tiered:all_trinkets_items"
         },
         {
             "custom": "tiered:all_curios_items"
+        },
+        {
+            "custom": "tiered:all_accessories_items"
         }
     ],
     "weight": 50,

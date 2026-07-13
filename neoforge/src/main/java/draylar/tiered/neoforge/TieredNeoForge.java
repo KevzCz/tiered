@@ -8,6 +8,8 @@ import draylar.tiered.TieredServer;
 import draylar.tiered.api.CustomEntityAttributes;
 import draylar.tiered.api.imprint.ImprintRegistry;
 import draylar.tiered.api.neoforge.CooldownsImpl;
+import draylar.tiered.compat.AccessoriesCompat;
+import draylar.tiered.neoforge.compat.CuriosCompat;
 import draylar.tiered.config.ConfigInit;
 import draylar.tiered.registry.ModDataComponents;
 import draylar.tiered.registry.ModItems;
@@ -21,6 +23,8 @@ public final class TieredNeoForge {
     public TieredNeoForge(IEventBus modEventBus) {
         ModDataComponents.register();
         CustomEntityAttributes.register();
+        CuriosCompat.init();
+        AccessoriesCompat.init();
         ModMisc.register();
         ImprintRegistry.touch();
         ConfigInit.init();

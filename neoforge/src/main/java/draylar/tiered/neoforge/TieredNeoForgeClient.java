@@ -3,7 +3,6 @@ package draylar.tiered.neoforge;
 import draylar.tiered.Tiered;
 import draylar.tiered.TieredClient;
 import draylar.tiered.data.TooltipBorderLoader;
-import draylar.tiered.neoforge.compat.CuriosCompat;
 import draylar.tiered.neoforge.config.ConfigScreenFactory;
 import draylar.tiered.neoforge.mixin.access.HandledScreensAccessor;
 import draylar.tiered.reforge.ReforgeScreen;
@@ -18,7 +17,6 @@ final class TieredNeoForgeClient {
     }
 
     static void init(IEventBus modEventBus) {
-        CuriosCompat.init();
         TieredTooltipComponentsNeoForge.register(modEventBus);
         TieredAccessoryTooltipNeoForge.register();
 

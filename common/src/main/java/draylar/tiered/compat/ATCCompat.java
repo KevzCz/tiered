@@ -38,9 +38,11 @@ public class ATCCompat {
 
     private static Predicate<ItemStack> trinketItemPredicate = stack -> false;
     private static Predicate<ItemStack> curioItemPredicate = stack -> false;
+    private static Predicate<ItemStack> accessoryItemPredicate = stack -> false;
 
     private static Supplier<Set<String>> trinketSlotIdsProvider = Collections::emptySet;
     private static Supplier<Set<String>> curioSlotIdsProvider = Collections::emptySet;
+    private static Supplier<Set<String>> accessorySlotIdsProvider = Collections::emptySet;
 
     public static void registerExtraProvider(Function<LivingEntity, List<ItemStack>> provider) {
         EXTRA_PROVIDERS.add(provider);
@@ -66,10 +68,19 @@ public class ATCCompat {
         curioSlotIdsProvider = provider;
     }
 
+    public static void registerAccessoryItemPredicate(Predicate<ItemStack> predicate) {
+        accessoryItemPredicate = predicate;
+    }
+
+    public static void registerAccessorySlotIdsProvider(Supplier<Set<String>> provider) {
+        accessorySlotIdsProvider = provider;
+    }
+
     public static Set<String> getAccessorylessSlotIds() {
         Set<String> out = new LinkedHashSet<>();
         out.addAll(trinketSlotIdsProvider.get());
         out.addAll(curioSlotIdsProvider.get());
+        out.addAll(accessorySlotIdsProvider.get());
         return out;
     }
 
@@ -79,6 +90,10 @@ public class ATCCompat {
 
     public static boolean isAnyCurioItem(ItemStack stack) {
         return curioItemPredicate.test(stack);
+    }
+
+    public static boolean isAnyAccessoryItem(ItemStack stack) {
+        return accessoryItemPredicate.test(stack);
     }
 
     public static Set<String> expandSlotNames(String[] configuredSlots) {

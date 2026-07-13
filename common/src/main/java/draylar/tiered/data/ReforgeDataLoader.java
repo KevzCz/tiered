@@ -122,14 +122,23 @@ public class ReforgeDataLoader implements ResourceManagerReloadListener {
     private static boolean isCustomAccessoryTag(String entry) {
         if (!entry.startsWith("#")) return false;
         String withoutHash = entry.substring(1);
-        return withoutHash.equals("tiered:all_trinkets_items") || withoutHash.equals("tiered:all_curios_items");
+        return withoutHash.equals("tiered:all_trinkets_items")
+                || withoutHash.equals("tiered:all_curios_items")
+                || withoutHash.equals("tiered:all_accessories_items");
     }
 
     private static void forEachMatchingAccessoryItem(String entry, Consumer<Item> consumer) {
-        boolean trinkets = entry.substring(1).equals("tiered:all_trinkets_items");
+        String customId = entry.substring(1);
         for (Item item : BuiltInRegistries.ITEM) {
             ItemStack stack = new ItemStack(item);
-            boolean matches = trinkets ? ATCCompat.isAnyTrinketItem(stack) : ATCCompat.isAnyCurioItem(stack);
+            boolean matches;
+            if (customId.equals("tiered:all_trinkets_items")) {
+                matches = ATCCompat.isAnyTrinketItem(stack);
+            } else if (customId.equals("tiered:all_accessories_items")) {
+                matches = ATCCompat.isAnyAccessoryItem(stack);
+            } else {
+                matches = ATCCompat.isAnyCurioItem(stack);
+            }
             if (matches) consumer.accept(item);
         }
     }
