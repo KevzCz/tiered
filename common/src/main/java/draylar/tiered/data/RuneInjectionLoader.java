@@ -1,5 +1,6 @@
 package draylar.tiered.data;
 
+import draylar.tiered.config.ConfigInit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +39,10 @@ public class RuneInjectionLoader extends SimpleJsonResourceReloadListener {
 
     @Override
     protected void apply(Map<ResourceLocation, JsonElement> loader, ResourceManager manager, ProfilerFiller profiler) {
+        if (!ConfigInit.runeItemsEnabled()) {
+            injections = new ArrayList<>();
+            return;
+        }
         Map<ResourceLocation, RuneInjection> read = Maps.newHashMap();
         for (Map.Entry<ResourceLocation, JsonElement> entry : loader.entrySet()) {
             try {

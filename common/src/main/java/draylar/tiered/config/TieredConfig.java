@@ -30,6 +30,15 @@ public class TieredConfig implements ConfigData {
     public float luckReforgeModifier = 0.02F;
     public boolean uniqueReforge = true;
 
+    @Comment("Rune items and their loot-table injection")
+    public boolean enableRuneItems = true;
+    @Comment("Imprints, effects and behaviors: their data, imprint slots, application and reforge material imprint/effect pools")
+    public boolean enableImprintsEffectsAndBehaviors = true;
+    @Comment("Reforge material bias pools that shift rarity/group weights (rare-only, rarity boost, max rarity)")
+    public boolean enableBiasPool = true;
+    @Comment("The imprint/effect codex button and screen in the reforge UI")
+    public boolean enableCodex = true;
+
     @ConfigEntry.Category("client_settings")
     public boolean showReforgingTab = true;
     @ConfigEntry.Category("client_settings")

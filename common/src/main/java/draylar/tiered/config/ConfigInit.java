@@ -46,6 +46,22 @@ public class ConfigInit {
         loadSlotScalingConfig();
     }
 
+    public static boolean runeItemsEnabled() {
+        return CONFIG == null || CONFIG.enableRuneItems;
+    }
+
+    public static boolean imprintsEffectsAndBehaviorsEnabled() {
+        return CONFIG == null || CONFIG.enableImprintsEffectsAndBehaviors;
+    }
+
+    public static boolean biasPoolEnabled() {
+        return CONFIG == null || CONFIG.enableBiasPool;
+    }
+
+    public static boolean codexEnabled() {
+        return CONFIG == null || CONFIG.enableCodex;
+    }
+
     private static void loadExtraTuningIngotConfig() {
         TuningIngotConfigList data;
 

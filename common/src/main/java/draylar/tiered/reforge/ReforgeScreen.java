@@ -318,6 +318,7 @@ public class ReforgeScreen extends AbstractContainerScreen<ReforgeScreenHandler>
         int codexSize = 12;
         int codexX = x + this.imageWidth - codexSize - 4;
         int codexY = y + 4;
+        if (ConfigInit.codexEnabled()) {
         this.codexButton = new AbstractWidget(codexX, codexY, codexSize, codexSize,
                 Component.translatable("screen.tiered.codex.title")) {
             @Override
@@ -355,6 +356,7 @@ public class ReforgeScreen extends AbstractContainerScreen<ReforgeScreenHandler>
             }
         };
         this.addRenderableWidget(codexButton);
+        }
 
         int iconX = ConfigInit.CONFIG.leftSideModifierList ? x + 5 : x + 155;
         int iconY = y + 5;
@@ -846,29 +848,31 @@ public class ReforgeScreen extends AbstractContainerScreen<ReforgeScreenHandler>
         List<Component> lines = new ArrayList<>(preview.getTooltipLines(ctx, minecraft.player, TooltipFlag.NORMAL));
         lines.add(0, Component.translatable("screen.tiered.reforge.preview.header").withStyle(s -> s.withColor(ChatFormatting.DARK_GRAY).withItalic(true)));
 
-        var imprints = preview.get(ModComponents.IMPRINTS);
-        int cap = ImprintSlots.capacity(preview);
-        if (cap > 0 || (imprints != null && !imprints.entries().isEmpty())) {
-            int used = imprints == null ? 0 : imprints.slotsUsed();
-            lines.add(Component.empty());
-            lines.add(Component.translatable("screen.tiered.imprints.header.slots", used, cap)
-                    .withStyle(s -> s.withColor(ChatFormatting.GRAY)));
-            if (imprints != null) {
-                for (var entry : imprints.entries()) {
-                    if (ImprintRegistry.get(entry.id()) == null) continue;
-                    lines.add(ReforgeMaterialTooltip.imprintMarker(entry.id(), entry.value(), entry.extraValues()));
+        if (ConfigInit.imprintsEffectsAndBehaviorsEnabled()) {
+            var imprints = preview.get(ModComponents.IMPRINTS);
+            int cap = ImprintSlots.capacity(preview);
+            if (cap > 0 || (imprints != null && !imprints.entries().isEmpty())) {
+                int used = imprints == null ? 0 : imprints.slotsUsed();
+                lines.add(Component.empty());
+                lines.add(Component.translatable("screen.tiered.imprints.header.slots", used, cap)
+                        .withStyle(s -> s.withColor(ChatFormatting.GRAY)));
+                if (imprints != null) {
+                    for (var entry : imprints.entries()) {
+                        if (ImprintRegistry.get(entry.id()) == null) continue;
+                        lines.add(ReforgeMaterialTooltip.imprintMarker(entry.id(), entry.value(), entry.extraValues()));
+                    }
                 }
             }
-        }
 
-        ItemStack addition = menu.getSlot(2).getItem();
-        var content = addition.get(ModComponents.RUNE_CONTENT);
-        if (content != null && !content.isEmpty()) {
-            lines.add(Component.empty());
-            lines.add(Component.translatable("screen.tiered.rune.grants.header").withStyle(s -> s.withColor(ChatFormatting.GRAY)));
-            for (var entry : content.entries()) {
-                if (ImprintRegistry.get(entry.imprintId()) == null) continue;
-                lines.add(ReforgeMaterialTooltip.imprintMarker(entry.imprintId(), entry.value(), entry.extraValues()));
+            ItemStack addition = menu.getSlot(2).getItem();
+            var content = addition.get(ModComponents.RUNE_CONTENT);
+            if (content != null && !content.isEmpty()) {
+                lines.add(Component.empty());
+                lines.add(Component.translatable("screen.tiered.rune.grants.header").withStyle(s -> s.withColor(ChatFormatting.GRAY)));
+                for (var entry : content.entries()) {
+                    if (ImprintRegistry.get(entry.imprintId()) == null) continue;
+                    lines.add(ReforgeMaterialTooltip.imprintMarker(entry.imprintId(), entry.value(), entry.extraValues()));
+                }
             }
         }
 

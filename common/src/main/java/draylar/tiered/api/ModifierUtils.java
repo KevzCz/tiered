@@ -31,7 +31,7 @@ public class ModifierUtils {
 
     private static final String SPECIAL_TIER = "tiered:special";
 
-    private static boolean hasAccessorylessSlots() {
+    public static boolean hasAccessorylessSlots() {
         return !Platform.isModLoaded("accessories")
                 && (Platform.isModLoaded("trinkets") || Platform.isModLoaded("curios"));
     }
@@ -519,13 +519,14 @@ public class ModifierUtils {
 
         applyDynamicWeightModifiers(playerEntity, true, potentialAttributes, attributeWeights);
 
-        float totalBoost = (material != null ? material.getRarityBoost() : 0f) + extraBias.extraRarityBoost;
+        float extraRarityBoost = ConfigInit.biasPoolEnabled() ? extraBias.extraRarityBoost : 0f;
+        float totalBoost = (material != null ? material.getRarityBoost() : 0f) + extraRarityBoost;
         if (totalBoost > 0f) applyRarityBoost(potentialAttributes, attributeWeights, Math.min(1f, totalBoost));
 
         ResourceLocation result = weightedPick(potentialAttributes, attributeWeights);
 
         String matMin = material != null ? material.getGuaranteedMinRarity() : null;
-        String biasMin = extraBias.guaranteedMinRarity;
+        String biasMin = ConfigInit.biasPoolEnabled() ? extraBias.guaranteedMinRarity : null;
         String effectiveMin = higherRarity(matMin, biasMin);
 
         if (result != null && effectiveMin != null) {

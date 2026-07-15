@@ -7,6 +7,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import draylar.tiered.api.ImprintSlotRule;
 import draylar.tiered.api.ItemVerifier;
+import draylar.tiered.config.ConfigInit;
 import draylar.tiered.util.ImprintSlots;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,6 +39,10 @@ public class ImprintSlotLoader extends SimpleJsonResourceReloadListener {
 
     @Override
     protected void apply(Map<ResourceLocation, JsonElement> loader, ResourceManager manager, ProfilerFiller profiler) {
+        if (!ConfigInit.imprintsEffectsAndBehaviorsEnabled()) {
+            rules = new ArrayList<>();
+            return;
+        }
         Map<ResourceLocation, ImprintSlotRule> read = Maps.newHashMap();
 
         for (Map.Entry<ResourceLocation, JsonElement> entry : loader.entrySet()) {

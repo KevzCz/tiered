@@ -9,6 +9,7 @@ import java.util.function.ToIntFunction;
 
 import com.google.gson.annotations.SerializedName;
 import draylar.tiered.api.effect.ReforgeEffects;
+import draylar.tiered.config.ConfigInit;
 import draylar.tiered.data.ReforgeMaterialLoader;
 import org.jetbrains.annotations.Nullable;
 
@@ -502,21 +503,21 @@ public class ReforgeMaterial {
 
     @Nullable
     public Map<String, Float> getGroupWeightMultipliers() {
-        return groupWeightMultipliers;
+        return ConfigInit.biasPoolEnabled() ? groupWeightMultipliers : null;
     }
 
     public float getRarityBoost() {
-        return rarityBoost;
+        return ConfigInit.biasPoolEnabled() ? rarityBoost : 0f;
     }
 
     @Nullable
     public String getGuaranteedMinRarity() {
-        return guaranteedMinRarity;
+        return ConfigInit.biasPoolEnabled() ? guaranteedMinRarity : null;
     }
 
     @Nullable
     public String getMaxRarity() {
-        return maxRarity;
+        return ConfigInit.biasPoolEnabled() ? maxRarity : null;
     }
 
     @Nullable

@@ -9,6 +9,7 @@ import draylar.tiered.api.effect.DataEffect;
 import draylar.tiered.api.effect.EffectDefinition;
 import draylar.tiered.api.effect.ReforgeEffect;
 import draylar.tiered.api.effect.ReforgeEffectRegistry;
+import draylar.tiered.config.ConfigInit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -35,6 +36,11 @@ public class EffectDefinitionLoader extends SimpleJsonResourceReloadListener {
 
     @Override
     protected void apply(Map<ResourceLocation, JsonElement> loader, ResourceManager manager, ProfilerFiller profiler) {
+        if (!ConfigInit.imprintsEffectsAndBehaviorsEnabled()) {
+            effects = new HashMap<>();
+            definitions = new HashMap<>();
+            return;
+        }
         Map<String, DataEffect> readEffects = Maps.newHashMap();
         Map<String, EffectDefinition> readDefs = Maps.newHashMap();
 

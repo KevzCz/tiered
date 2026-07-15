@@ -26,6 +26,7 @@ public final class TieredNeoForgeStyleTooltip {
 
     public static void appendAccessoryOnlyLines(List<Component> tooltip, ItemStack stack) {
         if (stack.get(Tiered.TIER) == null) return;
+        if (!ModifierUtils.hasAccessorylessSlots()) return;
         for (var entry : ModifierUtils.getAccessoryOnlyModifiers(stack).entrySet()) {
             Holder<Attribute> attribute = entry.getKey();
             String descriptionId = attribute.value().getDescriptionId();

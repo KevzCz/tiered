@@ -152,6 +152,7 @@ public class Tiered {
 
     private static void registerRuneLootInjection() {
         LootEvent.MODIFY_LOOT_TABLE.register((key, context, builtin) -> {
+            if (!ConfigInit.runeItemsEnabled()) return;
             String tableId = key.location().toString();
             List<RuneInjection> matching = RUNE_INJECTION_LOADER.getMatching(tableId);
             if (matching.isEmpty()) return;

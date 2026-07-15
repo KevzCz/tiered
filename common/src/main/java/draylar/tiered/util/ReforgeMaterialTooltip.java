@@ -8,6 +8,7 @@ import java.util.Map;
 
 import draylar.tiered.TieredKeybinds;
 import draylar.tiered.api.ImprintPlatesData;
+import draylar.tiered.config.ConfigInit;
 import draylar.tiered.api.effect.DataEffect;
 import draylar.tiered.api.effect.EffectDefinition;
 import draylar.tiered.api.effect.ReforgeEffect;
@@ -216,6 +217,7 @@ public final class ReforgeMaterialTooltip {
     }
 
     private static void appendImprintsSection(List<Component> tooltip, ItemStack stack, @Nullable Player player) {
+        if (!ConfigInit.imprintsEffectsAndBehaviorsEnabled()) return;
         ImprintComponent comp = stack.get(ModComponents.IMPRINTS);
         int capacity = ImprintSlots.capacity(stack);
         boolean hasAny = comp != null && !comp.entries().isEmpty();
@@ -442,34 +444,39 @@ public final class ReforgeMaterialTooltip {
     public static ReforgeMaterialBadgeData buildBadges(ReforgeMaterial material) {
         List<ReforgeMaterialBadgeData.Badge> badges = new ArrayList<>();
 
+        boolean imprintsEnabled = ConfigInit.imprintsEffectsAndBehaviorsEnabled();
+        boolean biasEnabled = ConfigInit.biasPoolEnabled();
+
         addStaticBiasBadges(badges, material);
 
-        if (material.isSkipsReforge()) {
-            badges.add(badge("⟳", Component.translatable("screen.tiered.reforge.material.preserves_tier"), 0xFF4A7FA5,
-                    "screen.tiered.reforge.material.preserves_tier.desc"));
-        }
-
-        if (material.isSkipsBaseItem()) {
+        if (imprintsEnabled) {
             if (material.isSkipsReforge()) {
-                if (!badges.isEmpty()) badges.remove(badges.size() - 1);
-                badges.add(badge("∅", Component.translatable("screen.tiered.reforge.material.standalone"), 0xFF555555,
-                        "screen.tiered.reforge.material.standalone.desc"));
-            } else {
-                badges.add(badge("∅", Component.translatable("screen.tiered.reforge.material.no_base_item"), 0xFF7A9E7E,
-                        "screen.tiered.reforge.material.no_base_item.desc"));
+                badges.add(badge("⟳", Component.translatable("screen.tiered.reforge.material.preserves_tier"), 0xFF4A7FA5,
+                        "screen.tiered.reforge.material.preserves_tier.desc"));
+            }
+
+            if (material.isSkipsBaseItem()) {
+                if (material.isSkipsReforge()) {
+                    if (!badges.isEmpty()) badges.remove(badges.size() - 1);
+                    badges.add(badge("∅", Component.translatable("screen.tiered.reforge.material.standalone"), 0xFF555555,
+                            "screen.tiered.reforge.material.standalone.desc"));
+                } else {
+                    badges.add(badge("∅", Component.translatable("screen.tiered.reforge.material.no_base_item"), 0xFF7A9E7E,
+                            "screen.tiered.reforge.material.no_base_item.desc"));
+                }
+            }
+
+            appendEffectBadges(badges, material.getEffects(), material);
+            if (!material.isBadgeHidden("effect_pool")) {
+                for (ReforgeMaterial.EffectPool pool : material.getEffectPools()) {
+                    appendEffectPoolBadge(badges, pool, material);
+                }
+
+                appendEffectChoiceBadge(badges, material);
             }
         }
 
-        appendEffectBadges(badges, material.getEffects(), material);
-        if (!material.isBadgeHidden("effect_pool")) {
-            for (ReforgeMaterial.EffectPool pool : material.getEffectPools()) {
-                appendEffectPoolBadge(badges, pool, material);
-            }
-
-            appendEffectChoiceBadge(badges, material);
-        }
-
-        if (!material.isBadgeHidden("behavior_pool")) {
+        if (biasEnabled && !material.isBadgeHidden("behavior_pool")) {
             for (ReforgeMaterial.BehaviorPool pool : material.getBehaviorPools()) {
                 appendBehaviorPoolBadge(badges, pool);
             }
@@ -477,7 +484,7 @@ public final class ReforgeMaterialTooltip {
             appendBehaviorChoiceBadge(badges, material);
         }
 
-        if (!material.isBadgeHidden("imprint_pool")) {
+        if (imprintsEnabled && !material.isBadgeHidden("imprint_pool")) {
             for (ReforgeMaterial.ImprintPool pool : material.getImprintPools()) {
                 appendImprintPoolBadge(badges, pool);
             }
@@ -500,9 +507,12 @@ public final class ReforgeMaterialTooltip {
                 : stack.get(ModComponents.RUNE_CONTENT);
         if (comp == null || !comp.rolled()) return buildBadges(material);
 
+        boolean imprintsEnabled = ConfigInit.imprintsEffectsAndBehaviorsEnabled();
+        boolean biasEnabled = ConfigInit.biasPoolEnabled();
+
         List<ReforgeMaterialBadgeData.Badge> badges = new ArrayList<>();
 
-        RuneContentComponent.RolledBias bias = comp.rolledBias();
+        RuneContentComponent.RolledBias bias = biasEnabled ? comp.rolledBias() : null;
         if (bias != null) {
             if (bias.hasGroupFilter()) {
                 String groups = String.join(", ", bias.groups().stream().map(ReforgeMaterialTooltip::capitalize).toList());
@@ -535,21 +545,23 @@ public final class ReforgeMaterialTooltip {
             addStaticBiasBadges(badges, material);
         }
 
-        if (material.isSkipsReforge()) {
-            if (material.isSkipsBaseItem()) {
-                badges.add(badge("∅", Component.translatable("screen.tiered.reforge.material.standalone"), 0xFF555555,
-                        "screen.tiered.reforge.material.standalone.desc"));
-            } else {
-                badges.add(badge("⟳", Component.translatable("screen.tiered.reforge.material.preserves_tier"), 0xFF4A7FA5,
-                        "screen.tiered.reforge.material.preserves_tier.desc"));
+        if (imprintsEnabled) {
+            if (material.isSkipsReforge()) {
+                if (material.isSkipsBaseItem()) {
+                    badges.add(badge("∅", Component.translatable("screen.tiered.reforge.material.standalone"), 0xFF555555,
+                            "screen.tiered.reforge.material.standalone.desc"));
+                } else {
+                    badges.add(badge("⟳", Component.translatable("screen.tiered.reforge.material.preserves_tier"), 0xFF4A7FA5,
+                            "screen.tiered.reforge.material.preserves_tier.desc"));
+                }
+            } else if (material.isSkipsBaseItem()) {
+                badges.add(badge("∅", Component.translatable("screen.tiered.reforge.material.no_base_item"), 0xFF7A9E7E,
+                        "screen.tiered.reforge.material.no_base_item.desc"));
             }
-        } else if (material.isSkipsBaseItem()) {
-            badges.add(badge("∅", Component.translatable("screen.tiered.reforge.material.no_base_item"), 0xFF7A9E7E,
-                    "screen.tiered.reforge.material.no_base_item.desc"));
-        }
 
-        appendEffectBadges(badges, material.getEffects(), material, comp);
-        appendEffectBadges(badges, comp.rolledEffects(), material, comp);
+            appendEffectBadges(badges, material.getEffects(), material, comp);
+            appendEffectBadges(badges, comp.rolledEffects(), material, comp);
+        }
 
         List<Component> lore = new ArrayList<>();
         if (material.getDescription() != null) {

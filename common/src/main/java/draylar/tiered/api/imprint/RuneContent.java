@@ -17,12 +17,25 @@ import draylar.tiered.api.effect.DataEffect;
 import draylar.tiered.api.effect.EffectDefinition;
 import draylar.tiered.api.effect.ReforgeEffect;
 import draylar.tiered.api.effect.ReforgeEffectRegistry;
+import draylar.tiered.config.ConfigInit;
 import draylar.tiered.registry.ModComponents;
 import draylar.tiered.util.ReforgeMaterials;
 
 public final class RuneContent {
 
     private RuneContent() {
+    }
+
+    private static boolean imprintPoolActive(ReforgeMaterial material) {
+        return ConfigInit.imprintsEffectsAndBehaviorsEnabled() && material.hasImprintPool();
+    }
+
+    private static boolean effectPoolActive(ReforgeMaterial material) {
+        return ConfigInit.imprintsEffectsAndBehaviorsEnabled() && material.hasEffectPool();
+    }
+
+    private static boolean biasPoolActive(ReforgeMaterial material) {
+        return ConfigInit.biasPoolEnabled() && material.hasBehaviorPool();
     }
 
     public static void writeContent(ItemStack stack, List<ImprintComponent.Entry> group) {
@@ -35,7 +48,7 @@ public final class RuneContent {
 
     public static boolean isRune(Item item) {
         ReforgeMaterial material = Tiered.REFORGE_MATERIAL_LOADER.getMaterial(item);
-        return material != null && (material.hasImprintPool() || material.hasEffectPool() || material.hasBehaviorPool());
+        return material != null && (imprintPoolActive(material) || effectPoolActive(material) || biasPoolActive(material));
     }
 
     public static boolean rollOnto(ItemStack stack, Random random) {
@@ -49,20 +62,22 @@ public final class RuneContent {
         if (existing != null && existing.rolled()) return false;
 
         ReforgeMaterial material = ReforgeMaterials.resolve(stack);
-        if (material == null || (!material.hasImprintPool() && !material.hasEffectPool() && !material.hasBehaviorPool())) return false;
+        if (material == null || (!imprintPoolActive(material) && !effectPoolActive(material) && !biasPoolActive(material))) return false;
 
         Random rng = random == null ? new Random() : random;
         List<RuneContentComponent.Entry> rolled = new ArrayList<>();
-        for (ReforgeMaterial.ImprintPool pool : material.getImprintPools()) rolled.addAll(rollPool(pool, rng, ctx));
+        if (imprintPoolActive(material)) {
+            for (ReforgeMaterial.ImprintPool pool : material.getImprintPools()) rolled.addAll(rollPool(pool, rng, ctx));
 
-        ReforgeMaterial.ImprintPoolChoice choice = material.getImprintPoolChoice();
-        if (choice != null && !choice.isEmpty()) {
-            ReforgeMaterial.ImprintPool picked = choice.pick(rng);
-            if (picked != null) rolled.addAll(rollPool(picked, rng, ctx));
+            ReforgeMaterial.ImprintPoolChoice choice = material.getImprintPoolChoice();
+            if (choice != null && !choice.isEmpty()) {
+                ReforgeMaterial.ImprintPool picked = choice.pick(rng);
+                if (picked != null) rolled.addAll(rollPool(picked, rng, ctx));
+            }
         }
-        List<String> rolledEffects = material.hasEffectPool() ? material.rollEffects(rng) : List.of();
+        List<String> rolledEffects = effectPoolActive(material) ? material.rollEffects(rng) : List.of();
         Map<String, Map<String, Float>> rolledEffectParams = rollEffectParams(rolledEffects, rng);
-        RuneContentComponent.RolledBias rolledBias = material.hasBehaviorPool() ? toBiasComponent(material.rollBehavior(rng)) : null;
+        RuneContentComponent.RolledBias rolledBias = biasPoolActive(material) ? toBiasComponent(material.rollBehavior(rng)) : null;
         stack.set(ModComponents.RUNE_CONTENT, new RuneContentComponent(true, rolled, rolledEffects, rolledEffectParams, rolledBias));
         return true;
     }

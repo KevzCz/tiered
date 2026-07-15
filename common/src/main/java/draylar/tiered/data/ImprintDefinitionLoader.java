@@ -9,6 +9,7 @@ import draylar.tiered.api.imprint.DataImprint;
 import draylar.tiered.api.imprint.Imprint;
 import draylar.tiered.api.imprint.ImprintDefinition;
 import draylar.tiered.api.imprint.ImprintRegistry;
+import draylar.tiered.config.ConfigInit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -35,6 +36,11 @@ public class ImprintDefinitionLoader extends SimpleJsonResourceReloadListener {
 
     @Override
     protected void apply(Map<ResourceLocation, JsonElement> loader, ResourceManager manager, ProfilerFiller profiler) {
+        if (!ConfigInit.imprintsEffectsAndBehaviorsEnabled()) {
+            imprints = new HashMap<>();
+            definitions = new HashMap<>();
+            return;
+        }
         Map<String, DataImprint> readImprints = Maps.newHashMap();
         Map<String, ImprintDefinition> readDefs = Maps.newHashMap();
 
