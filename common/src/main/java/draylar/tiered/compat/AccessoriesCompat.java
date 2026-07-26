@@ -4,6 +4,7 @@ import dev.architectury.platform.Platform;
 import io.wispforest.accessories.api.AccessoriesAPI;
 import io.wispforest.accessories.api.slot.SlotType;
 import io.wispforest.accessories.data.SlotTypeLoader;
+import io.wispforest.accessories.menu.ArmorSlotTypes;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -43,17 +44,11 @@ public final class AccessoriesCompat {
     private static boolean isAccessoryItem(ItemStack stack) {
         if (stack.isEmpty()) return false;
 
-        // Registered as an accessory instance (mirrors how TrinketsCompat checks TrinketsApi.getTrinket).
-        try {
-            Object accessory = AccessoriesAPI.getAccessory(stack);
-            if (accessory != null && accessory != AccessoriesAPI.defaultAccessory()) return true;
-        } catch (Throwable ignored) {
-        }
-
-        // Tag fallback: the item sits in any accessories:<slot> item tag (e.g. #accessories:ring).
         try {
             Item item = stack.getItem();
             for (SlotType slotType : SlotTypeLoader.INSTANCE.getSlotTypes(false).values()) {
+                if (ArmorSlotTypes.isArmorType(slotType.name())) continue;
+
                 TagKey<Item> tag = AccessoriesAPI.getSlotTag(slotType);
                 if (tag != null && item.builtInRegistryHolder().is(tag)) return true;
             }
