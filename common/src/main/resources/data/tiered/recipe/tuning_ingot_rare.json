@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "U": {
+      "item": "tiered:tuning_ingot_uncommon"
+    }
+  },
+  "pattern": [
+    "UU",
+    "UU"
+  ],
+  "result": {
+    "id": "tiered:tuning_ingot_rare"
+  }
+}

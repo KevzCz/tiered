@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "E": {
+      "item": "tiered:tuning_ingot_epic"
+    }
+  },
+  "pattern": [
+    " E ",
+    "EEE",
+    " E "
+  ],
+  "result": {
+    "id": "tiered:tuning_ingot_legendary"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "C": {
+      "item": "tiered:tuning_ingot_common"
+    },
+    "U": {
+      "item": "tiered:tuning_ingot_uncommon"
+    },
+    "R": {
+      "item": "tiered:tuning_ingot_rare"
+    },
+    "E": {
+      "item": "tiered:tuning_ingot_epic"
+    },
+    "L": {
+      "item": "tiered:tuning_ingot_legendary"
+    }
+  },
+  "pattern": [
+    "CLU",
+    "RLE"
+  ],
+  "result": {
+    "id": "tiered:tuning_ingot_unique"
+  }
+}
