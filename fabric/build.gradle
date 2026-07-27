@@ -99,6 +99,9 @@ unifiedPublishing {
             curseforge {
                 token = cfToken
                 id = "1275090"
+                // CurseForge requires a tag from its "Environment" group; Modrinth would
+                // reject these as unknown game versions, so they are set here only.
+                gameVersions = ["1.21.1", "Client", "Server"]
             }
         }
 
