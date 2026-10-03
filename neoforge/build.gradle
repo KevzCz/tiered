@@ -1,5 +1,5 @@
 plugins {
-    id "me.shedaniel.unified-publishing" version "0.1.+"
+    id "me.modmuss50.mod-publish-plugin" version "2.1.1"
     id 'com.gradleup.shadow'
 }
 
@@ -75,39 +75,49 @@ remapJar {
     inputFile.set shadowJar.archiveFile
 }
 
-unifiedPublishing {
-    project {
-        gameVersions = ["1.21.1"]
-        gameLoaders = ["neoforge"]
+publishMods {
+    // The per-task dryRun is wired from this and finalized in the task constructor, so it
+    // has to be set here. Keyed off the requested task names so publishModsDry rehearses
+    // while a plain publishMods still uploads for real.
+    dryRun = gradle.startParameter.taskNames.any { it.contains("publishModsDry") }
 
-        mainPublication tasks.remapJar
+    file = tasks.remapJar.archiveFile
+    displayName = "Tiered More [NEOFORGE] [${rootProject.minecraft_version}] - [${project.version}]"
+    type = STABLE
+    modLoaders.add("neoforge")
 
-        displayName = "Tiered More [${project.name.toUpperCase()}] [${rootProject.minecraft_version}] - [${project.version}]"
-        releaseType = "release" // "release", "beta" or "alpha"
+    def changelogFile = rootProject.file("CHANGELOG.md")
+    def changelogText = changelogFile.exists() ? changelogFile.text : ""
+    changelog = changelogText.trim().isEmpty() ? "No changelog provided." : changelogText
 
-        def changelogFile = rootProject.file("CHANGELOG.md")
-        def changelogText = changelogFile.exists() ? changelogFile.text : ""
-        changelog = changelogText.trim().isEmpty() ? "No changelog provided." : changelogText
-        
-        var cfToken = project.findProperty("cfToken") ?: System.getenv("CF_TOKEN")
-        if (cfToken != null) {
-            curseforge {
-                token = cfToken
-                id = "1275090"
-                gameVersions = ["1.21.1", "Client", "Server"]
-            }
-        }
+    curseforge {
+        projectId = "1275090"
+        accessToken = providers.gradleProperty("cfToken")
+            .orElse(providers.environmentVariable("CF_TOKEN"))
+        minecraftVersions.add("1.21.1")
+        javaVersions.add(JavaVersion.VERSION_21)
+        clientRequired = true
+        serverRequired = true
+    }
 
-        var mrToken = project.findProperty("modrinthToken") ?: System.getenv("MODRINTH_TOKEN")
-        if (mrToken != null) {
-            modrinth {
-                token = mrToken
-                id = "tiered-more"
-            }
-        }
+    modrinth {
+        projectId = "wDFzm2aY"
+        accessToken = providers.gradleProperty("modrinthToken")
+            .orElse(providers.environmentVariable("MODRINTH_TOKEN"))
+        minecraftVersions.add("1.21.1")
     }
 }
 
-tasks.matching { it.name.startsWith("modrinth") }.configureEach {
-    group = "upload"
+tasks.register("publishModsDry", Copy) {
+    group = "publishing"
+    description = "Dry run of publishMods — writes to build/unified-dry/ instead of uploading."
+
+    def publishTasks = tasks.withType(me.modmuss50.mpp.PublishModTask)
+    dependsOn publishTasks
+
+    from(publishTasks.collect { it.dryRunDirectory }) {
+        include "**/*.jar"
+    }
+    into rootProject.layout.buildDirectory.dir("unified-dry")
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }

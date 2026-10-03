@@ -75,3 +75,12 @@ subprojects {
         }
     }
 }
+
+// Aggregates every loader's dry run so one command rehearses the whole release. Each
+// loader copies into the same build/unified-dry/ directory, so running this from the
+// root leaves every jar side by side; running it in a subproject dries only that loader.
+tasks.register("publishModsDry") {
+    group = "publishing"
+    description = "Dry run publishing for every loader — writes to build/unified-dry/."
+    dependsOn ":fabric:publishModsDry", ":neoforge:publishModsDry"
+}

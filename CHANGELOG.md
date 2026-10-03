@@ -1,3 +1,1 @@
-More API for abilities
-
-Project now uses unified publishing by shedaniel
+Added null id checks and logs it instead of crashing (Due to other mods using the same "item_attributes" folder)

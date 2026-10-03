@@ -28,6 +28,7 @@ public class AttributeDataLoader extends SimpleJsonResourceReloadListener {
 
     private static final String PARSING_ERROR_MESSAGE = "Parsing error loading tier {}";
     private static final String LOADED_TIERS_MESSAGE = "Loaded {} tiers";
+    private static final String SKIPPED_NON_TIER_MESSAGE = "Skipped {} non-tier files in item_attributes (missing \"id\"), likely from another mod using the same folder";
     private static final Logger LOGGER = LogManager.getLogger();
 
     private volatile Map<ResourceLocation, PotentialAttribute> itemAttributes = Map.of();
@@ -39,11 +40,16 @@ public class AttributeDataLoader extends SimpleJsonResourceReloadListener {
     @Override
     protected void apply(Map<ResourceLocation, JsonElement> loader, ResourceManager manager, ProfilerFiller profiler) {
         Map<ResourceLocation, PotentialAttribute> readItemAttributes = Maps.newHashMap();
+        int skippedNonTier = 0;
 
         for (Map.Entry<ResourceLocation, JsonElement> entry : loader.entrySet()) {
             ResourceLocation identifier = entry.getKey();
             try {
                 PotentialAttribute itemAttribute = GSON.fromJson(entry.getValue(), PotentialAttribute.class);
+                if (itemAttribute == null || itemAttribute.getID() == null) {
+                    skippedNonTier++;
+                    continue;
+                }
                 readItemAttributes.put(ResourceLocation.parse(itemAttribute.getID()), itemAttribute);
             } catch (IllegalArgumentException | JsonParseException exception) {
                 LOGGER.error(PARSING_ERROR_MESSAGE, identifier, exception);
@@ -52,6 +58,9 @@ public class AttributeDataLoader extends SimpleJsonResourceReloadListener {
 
         itemAttributes = Collections.unmodifiableMap(readItemAttributes);
         LOGGER.info(LOADED_TIERS_MESSAGE, readItemAttributes.size());
+        if (skippedNonTier > 0) {
+            LOGGER.warn(SKIPPED_NON_TIER_MESSAGE, skippedNonTier);
+        }
     }
 
     public Map<ResourceLocation, PotentialAttribute> getItemAttributes() {
