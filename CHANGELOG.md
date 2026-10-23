@@ -1,1 +1,1 @@
-Added null id checks and logs it instead of crashing (Due to other mods using the same "item_attributes" folder)
+Fixed player attributes on Fabric overwriting other mods' player attributes (e.g. Movement Plus): Tiered now adds its attributes on top of the existing player attributes instead of replacing them (#10)

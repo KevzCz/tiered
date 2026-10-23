@@ -10,7 +10,8 @@
   "mixins": [
     "compat.AccessoriesAPIMixin",
     "ItemStackSpellMixin",
-    "PlayerDigSpeedMixin"
+    "PlayerDigSpeedMixin",
+    "PlayerAttributesMixin"
   ],
   "injectors": {
     "defaultRequire": 1
