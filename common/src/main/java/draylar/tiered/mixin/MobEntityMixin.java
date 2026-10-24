@@ -7,6 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
@@ -30,8 +31,13 @@ import draylar.tiered.registry.StructureContext;
 @Mixin(Mob.class)
 public abstract class MobEntityMixin implements SpawnStructureHolder {
 
+    private static final String TIERED$PENDING_KEY = "TieredSpawnStructuresPending";
+    private static final String TIERED$PENDING_POS_KEY = "TieredSpawnStructuresPos";
+
     private List<String> tiered$spawnStructureIds = List.of();
     private List<String> tiered$spawnStructureTags = List.of();
+    private boolean tiered$spawnStructuresPending = false;
+    private long tiered$pendingSpawnPos = 0L;
 
     @Inject(method = "finalizeSpawn", at = @At("TAIL"))
     private void initializeMixin(ServerLevelAccessor world, DifficultyInstance difficulty, MobSpawnType spawnReason, @Nullable SpawnGroupData entityData, CallbackInfoReturnable<SpawnGroupData> info) {
@@ -48,11 +54,28 @@ public abstract class MobEntityMixin implements SpawnStructureHolder {
     }
 
     private void tiered$captureSpawnStructures(ServerLevelAccessor world) {
+        BlockPos pos = ((Mob) (Object) this).blockPosition();
+        if (world instanceof WorldGenRegion) {
+            this.tiered$spawnStructuresPending = true;
+            this.tiered$pendingSpawnPos = pos.asLong();
+            return;
+        }
         if (world.getLevel() instanceof ServerLevel serverWorld) {
-            BlockPos pos = ((Mob) (Object) this).blockPosition();
-            StructureContext.Result r = StructureContext.resolve(serverWorld, pos);
-            this.tiered$spawnStructureIds = r.ids();
-            this.tiered$spawnStructureTags = r.tags();
+            tiered$applySpawnStructures(serverWorld, pos);
+        }
+    }
+
+    private void tiered$applySpawnStructures(ServerLevel serverWorld, BlockPos pos) {
+        StructureContext.Result r = StructureContext.resolve(serverWorld, pos);
+        this.tiered$spawnStructureIds = r.ids();
+        this.tiered$spawnStructureTags = r.tags();
+        this.tiered$spawnStructuresPending = false;
+    }
+
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void tiered$resolvePendingSpawnStructures(CallbackInfo ci) {
+        if (this.tiered$spawnStructuresPending && ((Mob) (Object) this).level() instanceof ServerLevel serverWorld) {
+            tiered$applySpawnStructures(serverWorld, BlockPos.of(this.tiered$pendingSpawnPos));
         }
     }
 
@@ -70,6 +93,7 @@ public abstract class MobEntityMixin implements SpawnStructureHolder {
     public void tiered$setSpawnStructures(List<String> ids, List<String> tags) {
         this.tiered$spawnStructureIds = ids == null ? List.of() : ids;
         this.tiered$spawnStructureTags = tags == null ? List.of() : tags;
+        this.tiered$spawnStructuresPending = false;
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
@@ -80,12 +104,18 @@ public abstract class MobEntityMixin implements SpawnStructureHolder {
         if (!tiered$getSpawnStructureTags().isEmpty()) {
             nbt.put("TieredSpawnStructureTags", tiered$toNbtList(tiered$getSpawnStructureTags()));
         }
+        if (this.tiered$spawnStructuresPending) {
+            nbt.putBoolean(TIERED$PENDING_KEY, true);
+            nbt.putLong(TIERED$PENDING_POS_KEY, this.tiered$pendingSpawnPos);
+        }
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
     private void tiered$readSpawnStructures(CompoundTag nbt, CallbackInfo ci) {
         this.tiered$spawnStructureIds = tiered$fromNbtList(nbt, "TieredSpawnStructures");
         this.tiered$spawnStructureTags = tiered$fromNbtList(nbt, "TieredSpawnStructureTags");
+        this.tiered$spawnStructuresPending = nbt.getBoolean(TIERED$PENDING_KEY);
+        this.tiered$pendingSpawnPos = nbt.getLong(TIERED$PENDING_POS_KEY);
     }
 
     private static ListTag tiered$toNbtList(List<String> values) {

@@ -1,1 +1,1 @@
-Fixed player attributes on Fabric overwriting other mods' player attributes (e.g. Movement Plus): Tiered now adds its attributes on top of the existing player attributes instead of replacing them (#10)
+Fixed a server freeze when a mob spawned during world generation: its spawn structures are now looked up on its first tick instead of from the world generation thread

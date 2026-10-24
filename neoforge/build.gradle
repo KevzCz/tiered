@@ -76,9 +76,6 @@ remapJar {
 }
 
 publishMods {
-    // The per-task dryRun is wired from this and finalized in the task constructor, so it
-    // has to be set here. Keyed off the requested task names so publishModsDry rehearses
-    // while a plain publishMods still uploads for real.
     dryRun = gradle.startParameter.taskNames.any { it.contains("publishModsDry") }
 
     file = tasks.remapJar.archiveFile
@@ -92,6 +89,7 @@ publishMods {
 
     curseforge {
         projectId = "1275090"
+        projectSlug = "tiered-more"
         accessToken = providers.gradleProperty("cfToken")
             .orElse(providers.environmentVariable("CF_TOKEN"))
         minecraftVersions.add("1.21.1")
@@ -105,12 +103,13 @@ publishMods {
         accessToken = providers.gradleProperty("modrinthToken")
             .orElse(providers.environmentVariable("MODRINTH_TOKEN"))
         minecraftVersions.add("1.21.1")
+        environment = CLIENT_AND_SERVER
     }
 }
 
 tasks.register("publishModsDry", Copy) {
-    group = "publishing"
-    description = "Dry run of publishMods — writes to build/unified-dry/ instead of uploading."
+    group = "upload"
+    description = "Dry run of publishMods - writes to build/unified-dry/ instead of uploading."
 
     def publishTasks = tasks.withType(me.modmuss50.mpp.PublishModTask)
     dependsOn publishTasks
@@ -120,4 +119,9 @@ tasks.register("publishModsDry", Copy) {
     }
     into rootProject.layout.buildDirectory.dir("unified-dry")
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+tasks.named("publishMods") { group = "upload" }
+tasks.withType(me.modmuss50.mpp.PublishModTask).configureEach {
+    group = "upload"
 }
