@@ -30,11 +30,13 @@ public class ReforgeDataLoader implements ResourceManagerReloadListener {
 
     private final List<ResourceLocation> reforgeIdentifiers = new ArrayList<>();
     private final Map<ResourceLocation, List<Item>> reforgeBaseMap = new HashMap<>();
+    private final Map<String, List<Item>> accessoryMatches = new HashMap<>();
 
     @Override
     public void onResourceManagerReload(ResourceManager resourceManager) {
         reforgeIdentifiers.clear();
         reforgeBaseMap.clear();
+        accessoryMatches.clear();
 
         resourceManager.listResources("reforge_items", id -> id.getPath().endsWith(".json")).forEach((id, resourceRef) -> {
             try (InputStream stream = resourceRef.open()) {
@@ -127,8 +129,13 @@ public class ReforgeDataLoader implements ResourceManagerReloadListener {
                 || withoutHash.equals("tiered:all_accessories_items");
     }
 
-    private static void forEachMatchingAccessoryItem(String entry, Consumer<Item> consumer) {
+    private void forEachMatchingAccessoryItem(String entry, Consumer<Item> consumer) {
+        accessoryMatches.computeIfAbsent(entry, ReforgeDataLoader::matchingAccessoryItems).forEach(consumer);
+    }
+
+    private static List<Item> matchingAccessoryItems(String entry) {
         String customId = entry.substring(1);
+        List<Item> found = new ArrayList<>();
         for (Item item : BuiltInRegistries.ITEM) {
             ItemStack stack = new ItemStack(item);
             boolean matches;
@@ -139,8 +146,9 @@ public class ReforgeDataLoader implements ResourceManagerReloadListener {
             } else {
                 matches = ATCCompat.isAnyCurioItem(stack);
             }
-            if (matches) consumer.accept(item);
+            if (matches) found.add(item);
         }
+        return found;
     }
 
     public List<Item> getReforgeBaseItems(Item item) {
