@@ -1,1 +1,1 @@
-The list of items that count as accessories for each reforge entry is now worked out once and cleared on reload, instead of scanning every item each time.
+Added a Reforge Luck stat (tiered:generic.reforge_luck). It raises the odds of better tiers when reforging or crafting, like Luck, without affecting loot tables.

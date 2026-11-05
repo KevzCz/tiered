@@ -286,6 +286,11 @@ public class ModifierUtils {
         });
     }
 
+    private static float reforgeLuck(Player player) {
+        return CustomEntityAttributes.REFORGE_LUCK != null && player.getAttribute(CustomEntityAttributes.REFORGE_LUCK) != null
+                ? (float) player.getAttributeValue(CustomEntityAttributes.REFORGE_LUCK) : 0.0F;
+    }
+
     private static void applyRarityBoost(List<ResourceLocation> attributes, List<Integer> weights, float boost) {
         if (weights.isEmpty()) return;
         int maxWeight = Collections.max(weights);
@@ -345,7 +350,7 @@ public class ModifierUtils {
             int luckMaxWeight = Collections.max(attributeWeights);
             for (int i = 0; i < attributeWeights.size(); i++) {
                 if (attributeWeights.get(i) > luckMaxWeight / 3) {
-                    attributeWeights.set(i, (int) (attributeWeights.get(i) * (1.0f - ConfigInit.CONFIG.luckReforgeModifier * playerEntity.getLuck())));
+                    attributeWeights.set(i, (int) (attributeWeights.get(i) * (1.0f - ConfigInit.CONFIG.luckReforgeModifier * (playerEntity.getLuck() + reforgeLuck(playerEntity)))));
                 }
             }
         }
@@ -396,7 +401,7 @@ public class ModifierUtils {
             int luckMaxWeight = Collections.max(attributeWeights);
             for (int i = 0; i < attributeWeights.size(); i++) {
                 if (attributeWeights.get(i) > luckMaxWeight / 3) {
-                    attributeWeights.set(i, (int) (attributeWeights.get(i) * (1.0f - ConfigInit. CONFIG.luckReforgeModifier * playerEntity.getLuck())));
+                    attributeWeights.set(i, (int) (attributeWeights.get(i) * (1.0f - ConfigInit. CONFIG.luckReforgeModifier * (playerEntity.getLuck() + reforgeLuck(playerEntity)))));
                 }
             }
         }

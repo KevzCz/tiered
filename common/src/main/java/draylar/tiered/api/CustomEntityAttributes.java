@@ -33,16 +33,22 @@ public class CustomEntityAttributes {
             ATTRIBUTES.register(ResourceLocation.fromNamespaceAndPath("tiered", "generic.range_attack_damage"), () ->
                     new RangedAttribute("attribute.name.generic.range_attack_damage", 0.0D, 0.0D, 2048.0D).setSyncable(true));
 
+    private static final RegistrySupplier<Attribute> REFORGE_LUCK_SUPPLIER =
+            ATTRIBUTES.register(ResourceLocation.fromNamespaceAndPath("tiered", "generic.reforge_luck"), () ->
+                    new RangedAttribute("attribute.name.generic.reforge_luck", 0.0D, -1024.0D, 1024.0D).setSyncable(true));
+
     public static Holder<Attribute> DIG_SPEED;
     public static Holder<Attribute> CRIT_CHANCE;
     public static Holder<Attribute> DURABLE;
     public static Holder<Attribute> RANGE_ATTACK_DAMAGE;
+    public static Holder<Attribute> REFORGE_LUCK;
 
     public static void init() {
         DIG_SPEED = getHolder(DIG_SPEED_SUPPLIER.getId());
         CRIT_CHANCE = getHolder(CRIT_CHANCE_SUPPLIER.getId());
         DURABLE = getHolder(DURABLE_SUPPLIER.getId());
         RANGE_ATTACK_DAMAGE = getHolder(RANGE_ATTACK_DAMAGE_SUPPLIER.getId());
+        REFORGE_LUCK = getHolder(REFORGE_LUCK_SUPPLIER.getId());
     }
 
     private static Holder<Attribute> getHolder(ResourceLocation id) {

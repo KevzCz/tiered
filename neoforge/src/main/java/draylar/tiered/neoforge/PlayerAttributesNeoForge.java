@@ -17,5 +17,6 @@ public final class PlayerAttributesNeoForge {
         event.add(EntityType.PLAYER, CustomEntityAttributes.DIG_SPEED);
         event.add(EntityType.PLAYER, CustomEntityAttributes.DURABLE);
         event.add(EntityType.PLAYER, CustomEntityAttributes.RANGE_ATTACK_DAMAGE);
+        event.add(EntityType.PLAYER, CustomEntityAttributes.REFORGE_LUCK);
     }
 }

@@ -29,7 +29,7 @@ public final class PlayerAttributesFabric {
             return;
         }
         for (Holder<Attribute> attribute : List.of(CustomEntityAttributes.CRIT_CHANCE, CustomEntityAttributes.DIG_SPEED, CustomEntityAttributes.DURABLE,
-                CustomEntityAttributes.RANGE_ATTACK_DAMAGE)) {
+                CustomEntityAttributes.RANGE_ATTACK_DAMAGE, CustomEntityAttributes.REFORGE_LUCK)) {
             builder.add(attribute);
         }
     }
