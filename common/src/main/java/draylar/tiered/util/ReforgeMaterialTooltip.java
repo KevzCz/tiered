@@ -217,7 +217,7 @@ public final class ReforgeMaterialTooltip {
     }
 
     private static void appendImprintsSection(List<Component> tooltip, ItemStack stack, @Nullable Player player) {
-        if (!ConfigInit.imprintsEffectsAndBehaviorsEnabled()) return;
+        if (!ConfigInit.imprintsEnabled()) return;
         ImprintComponent comp = stack.get(ModComponents.IMPRINTS);
         int capacity = ImprintSlots.capacity(stack);
         boolean hasAny = comp != null && !comp.entries().isEmpty();
@@ -444,12 +444,13 @@ public final class ReforgeMaterialTooltip {
     public static ReforgeMaterialBadgeData buildBadges(ReforgeMaterial material) {
         List<ReforgeMaterialBadgeData.Badge> badges = new ArrayList<>();
 
-        boolean imprintsEnabled = ConfigInit.imprintsEffectsAndBehaviorsEnabled();
+        boolean imprintsEnabled = ConfigInit.imprintsEnabled();
+        boolean effectsEnabled = ConfigInit.effectsEnabled();
         boolean biasEnabled = ConfigInit.biasPoolEnabled();
 
         addStaticBiasBadges(badges, material);
 
-        if (imprintsEnabled) {
+        if (imprintsEnabled || effectsEnabled) {
             if (material.isSkipsReforge()) {
                 badges.add(badge("⟳", Component.translatable("screen.tiered.reforge.material.preserves_tier"), 0xFF4A7FA5,
                         "screen.tiered.reforge.material.preserves_tier.desc"));
@@ -466,8 +467,10 @@ public final class ReforgeMaterialTooltip {
                 }
             }
 
-            appendEffectBadges(badges, material.getEffects(), material);
-            if (!material.isBadgeHidden("effect_pool")) {
+            if (effectsEnabled) {
+                appendEffectBadges(badges, material.getEffects(), material);
+            }
+            if (effectsEnabled && !material.isBadgeHidden("effect_pool")) {
                 for (ReforgeMaterial.EffectPool pool : material.getEffectPools()) {
                     appendEffectPoolBadge(badges, pool, material);
                 }
@@ -507,7 +510,8 @@ public final class ReforgeMaterialTooltip {
                 : stack.get(ModComponents.RUNE_CONTENT);
         if (comp == null || !comp.rolled()) return buildBadges(material);
 
-        boolean imprintsEnabled = ConfigInit.imprintsEffectsAndBehaviorsEnabled();
+        boolean imprintsEnabled = ConfigInit.imprintsEnabled();
+        boolean effectsEnabled = ConfigInit.effectsEnabled();
         boolean biasEnabled = ConfigInit.biasPoolEnabled();
 
         List<ReforgeMaterialBadgeData.Badge> badges = new ArrayList<>();
@@ -545,7 +549,7 @@ public final class ReforgeMaterialTooltip {
             addStaticBiasBadges(badges, material);
         }
 
-        if (imprintsEnabled) {
+        if (imprintsEnabled || effectsEnabled) {
             if (material.isSkipsReforge()) {
                 if (material.isSkipsBaseItem()) {
                     badges.add(badge("∅", Component.translatable("screen.tiered.reforge.material.standalone"), 0xFF555555,
@@ -559,8 +563,10 @@ public final class ReforgeMaterialTooltip {
                         "screen.tiered.reforge.material.no_base_item.desc"));
             }
 
-            appendEffectBadges(badges, material.getEffects(), material, comp);
-            appendEffectBadges(badges, comp.rolledEffects(), material, comp);
+            if (effectsEnabled) {
+                appendEffectBadges(badges, material.getEffects(), material, comp);
+                appendEffectBadges(badges, comp.rolledEffects(), material, comp);
+            }
         }
 
         List<Component> lore = new ArrayList<>();

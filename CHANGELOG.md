@@ -1,1 +1,1 @@
-Added a Reforge Luck stat (tiered:generic.reforge_luck). It raises the odds of better tiers when reforging or crafting, like Luck, without affecting loot tables.
+Split the imprint switch: "enableImprints" turns off imprints, imprint slots and rune imprint pools; "enableEffects" turns off reforge effects and rune effect pools. Runes left with nothing to roll no longer drop from loot.

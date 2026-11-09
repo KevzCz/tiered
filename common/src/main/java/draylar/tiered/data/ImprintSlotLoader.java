@@ -39,7 +39,7 @@ public class ImprintSlotLoader extends SimpleJsonResourceReloadListener {
 
     @Override
     protected void apply(Map<ResourceLocation, JsonElement> loader, ResourceManager manager, ProfilerFiller profiler) {
-        if (!ConfigInit.imprintsEffectsAndBehaviorsEnabled()) {
+        if (!ConfigInit.imprintsEnabled()) {
             rules = new ArrayList<>();
             return;
         }

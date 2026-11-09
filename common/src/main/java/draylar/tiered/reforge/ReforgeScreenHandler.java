@@ -147,8 +147,8 @@ public class ReforgeScreenHandler extends AbstractContainerMenu {
             List<String> readyEffects = (readyComp != null && !readyComp.rolledEffects().isEmpty())
                     ? mergeEffects(additionMaterial.getEffects(), readyComp.rolledEffects())
                     : additionMaterial.getEffects();
-            boolean imprintReady = ConfigInit.imprintsEffectsAndBehaviorsEnabled() && additionMaterial.hasImprintPool();
-            boolean effectsReady = ConfigInit.imprintsEffectsAndBehaviorsEnabled() && ReforgeEffects.anyCanRun(readyEffects, stack);
+            boolean imprintReady = ConfigInit.imprintsEnabled() && additionMaterial.hasImprintPool();
+            boolean effectsReady = ConfigInit.effectsEnabled() && ReforgeEffects.anyCanRun(readyEffects, stack);
             boolean ready = !stack.isEmpty()
                     && ReforgeUtil.isMaterialCompatible(additionMaterial, stack)
                     && (imprintReady || effectsReady);
@@ -352,8 +352,8 @@ public class ReforgeScreenHandler extends AbstractContainerMenu {
                 return;
             }
 
-            boolean imprintsEnabled = ConfigInit.imprintsEffectsAndBehaviorsEnabled();
-            boolean changed = imprintsEnabled && ReforgeEffects.run(player, itemStack, standaloneEffects,
+            boolean imprintsEnabled = ConfigInit.imprintsEnabled();
+            boolean changed = ConfigInit.effectsEnabled() && ReforgeEffects.run(player, itemStack, standaloneEffects,
                     noReforgeMaterial.getEffectParams(), player.level(), this.pos, tuningIngot);
 
             if (imprintsEnabled && !changed && noReforgeMaterial.hasImprintPool()) {
@@ -403,13 +403,14 @@ public class ReforgeScreenHandler extends AbstractContainerMenu {
                 return;
             }
 
-            boolean imprintsEnabled = ConfigInit.imprintsEffectsAndBehaviorsEnabled();
+            boolean imprintsEnabled = ConfigInit.imprintsEnabled();
+            boolean effectsEnabled = ConfigInit.effectsEnabled();
             RuneContentComponent runeComp = tuningIngot.get(ModComponents.RUNE_CONTENT);
-            List<String> effectIds = !imprintsEnabled ? List.of()
+            List<String> effectIds = !effectsEnabled ? List.of()
                     : (runeComp != null && !runeComp.rolledEffects().isEmpty())
                     ? mergeEffects(material.getEffects(), runeComp.rolledEffects())
                     : material.getEffects();
-            Map<String, Map<String, Float>> effectParams = !imprintsEnabled ? Map.of()
+            Map<String, Map<String, Float>> effectParams = !effectsEnabled ? Map.of()
                     : mergeEffectParams(material.getEffectParams(), runeComp != null ? runeComp.rolledEffectParams() : null);
             if (!keepTier) {
 

@@ -37,7 +37,9 @@ public class RollRuneContentLootFunction extends LootItemConditionalFunction {
 
     @Override
     protected ItemStack run(ItemStack stack, LootContext context) {
-
+        if (!RuneContent.isRune(stack.getItem())) {
+            return ItemStack.EMPTY;
+        }
         Random rng = new Random(context.getRandom().nextLong());
         RuneContent.rollOnto(stack, rng, buildRollContext(context));
         return stack;

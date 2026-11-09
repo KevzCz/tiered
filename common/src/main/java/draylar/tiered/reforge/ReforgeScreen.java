@@ -848,7 +848,7 @@ public class ReforgeScreen extends AbstractContainerScreen<ReforgeScreenHandler>
         List<Component> lines = new ArrayList<>(preview.getTooltipLines(ctx, minecraft.player, TooltipFlag.NORMAL));
         lines.add(0, Component.translatable("screen.tiered.reforge.preview.header").withStyle(s -> s.withColor(ChatFormatting.DARK_GRAY).withItalic(true)));
 
-        if (ConfigInit.imprintsEffectsAndBehaviorsEnabled()) {
+        if (ConfigInit.imprintsEnabled()) {
             var imprints = preview.get(ModComponents.IMPRINTS);
             int cap = ImprintSlots.capacity(preview);
             if (cap > 0 || (imprints != null && !imprints.entries().isEmpty())) {

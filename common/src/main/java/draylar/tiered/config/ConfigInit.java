@@ -50,8 +50,12 @@ public class ConfigInit {
         return CONFIG == null || CONFIG.enableRuneItems;
     }
 
-    public static boolean imprintsEffectsAndBehaviorsEnabled() {
-        return CONFIG == null || CONFIG.enableImprintsEffectsAndBehaviors;
+    public static boolean imprintsEnabled() {
+        return CONFIG == null || CONFIG.enableImprints;
+    }
+
+    public static boolean effectsEnabled() {
+        return CONFIG == null || CONFIG.enableEffects;
     }
 
     public static boolean biasPoolEnabled() {

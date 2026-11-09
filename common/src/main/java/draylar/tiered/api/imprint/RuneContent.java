@@ -27,11 +27,11 @@ public final class RuneContent {
     }
 
     private static boolean imprintPoolActive(ReforgeMaterial material) {
-        return ConfigInit.imprintsEffectsAndBehaviorsEnabled() && material.hasImprintPool();
+        return ConfigInit.imprintsEnabled() && material.hasImprintPool();
     }
 
     private static boolean effectPoolActive(ReforgeMaterial material) {
-        return ConfigInit.imprintsEffectsAndBehaviorsEnabled() && material.hasEffectPool();
+        return ConfigInit.effectsEnabled() && material.hasEffectPool();
     }
 
     private static boolean biasPoolActive(ReforgeMaterial material) {

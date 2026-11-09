@@ -32,8 +32,10 @@ public class TieredConfig implements ConfigData {
 
     @Comment("Rune items and their loot-table injection")
     public boolean enableRuneItems = true;
-    @Comment("Imprints, effects and behaviors: their data, imprint slots, application and reforge material imprint/effect pools")
-    public boolean enableImprintsEffectsAndBehaviors = true;
+    @Comment("Imprints and their behaviors: imprint data, imprint slots, applying imprints, and rune imprint pools. Runes left with nothing to roll stop dropping")
+    public boolean enableImprints = true;
+    @Comment("Reforge effects: effect data and rune effect pools")
+    public boolean enableEffects = true;
     @Comment("Reforge material bias pools that shift rarity/group weights (rare-only, rarity boost, max rarity)")
     public boolean enableBiasPool = true;
     @Comment("The imprint/effect codex button and screen in the reforge UI")
